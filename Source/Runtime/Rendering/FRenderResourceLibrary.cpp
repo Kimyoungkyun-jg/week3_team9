@@ -1,4 +1,5 @@
 ﻿#include "FRenderResourceLibrary.h"
+#include "Vertices.h"
 
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Rendering/FRenderer.h"
@@ -21,6 +22,7 @@ namespace
 
 bool FRenderResourceLibrary::Initialize(FRenderer& Renderer)
 {
+	RendererRef = &Renderer;
 	if (!CreateCubeMesh(Renderer) ||
 		!CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f ,1.0f) ||
 		!CreateConeMesh(Renderer) ||
@@ -44,138 +46,134 @@ bool FRenderResourceLibrary::Initialize(FRenderer& Renderer)
 
 bool FRenderResourceLibrary::CreateCubeMesh(FRenderer& Renderer)
 {
-	TArray<FVertexPositionColor> Vertices = {
-		{ FVector(-0.5, -0.5, -0.5), FVector(0.0, 0.0, 0.0) },
-		{ FVector(0.5, -0.5, -0.5), FVector(1.0, 0.0, 0.0) },
-		{ FVector(0.5,  0.5, -0.5), FVector(1.0, 1.0, 0.0) },
-		{ FVector(-0.5,  0.5, -0.5), FVector(0.0, 1.0, 0.0) },
-		{ FVector(-0.5, -0.5,  0.5), FVector(0.0, 0.0, 1.0) },
-		{ FVector(0.5, -0.5,  0.5), FVector(1.0, 0.0, 1.0) },
-		{ FVector(0.5,  0.5,  0.5), FVector(1.0, 1.0, 1.0) },
-		{ FVector(-0.5,  0.5,  0.5), FVector(0.0, 1.0, 1.0) },
-	};
-
-	const TArray<uint32> Indices = {
-		0, 2, 1, 0, 3, 2, // -Z
-		4, 5, 6, 4, 6, 7, // +Z
-		0, 1, 5, 0, 5, 4, // -Y
-		3, 7, 6, 3, 6, 2, // +Y
-		0, 4, 7, 0, 7, 3, // -X
-		1, 2, 6, 1, 6, 5, // +X
-	};
-
 	FMeshDesc MeshDesc{
-		.VertexLayout = EVertexLayout::PositionColor,
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexPositionColor)),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
+		.VertexData = CubeVertices,
+		.VertexDataSize = static_cast<uint32>(sizeof(CubeVertices)),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+		.VertexCount = static_cast<uint32>(std::size(CubeVertices)),
+		.IndexData = CubeIndices,
+		.IndexDataSize = static_cast<uint32>(sizeof(CubeIndices)),
+		.IndexCount = static_cast<uint32>(std::size(CubeIndices)),
 	};
 
-	CubeMesh = Renderer.CreateMesh(MeshDesc);
+	RegisterMesh("Cube", Renderer.CreateMesh(MeshDesc));
 
-	return CubeMesh != nullptr;
+	return GetMesh("Cube") != nullptr;
 }
 
-// TODO: 컬러는 테스트용
 bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer& Renderer, float Height, uint32 SliceCount, float TopRadius, float BottomRadius)
 {
 	constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
 	const float DTheta = TAU / static_cast<float>(SliceCount);
 
-	TArray<FVertexPositionColor> Vertices;
-
-	for (int Ring = 0; Ring < 2; ++Ring)
-	{
-		const float Radius = (Ring == 0) ? BottomRadius : TopRadius;
-		const float Y = (Ring == 0) ? -0.5f * Height : 0.5f * Height;
-		for (uint32 i = 0u; i <= SliceCount; ++i)
-		{
-			const float Theta = DTheta * static_cast<float>(i);
-			const float c = cosf(Theta);
-			const float s = sinf(Theta);
-			const FVector Pos(Radius * c, Y, Radius * s);
-			const float t = static_cast<float>(i) / static_cast<float>(SliceCount);
-			const FVector Color(t, static_cast<float>(Ring), 1.0f - t);
-			Vertices.push_back({ Pos, Color });
-		}
-	}
-
+	TArray<FVertexData> Vertices;
 	TArray<uint32> Indices;
-	Indices.reserve(static_cast<uint64>(SliceCount * 6u));
 
-	for (uint32 i = 0u; i < SliceCount; ++i)
+	Vertices.reserve(SliceCount * 4 + 2);
+	Indices.reserve(SliceCount * 12);
+
+	const float HalfH = Height * 0.5f;
+
+	const uint32 TopCenterIndex = static_cast<uint32>(Vertices.size());
+	Vertices.push_back({ 0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f });
+
+	const uint32 TopRingStart = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		Indices.push_back(i);
-		Indices.push_back(i + SliceCount + 1);
-		Indices.push_back(i + 1);
-
-		Indices.push_back(i + 1);
-		Indices.push_back(i + SliceCount + 1);
-		Indices.push_back(i + SliceCount + 2);
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			TopRadius * std::cos(Theta), HalfH, TopRadius * std::sin(Theta),
+			0.0f, 0.0f, 1.0f, 1.0f,
+			0.5f + 0.5f * std::cos(Theta), 0.5f + 0.5f * std::sin(Theta),
+			0.0f, 1.0f, 0.0f
+		});
 	}
 
-	// 위 뚜껑
+	const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
+	Vertices.push_back({ 0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, -1.0f, 0.0f });
+
+	const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		//중심
-		const uint32 Center = static_cast<uint32>(Vertices.size());
-		Vertices.emplace_back(FVector(0.0f, 0.5f * Height, 0.0f), FVector{ 1.0f, 1.0f, 1.0f });
-
-		const uint32 First = static_cast<uint32>(Vertices.size());
-		for (uint32 i = 0u; i <= SliceCount; ++i)
-		{
-			const float Theta = DTheta * static_cast<float>(i);
-			Vertices.push_back({
-				FVector(TopRadius * cosf(Theta), 0.5f * Height, TopRadius * sinf(Theta)),
-				FVector(0.9f, 0.9f, 0.2f) });
-		}
-
-		for (uint32 i = 0u; i < SliceCount; ++i)
-		{
-			Indices.push_back(Center);
-			Indices.push_back(First + i + 1);
-			Indices.push_back(First + i);
-		}
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
+			0.0f, 0.0f, 1.0f, 1.0f,
+			0.5f + 0.5f * std::cos(Theta), 0.5f + 0.5f * std::sin(Theta),
+			0.0f, -1.0f, 0.0f
+		});
 	}
 
-	// 아래 뚜껑
+	const uint32 SideTopStart = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		const uint32 Center = static_cast<uint32>(Vertices.size());
-		Vertices.emplace_back(FVector(0.0f, -0.5f * Height, 0.0f), FVector{ 0.3f, 0.3f, 0.3f });
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			TopRadius * std::cos(Theta), HalfH, TopRadius * std::sin(Theta),
+			0.0f, 0.0f, 1.0f, 1.0f,
+			static_cast<float>(i) / static_cast<float>(SliceCount), 0.0f,
+			std::cos(Theta), 0.0f, std::sin(Theta)
+		});
+	}
 
-		const uint32 First = static_cast<uint32>(Vertices.size());
-		for (uint32 i = 0u; i <= SliceCount; ++i)
-		{
-			const float Theta = DTheta * static_cast<float>(i);
-			Vertices.push_back({
-				FVector(BottomRadius * cosf(Theta), -0.5f * Height, BottomRadius * sinf(Theta)),
-				FVector(0.2f, 0.2f, 0.5f) });
-		}
+	const uint32 SideBottomStart = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
+			0.0f, 0.0f, 1.0f, 1.0f,
+			static_cast<float>(i) / static_cast<float>(SliceCount), 1.0f,
+			std::cos(Theta), 0.0f, std::sin(Theta)
+		});
+	}
 
-		for (uint32 i = 0u; i < SliceCount; ++i)
-		{
-			Indices.push_back(Center);
-			Indices.push_back(First + i);
-			Indices.push_back(First + i + 1);
-		}
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+		Indices.push_back(TopCenterIndex);
+		Indices.push_back(TopRingStart + Next);
+		Indices.push_back(TopRingStart + i);
+	}
+
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+		Indices.push_back(BottomCenterIndex);
+		Indices.push_back(BottomRingStart + i);
+		Indices.push_back(BottomRingStart + Next);
+	}
+
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+
+		const uint32 TL = SideTopStart + i;
+		const uint32 TR = SideTopStart + Next;
+		const uint32 BL = SideBottomStart + i;
+		const uint32 BR = SideBottomStart + Next;
+
+		Indices.push_back(BL);
+		Indices.push_back(TL);
+		Indices.push_back(BR);
+
+		Indices.push_back(BR);
+		Indices.push_back(TL);
+		Indices.push_back(TR);
 	}
 
 	FMeshDesc MeshDesc{
-		.VertexLayout = EVertexLayout::PositionColor,
 		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexPositionColor)),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 		.IndexData = Indices.data(),
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	CylinderMesh = Renderer.CreateMesh(MeshDesc);
-	return CylinderMesh != nullptr;
+	RegisterMesh("Cylinder", Renderer.CreateMesh(MeshDesc));
+	return GetMesh("Cylinder") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateConeMesh(FRenderer& Renderer)
@@ -184,88 +182,74 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer& Renderer)
 	constexpr float Height = 1.0f;
 	constexpr uint32 SliceCount = 24;
 	constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
-	constexpr float DTheta = TAU / static_cast<float>(SliceCount);
+	const float DTheta = TAU / static_cast<float>(SliceCount);
 
-	FVector Color;
-	TArray<FVertexPositionColor> Vertices;
-	const float Radius = BottomRadius;
-
-		for (int Ring = 0; Ring < 2; ++Ring)
-		{
-
-			for (uint32 i = 0u; i <= SliceCount; ++i)
-			{
-				const float t = static_cast<float>(i) / static_cast<float>(SliceCount);
-				const FVector Color(t, static_cast<float>(i), 1.0f - t);
-				if(Ring == 0)
-				{
-					const FVector Pos(0.0f, 0.5f, 0.0f);
-					Vertices.push_back({ Pos,Color });
-					continue;
-				}
-					
-				const float Theta = DTheta * static_cast<float>(i);
-				const float c = cosf(Theta);
-				const float s = sinf(Theta);
-
-				const FVector Pos(Radius * c, -0.5f, Radius * s);
-
-				Vertices.push_back({ Pos, Color });
-			}
-		}
-
-
-	
-
+	TArray<FVertexData> Vertices;
 	TArray<uint32> Indices;
+
+	Vertices.reserve(SliceCount * 2 + 2);
 	Indices.reserve(SliceCount * 6);
 
-	for (uint32 i = 0u; i < SliceCount; ++i)
-	{
-		Indices.push_back(i);
-		Indices.push_back(i + SliceCount + 1);
-		Indices.push_back(i + 1);
+	const float HalfH = Height * 0.5f;
 
-		Indices.push_back(i + 1);
-		Indices.push_back(i + SliceCount + 1);
-		Indices.push_back(i + SliceCount + 2);
+	const uint32 ApexIndex = static_cast<uint32>(Vertices.size());
+	Vertices.push_back({ 0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f });
+
+	const uint32 SideBaseStart = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
+			0.0f, 0.0f, 1.0f, 1.0f,
+			static_cast<float>(i) / static_cast<float>(SliceCount), 1.0f,
+			std::cos(Theta), 0.0f, std::sin(Theta)
+		});
 	}
 
-	// 아래 뚜껑
-	{
-		const uint32 Center = static_cast<uint32>(Vertices.size());
-		Vertices.push_back({ FVector(0.0f, -0.5f * Height, 0.0f), Color });
-		const uint32 First = static_cast<uint32>(Vertices.size());
-		for (int i = 0; i <= SliceCount; ++i)
-		{
-			const float Theta = DTheta * static_cast<float>(i);
-			Vertices.push_back({
-				FVector(BottomRadius * cosf(Theta), -0.5f * Height, BottomRadius * sinf(Theta)),
-				//FVector(0.2f, 0.2f, 0.5f) });
-				Color });
-		}
+	const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
+	Vertices.push_back({ 0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, -1.0f, 0.0f });
 
-		for (int i = 0; i < SliceCount; ++i)
-		{
-			Indices.push_back(Center);
-			Indices.push_back(i + First);
-			Indices.push_back(i + First + 1);
-		}
+	const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
+			0.0f, 0.0f, 1.0f, 1.0f,
+			0.5f + 0.5f * std::cos(Theta), 0.5f + 0.5f * std::sin(Theta),
+			0.0f, -1.0f, 0.0f
+		});
+	}
+
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+		Indices.push_back(ApexIndex);
+		Indices.push_back(SideBaseStart + Next);
+		Indices.push_back(SideBaseStart + i);
+	}
+
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+		Indices.push_back(BottomCenterIndex);
+		Indices.push_back(BottomRingStart + Next);
+		Indices.push_back(BottomRingStart + i);
 	}
 
 	FMeshDesc MeshDesc{
-		.VertexLayout = EVertexLayout::PositionColor,
 		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexPositionColor)),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 		.IndexData = Indices.data(),
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	ConeMesh = Renderer.CreateMesh(MeshDesc);
-	return ConeMesh != nullptr;
+	RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
+	return GetMesh("Cone") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateArrowMesh(FRenderer& Renderer)
@@ -274,95 +258,137 @@ bool FRenderResourceLibrary::CreateArrowMesh(FRenderer& Renderer)
 	constexpr float ShaftLength = 0.75f;
 	constexpr float ShaftRadius = 0.025f;
 	constexpr float HeadRadius = 0.075f;
-	constexpr float ArrowLength = 1.0f;
-	constexpr float Tau = std::numbers::pi_v<float> * 2.0f;
-	constexpr FVector Color{ 1.0f, 1.0f, 1.0f };
+	constexpr float HeadLength = 0.25f;
+	constexpr float DTheta = 2.0f * std::numbers::pi_v<float> / static_cast<float>(SliceCount);
 
-	TArray<FVertexPositionColor> Vertices;
+	TArray<FVertexData> Vertices;
 	TArray<uint32> Indices;
 
-	Vertices.reserve((SliceCount + 1u) * 3u + 3u);
-	Indices.reserve(SliceCount * 15u);
+	Vertices.reserve(SliceCount * 5 + 3);
+	Indices.reserve(SliceCount * 18);
 
-	const uint32 ShaftStartRing = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0u; i <= SliceCount; ++i)
+	const uint32 ShaftBottomCenter = static_cast<uint32>(Vertices.size());
+	Vertices.push_back({ 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f });
+
+	const uint32 ShaftBottomRing = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		const float Theta = Tau * static_cast<float>(i) / static_cast<float>(SliceCount);
+		const float Theta = static_cast<float>(i) * DTheta;
 		Vertices.push_back({
-			FVector{ 0.0f, ShaftRadius * cosf(Theta), ShaftRadius * sinf(Theta) },
-			Color });
+			0.0f, ShaftRadius * std::cos(Theta), ShaftRadius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f,
+			-1.0f, 0.0f, 0.0f
+		});
 	}
 
-	const uint32 ShaftEndRing = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0u; i <= SliceCount; ++i)
+	const uint32 ShaftSideBottom = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		const float Theta = Tau * static_cast<float>(i) / static_cast<float>(SliceCount);
+		const float Theta = static_cast<float>(i) * DTheta;
 		Vertices.push_back({
-			FVector{ ShaftLength, ShaftRadius * cosf(Theta), ShaftRadius * sinf(Theta) },
-			Color });
+			0.0f, ShaftRadius * std::cos(Theta), ShaftRadius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f,
+			0.0f, std::cos(Theta), std::sin(Theta)
+		});
 	}
 
-	for (uint32 i = 0u; i < SliceCount; ++i)
+	const uint32 ShaftSideTop = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		Indices.push_back(ShaftStartRing + i);
-		Indices.push_back(ShaftStartRing + i + 1u);
-		Indices.push_back(ShaftEndRing + i);
-
-		Indices.push_back(ShaftStartRing + i + 1u);
-		Indices.push_back(ShaftEndRing + i + 1u);
-		Indices.push_back(ShaftEndRing + i);
-	}
-
-	const uint32 ShaftStartCenter = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ FVector{ 0.0f, 0.0f, 0.0f }, Color });
-	for (uint32 i = 0u; i < SliceCount; ++i)
-	{
-		Indices.push_back(ShaftStartCenter);
-		Indices.push_back(ShaftStartRing + i + 1u);
-		Indices.push_back(ShaftStartRing + i);
-	}
-
-	const uint32 HeadBaseRing = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0u; i <= SliceCount; ++i)
-	{
-		const float Theta = Tau * static_cast<float>(i) / static_cast<float>(SliceCount);
+		const float Theta = static_cast<float>(i) * DTheta;
 		Vertices.push_back({
-			FVector{ ShaftLength, HeadRadius * cosf(Theta), HeadRadius * sinf(Theta) },
-			Color });
-	}
-
-	const uint32 HeadTip = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ FVector{ ArrowLength, 0.0f, 0.0f }, Color });
-
-	for (uint32 i = 0u; i < SliceCount; ++i)
-	{
-		Indices.push_back(HeadBaseRing + i);
-		Indices.push_back(HeadBaseRing + i + 1u);
-		Indices.push_back(HeadTip);
+			ShaftLength, ShaftRadius * std::cos(Theta), ShaftRadius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			1.0f, 0.0f,
+			0.0f, std::cos(Theta), std::sin(Theta)
+		});
 	}
 
 	const uint32 HeadBaseCenter = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ FVector{ ShaftLength, 0.0f, 0.0f }, Color });
-	for (uint32 i = 0u; i < SliceCount; ++i)
+	Vertices.push_back({ ShaftLength, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f });
+
+	const uint32 HeadBaseRing = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
 	{
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			ShaftLength, HeadRadius * std::cos(Theta), HeadRadius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f,
+			-1.0f, 0.0f, 0.0f
+		});
+	}
+
+	const uint32 HeadSideBase = static_cast<uint32>(Vertices.size());
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const float Theta = static_cast<float>(i) * DTheta;
+		Vertices.push_back({
+			ShaftLength, HeadRadius * std::cos(Theta), HeadRadius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f,
+			0.0f, std::cos(Theta), std::sin(Theta)
+		});
+	}
+
+	const uint32 HeadTip = static_cast<uint32>(Vertices.size());
+	Vertices.push_back({ ShaftLength + HeadLength, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f, 0.0f });
+
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+		Indices.push_back(ShaftBottomCenter);
+		Indices.push_back(ShaftBottomRing + Next);
+		Indices.push_back(ShaftBottomRing + i);
+	}
+
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+		const uint32 BL = ShaftSideBottom + i;
+		const uint32 BR = ShaftSideBottom + Next;
+		const uint32 TL = ShaftSideTop + i;
+		const uint32 TR = ShaftSideTop + Next;
+
+		Indices.push_back(BL);
+		Indices.push_back(TL);
+		Indices.push_back(BR);
+
+		Indices.push_back(BR);
+		Indices.push_back(TL);
+		Indices.push_back(TR);
+	}
+
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
 		Indices.push_back(HeadBaseCenter);
-		Indices.push_back(HeadBaseRing + i + 1u);
+		Indices.push_back(HeadBaseRing + Next);
 		Indices.push_back(HeadBaseRing + i);
 	}
 
-	const FMeshDesc MeshDesc{
-		.VertexLayout = EVertexLayout::PositionColor,
+	for (uint32 i = 0; i < SliceCount; ++i)
+	{
+		const uint32 Next = (i + 1) % SliceCount;
+		Indices.push_back(HeadSideBase + i);
+		Indices.push_back(HeadTip);
+		Indices.push_back(HeadSideBase + Next);
+	}
+
+	FMeshDesc MeshDesc{
 		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexPositionColor)),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 		.IndexData = Indices.data(),
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	ArrowMesh = Renderer.CreateMesh(MeshDesc);
-	return ArrowMesh != nullptr;
+	RegisterMesh("Arrow", Renderer.CreateMesh(MeshDesc));
+	return GetMesh("Arrow") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCircleMesh(FRenderer& Renderer)
@@ -371,61 +397,65 @@ bool FRenderResourceLibrary::CreateCircleMesh(FRenderer& Renderer)
 	constexpr float Radius = 1.0f;
 	constexpr float Width = 0.07f;
 
-	FVector Color{ 0.0f, 0.0f, 0.0f };
-
-	TArray<FVertexPositionColor> Vertices;
+	TArray<FVertexData> Vertices;
 	TArray<uint32> Indices;
 
-	constexpr uint32 TubeSliceCount = 8u;
-	constexpr uint32 RingVertexCount = TubeSliceCount + 1u;
-	constexpr float TubeRadius = Width * 0.5f;
-	constexpr float HalfPi = std::numbers::pi_v<float> * 0.5f;
-	Vertices.reserve(SliceCount * RingVertexCount);
-	Indices.reserve(SliceCount * TubeSliceCount * 6u);
-
-	const float Step = std::numbers::pi_v<float> * 2.0f / static_cast<float>(SliceCount);
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Cos = std::cosf(Step * static_cast<float>(i));
-		const float Sin = std::sinf(Step * static_cast<float>(i));
-		for (uint32 j = 0; j <= TubeSliceCount; ++j)
-		{
-			const float Angle = -HalfPi + std::numbers::pi_v<float> * static_cast<float>(j) / static_cast<float>(TubeSliceCount);
-			const float RingRadius = (j == 0u || j == TubeSliceCount) ? Radius : Radius + TubeRadius * std::cosf(Angle);
-			Vertices.push_back({ FVector{ TubeRadius * std::sinf(Angle), Cos * RingRadius, Sin * RingRadius }, Color });
-		}
-	}
+	Vertices.reserve(SliceCount * 2);
+	Indices.reserve(SliceCount * 6);
 
 	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		const uint32 Next = (i + 1u) % SliceCount;
-		for (uint32 j = 0; j < TubeSliceCount; ++j)
-		{
-			const uint32 A = i * RingVertexCount + j;
-			const uint32 B = Next * RingVertexCount + j;
-			
-			Indices.push_back(A);
-			Indices.push_back(B);
-			Indices.push_back(B + 1u);
-			Indices.push_back(A);
-			Indices.push_back(B + 1u);
-			Indices.push_back(A + 1u);
-		}
+		float Theta = 2.0f * std::numbers::pi_v<float> * static_cast<float>(i) / static_cast<float>(SliceCount);
+		float InnerRadius = Radius - Width * 0.5f;
+		float OuterRadius = Radius + Width * 0.5f;
+
+		Vertices.push_back({
+			0.0f, InnerRadius * std::cos(Theta), InnerRadius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f,
+			1.0f, 0.0f, 0.0f
+		});
+		Vertices.push_back({
+			0.0f, OuterRadius * std::cos(Theta), OuterRadius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			1.0f, 1.0f,
+			1.0f, 0.0f, 0.0f
+		});
+
+		uint32 InnerCurrent = 2 * i;
+		uint32 OuterCurrent = 2 * i + 1;
+		uint32 InnerNext = (2 * (i + 1)) % (SliceCount * 2);
+		uint32 OuterNext = (2 * (i + 1) + 1) % (SliceCount * 2);
+
+		Indices.push_back(InnerCurrent);
+		Indices.push_back(OuterCurrent);
+		Indices.push_back(InnerNext);
+
+		Indices.push_back(InnerNext);
+		Indices.push_back(OuterCurrent);
+		Indices.push_back(OuterNext);
+
+		Indices.push_back(OuterCurrent);
+		Indices.push_back(InnerCurrent);
+		Indices.push_back(InnerNext);
+
+		Indices.push_back(OuterCurrent);
+		Indices.push_back(InnerNext);
+		Indices.push_back(OuterNext);
 	}
 
 	const FMeshDesc Desc{
-		.VertexLayout = EVertexLayout::PositionColor,
 		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexPositionColor)),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 		.IndexData = Indices.data(),
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	CircleMesh = Renderer.CreateMesh(Desc);
-	return CircleMesh != nullptr;
+	RegisterMesh("Circle", Renderer.CreateMesh(Desc));
+	return GetMesh("Circle") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer& Renderer)
@@ -433,29 +463,45 @@ bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer& Renderer)
 	constexpr uint32 SliceCount = 32u;
 	constexpr float Radius = 1.0f;
 
-	FVector In{ -1.0f, 0.0f, 0.0f };
-	FVector Out{ 1.0f, 0.0f, 0.0f };
-
-	TArray<FVertexPositionColor> Vertices;
+	TArray<FVertexData> Vertices;
 	TArray<uint32> Indices;
-	Vertices.reserve(SliceCount * 4u);
-	Indices.reserve(SliceCount * 12u);
 
-	float Step = std::numbers::pi_v<float> *2.0f / static_cast<float>(SliceCount);
+	Vertices.reserve(SliceCount * 2);
+	Indices.reserve(SliceCount * 6);
+
 	for (uint32 i = 0; i < SliceCount; ++i)
 	{
-		float Cos = std::cosf(Step * static_cast<float>(i));
-		float Sin = std::sinf(Step * static_cast<float>(i));
+		float Theta = 2.0f * std::numbers::pi_v<float> * static_cast<float>(i) / static_cast<float>(SliceCount);
 
-		Vertices.push_back({ FVector{ 0.0f, Cos * Radius, Sin * Radius }, Out });
-		Vertices.push_back({ FVector{ 0.0f, Cos * Radius, Sin * Radius }, In });
+		Vertices.push_back({
+			0.0f, Radius * std::cos(Theta), Radius * std::sin(Theta),
+			-1.0f, 0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f,
+			-1.0f, 0.0f, 0.0f
+		});
+		Vertices.push_back({
+			0.0f, Radius * std::cos(Theta), Radius * std::sin(Theta),
+			1.0f, 0.0f, 0.0f, 1.0f,
+			1.0f, 0.0f,
+			1.0f, 0.0f, 0.0f
+		});
+
+		if (i == 0) continue;
+
+		Indices.push_back(2u * i - 2u);
+		Indices.push_back(2u * i + 1u);
+		Indices.push_back(2u * i - 1u);
+
+		Indices.push_back(2u * i - 2u);
+		Indices.push_back(2u * i);
+		Indices.push_back(2u * i + 1u);
 
 		Indices.push_back(2u * i - 2u);
 		Indices.push_back(2u * i - 1u);
 		Indices.push_back(2u * i + 1u);
 
 		Indices.push_back(2u * i - 2u);
-		Indices.push_back(2u * i + 1u);
+		Indices.push_back(2u * i);
 		Indices.push_back(2u * i - 1u);
 
 		Indices.push_back(2u * i - 2u);
@@ -474,18 +520,17 @@ bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer& Renderer)
 	Indices[9] = 2u * SliceCount - 2u;
 
 	const FMeshDesc Desc{
-		.VertexLayout = EVertexLayout::PositionColor,
 		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexPositionColor)),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 		.IndexData = Indices.data(),
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	RotationGizmoMesh = Renderer.CreateMesh(Desc);
-	return RotationGizmoMesh != nullptr;
+	RegisterMesh("RotationGizmo", Renderer.CreateMesh(Desc));
+	return GetMesh("RotationGizmo") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer& Renderer)
@@ -495,38 +540,23 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer& Renderer)
 	constexpr float ArrowLength = 1.0f;
 	constexpr float TipSize = ArrowLength - ShaftLength;
 
-	const TArray<FVertexPositionColor> CubeVertices = {
-		{ FVector(-0.5, -0.5, -0.5), FVector(1.0, 0.0, 0.0) },
-		{ FVector(0.5, -0.5, -0.5), FVector(1.0, 0.0, 0.0) },
-		{ FVector(0.5,  0.5, -0.5), FVector(1.0, 0.0, 0.0) },
-		{ FVector(-0.5,  0.5, -0.5), FVector(1.0, 0.0, 0.0) },
-		{ FVector(-0.5, -0.5,  0.5), FVector(0.0, 0.0, 1.0) },
-		{ FVector(0.5, -0.5,  0.5), FVector(1.0, 0.0, 1.0) },
-		{ FVector(0.5,  0.5,  0.5), FVector(1.0, 1.0, 1.0) },
-		{ FVector(-0.5,  0.5,  0.5), FVector(0.0, 1.0, 1.0) },
-	};
-	const TArray<uint32> CubeIndices = {
-		0, 2, 1, 0, 3, 2, // -Z
-		4, 5, 6, 4, 6, 7, // +Z
-		0, 1, 5, 0, 5, 4, // -Y
-		3, 7, 6, 3, 6, 2, // +Y
-		0, 4, 7, 0, 7, 3, // -X
-		1, 2, 6, 1, 6, 5, // +X
-	};
-
-	TArray <FVertexPositionColor> Vertices;
+	TArray<FVertexData> Vertices;
 	TArray<uint32> Indices;
 
 	Vertices.reserve(16u);
 	Indices.reserve(72u);
 
-	for (const auto& [Position, Color] : CubeVertices)
+	for (const auto& v : ColoredCubeVertices)
 	{
-		FVector ScaledPosition = Position;
-		ScaledPosition.X *= ShaftLength;
-		ScaledPosition.Y *= ShaftRadius;
-		ScaledPosition.Z *= ShaftRadius;
-		Vertices.push_back({ ScaledPosition + FVector{ ShaftLength * 0.5f, 0.0f, 0.0f }, Color });
+		float ScaledX = v.x * ShaftLength;
+		float ScaledY = v.y * ShaftRadius;
+		float ScaledZ = v.z * ShaftRadius;
+		Vertices.push_back({
+			ScaledX + ShaftLength * 0.5f, ScaledY, ScaledZ,
+			v.r, v.g, v.b, v.a,
+			v.u, v.v,
+			v.nx, v.ny, v.nz
+		});
 	}
 
 	for (const auto& Index : CubeIndices)
@@ -534,13 +564,17 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer& Renderer)
 		Indices.push_back(Index);
 	}
 
-	for (const auto& [Position, Color] : CubeVertices)
+	for (const auto& v : ColoredCubeVertices)
 	{
-		FVector ScaledPosition = Position;
-		ScaledPosition.X *= TipSize;
-		ScaledPosition.Y *= TipSize;
-		ScaledPosition.Z *= TipSize;
-		Vertices.push_back({ ScaledPosition + FVector{ TipSize * 0.5f + ShaftLength, 0.0f, 0.0f }, Color });
+		float ScaledX = v.x * TipSize;
+		float ScaledY = v.y * TipSize;
+		float ScaledZ = v.z * TipSize;
+		Vertices.push_back({
+			ScaledX + TipSize * 0.5f + ShaftLength, ScaledY, ScaledZ,
+			v.r, v.g, v.b, v.a,
+			v.u, v.v,
+			v.nx, v.ny, v.nz
+		});
 	}
 
 	for (const auto& Index : CubeIndices)
@@ -549,111 +583,86 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer& Renderer)
 	}
 
 	const FMeshDesc Desc{
-		.VertexLayout = EVertexLayout::PositionColor,
 		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexPositionColor)),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 		.IndexData = Indices.data(),
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	SquareArrowMesh = Renderer.CreateMesh(Desc);
-	return SquareArrowMesh != nullptr;
+	RegisterMesh("SquareArrow", Renderer.CreateMesh(Desc));
+	return GetMesh("SquareArrow") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateGridMesh(FRenderer& Renderer)
 {
-	constexpr float HalfW = 50.0f;   // width  100
-	constexpr float HalfH = 50.0f;   // height 100
+	constexpr float HalfW = 50.0f;
+	constexpr float HalfH = 50.0f;
 
-	// XY 평면 (Z=0), 위(+Z)를 향하는 감김 — 큐브의 +Z 면과 동일
-	const TArray<FVertexPositionColor> Vertices = {
-		{ FVector{ -HalfW, -HalfH, 0.0f }, FVector{} },   // 0
-		{ FVector{  HalfW, -HalfH, 0.0f }, FVector{} },   // 1
-		{ FVector{  HalfW,  HalfH, 0.0f }, FVector{} },   // 2
-		{ FVector{ -HalfW,  HalfH, 0.0f }, FVector{} },   // 3
+	const TArray<FVertexData> Vertices = {
+		{ -HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f },
+		{  HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f },
+		{  HalfW,  HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f },
+		{ -HalfW,  HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f },
 	};
 	const TArray<uint32> Indices = { 0, 1, 2, 0, 2, 3 };
 
 	FMeshDesc MeshDesc{
-		.VertexLayout = EVertexLayout::PositionColor,
 		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = sizeof(FVertexPositionColor),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = sizeof(FVertexData),
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 		.IndexData = Indices.data(),
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	GridMesh = Renderer.CreateMesh(MeshDesc);
-	return GridMesh != nullptr;
+	RegisterMesh("Grid", Renderer.CreateMesh(MeshDesc));
+	return GetMesh("Grid") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSphereMesh(FRenderer& Renderer)
 {
-	TArray<FVertexPositionColor> Vertices;
-	for (int i = 2399; i >= 0; --i)
-	{
-		Vertices.push_back(sphere_vertices[i]);
-	}
+	auto Vertices = CreateSphereVertices(0.5f, 20, 20, false);
 	
 	FMeshDesc MeshDesc{
-	.VertexLayout = EVertexLayout::PositionColor,
-	.VertexData = Vertices.data(),
-	.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-	.VertexStride = sizeof(FVertexPositionColor),
-	.VertexCount = static_cast<uint32>(Vertices.size()),
+		.VertexData = Vertices.data(),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+		.VertexStride = sizeof(FVertexData),
+		.VertexCount = static_cast<uint32>(Vertices.size()),
 	};
 
-
-
-
-
-	SphereMesh = Renderer.CreateMesh(MeshDesc);
-	return SphereMesh != nullptr;
+	RegisterMesh("Sphere", Renderer.CreateMesh(MeshDesc));
+	return GetMesh("Sphere") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateLineMesh(FRenderer& Renderer)
 {
-	TArray<FVertexPositionColor> Vertices = {
-		{ FVector{ 0.0f, 0.0f, 0.0f }, FVector{ 1.0f, 1.0f, 1.0f } },
-		{ FVector{ 1.0f, 0.0f, 0.0f }, FVector{ 1.0f, 1.0f, 1.0f } },
-	};
-
 	FMeshDesc Desc{
-		.VertexLayout = EVertexLayout::PositionColor,
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = sizeof(FVertexPositionColor),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
+		.VertexData = LineVertices,
+		.VertexDataSize = static_cast<uint32>(sizeof(LineVertices)),
+		.VertexStride = sizeof(FVertexData),
+		.VertexCount = static_cast<uint32>(std::size(LineVertices)),
 		.bIsLine = true
 	};
 
-	LineMesh = Renderer.CreateMesh(Desc);
-	return LineMesh != nullptr;
+	RegisterMesh("Line", Renderer.CreateMesh(Desc));
+	return GetMesh("Line") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer& Renderer)
 {
-	TArray<FVertexPositionColor> Vertices = {
-		{ FVector{ 0.0f, 0.0f, 1.0f }, FVector{ 1.0f, 0.0f, 0.0f } },
-		{ FVector{ 0.0f, 0.866f, -0.5f }, FVector{ 0.0f, 1.0f, 0.0f } },
-		{ FVector{ 0.0f, -0.866f, -0.5f }, FVector{ 0.0f, 0.0f, 1.0f } }
-	};
-
 	FMeshDesc Desc{
-		.VertexLayout = EVertexLayout::PositionColor,
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexPositionColor) * Vertices.size()),
-		.VertexStride = sizeof(FVertexPositionColor),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
+		.VertexData = PlaneVertices,
+		.VertexDataSize = static_cast<uint32>(sizeof(PlaneVertices)),
+		.VertexStride = sizeof(FVertexData),
+		.VertexCount = static_cast<uint32>(std::size(PlaneVertices)),
 	};
 
-	PlaneMesh = Renderer.CreateMesh(Desc);
-	return PlaneMesh != nullptr;
+	RegisterMesh("Plane", Renderer.CreateMesh(Desc));
+	return GetMesh("Plane") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer& Renderer)
@@ -663,12 +672,11 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer& Renderer)
 	FMaterialDesc Desc = {
 		.VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
 		.PixelShaderFileName = Path + L"/Shader/ExamplePS.cso",
-		.VertexLayout = EVertexLayout::PositionColor,
 	};
 	
-	SimpleMaterial = Renderer.CreateMaterial(Desc);
+	RegisterMaterial("Simple", Renderer.CreateMaterial(Desc));
 
-	return SimpleMaterial != nullptr;
+	return GetMaterial("Simple") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateGridMaterial(FRenderer& Renderer)
@@ -678,12 +686,11 @@ bool FRenderResourceLibrary::CreateGridMaterial(FRenderer& Renderer)
 	FMaterialDesc Desc = {
 		.VertexShaderFileName = Path + L"/Shader/GridVS.cso",
 		.PixelShaderFileName = Path + L"/Shader/GridPS.cso",
-		.VertexLayout = EVertexLayout::PositionColor,
 	};
 
-	GridMaterial = Renderer.CreateMaterial(Desc);
+	RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
 
-	return GridMaterial != nullptr;
+	return GetMaterial("Grid") != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer& Renderer)
@@ -693,10 +700,9 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer& Renderer)
 	FMaterialDesc Desc = {
 		.VertexShaderFileName = Path + L"/Shader/RotationGizmoVS.cso",
 		.PixelShaderFileName = Path + L"/Shader/RotationGizmoPS.cso",
-		.VertexLayout = EVertexLayout::PositionColor,
 	};
 
-	RotationGizmoMaterial = Renderer.CreateMaterial(Desc);
+	RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
 
-	return RotationGizmoMaterial != nullptr;
+	return GetMaterial("RotationGizmo") != nullptr;
 }

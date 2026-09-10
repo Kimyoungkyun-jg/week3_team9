@@ -3,7 +3,9 @@
 struct VS_INPUT
 {
     float3 Position : POSITION;
-    float3 Side : COLOR;
+    float4 Color : COLOR;
+    float2 UV : TEXCOORD0;
+    float3 Normal : NORMAL;
 };
 
 struct PS_INPUT
@@ -15,12 +17,11 @@ struct PS_INPUT
 static const float RingWidthPixels = 3.0f;
 static const float RingRadius = 1.0f;
 
-// TODO: 정점 자체는 언리얼 좌표계
 PS_INPUT main(VS_INPUT Input)
 {
     PS_INPUT Output;
 
-    const float Side = Input.Side.r;
+    const float Side = Input.Color.r;
     float2 Radial = normalize(Input.Position.yz);
 
     float3 CenterLocal = float3(0.0f, Radial) * RingRadius;

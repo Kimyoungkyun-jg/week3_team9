@@ -15,10 +15,10 @@
 
 void FGrid::Initialize(FRenderResourceLibrary& RenderResources)
 {
-	GridMesh = RenderResources.GetGridMesh();
-	GridMaterial = RenderResources.GetGridMaterial();
-	LineMesh = RenderResources.GetArrowMesh();
-	LineMaterial = RenderResources.GetSimpleMaterial();
+	GridMesh = RenderResources.GetMesh("Grid");
+	GridMaterial = RenderResources.GetMaterial("Grid");
+	LineMesh = RenderResources.GetMesh("Arrow");
+	LineMaterial = RenderResources.GetMaterial("Simple");
 }
 
 void FGrid::Draw(FRenderer& Renderer, const FCamera& Camera)

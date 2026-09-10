@@ -75,12 +75,6 @@ void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV)
 void FRenderer::Draw(const FMesh& Mesh, const FMaterial& Material, const FObjectConstants& ObjectConstants)
 {
 	UpdateObjectConstants(ObjectConstants);
-
-	if (Mesh.GetVertexLayout() != Material.GetVertexLayout())
-	{
-		return;
-	}
-
 	const auto& Pipeline = Material.Pipeline;
 
 	Pipeline->Bind(*Context.Get());
@@ -102,12 +96,6 @@ void FRenderer::Draw(const FMesh& Mesh, const FMaterial& Material, const FObject
 void FRenderer::DrawGrid(const FMesh& Mesh, const FMaterial& Material, const FGridConstants& GridConstants)
 {
 	UpdateGridConstants(GridConstants);
-
-	if (Mesh.GetVertexLayout() != Material.GetVertexLayout())
-	{
-		return;
-	}
-
 	const auto& Pipeline = Material.Pipeline;
 		
 	Pipeline->Bind(*Context.Get());
@@ -166,8 +154,6 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 	}
 
 	auto Mesh = TSharedPtr<FMesh>{ new FMesh() };
-	Mesh->VertexLayout = Desc.VertexLayout;
-
 	D3D11_BUFFER_DESC VertexBufferDesc = {
 		.ByteWidth = Desc.VertexDataSize,
 		.Usage = D3D11_USAGE_DEFAULT,
@@ -207,12 +193,12 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 	Mesh->IndexCount = Desc.IndexCount;
 
 	const auto* vertices =
-		static_cast<const FVertexPositionColor*>(Desc.VertexData);
+		static_cast<const FVertexData*>(Desc.VertexData);
 
 	Mesh->Positions.reserve(Desc.VertexCount);
 	for (uint32 i = 0; i < Desc.VertexCount; ++i)
 	{
-		Mesh->Positions.push_back(vertices[i].Position);
+		Mesh->Positions.push_back(FVector{ vertices[i].x, vertices[i].y, vertices[i].z });
 	}
 
 	if (Desc.IndexCount > 0)
@@ -380,8 +366,6 @@ TSharedPtr<FRenderPipeline> FRenderer::FindOrCreateRenderPipeline(const FMateria
 	// TODO: 이미 만들었던 파이프라인 있는지 찾아서 쓰기
 
 	TSharedPtr<FRenderPipeline> Pipeline{ new FRenderPipeline() };
-	Pipeline->VertexLayout = Desc.VertexLayout;
-
 	Microsoft::WRL::ComPtr<ID3DBlob> Blob;	
 	HRESULT Result = D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
 	if (FAILED(Result))
@@ -399,8 +383,8 @@ TSharedPtr<FRenderPipeline> FRenderer::FindOrCreateRenderPipeline(const FMateria
 		return nullptr;
 	}
 
-	FVertexLayoutDesc LayoutDesc = GetVertexLayoutDesc(Desc.VertexLayout);
-	Result = Device->CreateInputLayout(LayoutDesc.InputElements, LayoutDesc.InputElementCount, Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+	
+	Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements, Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
 	if (FAILED(Result))
 	{
 		return nullptr;

@@ -9,14 +9,10 @@ class FRenderPipeline final
 	friend class FRenderer;
 
 public:
-	[[nodiscard]] EVertexLayout GetVertexLayout() const { return VertexLayout; }
-
-private:
 	FRenderPipeline() = default;
 
+private:
 	void Bind(ID3D11DeviceContext& Context) const;
-
-	EVertexLayout VertexLayout = EVertexLayout::None;
 
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
@@ -24,5 +20,4 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState;
-	// Blend Mode 등 추가 가능
 };

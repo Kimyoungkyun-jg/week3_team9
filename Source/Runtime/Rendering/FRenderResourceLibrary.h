@@ -2,7 +2,11 @@
 
 #include "FMesh.h"
 #include "FMaterial.h"
+#include "Vertices.h"
 #include "Runtime/Core/PointerTypes.h"
+#include "Runtime/Core/TMap.h"
+#include "Runtime/Core/FString.h"
+#include "Runtime/Core/TArray.h"
 
 class FRenderer;
 
@@ -11,24 +15,51 @@ class FRenderResourceLibrary final
 public:
 	bool Initialize(FRenderer& Renderer);
 
-	// TODO: 필요할 시 Enum 기반 switch-case로 처리
-	//  GetConstCubeMesh() -> const FMesh를 반환, GetCubeMesh() -> FMesh를 생성해서 반환으로 나눌 수 있음
-	//  지금은 어차피 FMesh로 반환해도 Getter만 있어서 수정 못 함
-	//  UPrimitive가 비const FMesh를 소유하도록 되어 있어서 이렇게 둠
-	[[nodiscard]] TSharedPtr<FMesh> GetCubeMesh() { return CubeMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetCylinderMesh() { return CylinderMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetConeMesh() { return ConeMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetArrowMesh() { return ArrowMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetCircleMesh() { return CircleMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetRotationGizmoMesh() { return RotationGizmoMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetSquareArrowMesh() { return SquareArrowMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetGridMesh() { return GridMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetSphereMesh() { return SphereMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetLineMesh() { return LineMesh; }
-	[[nodiscard]] TSharedPtr<FMesh> GetPlaneMesh() { return PlaneMesh; }
-	[[nodiscard]] TSharedPtr<FMaterial> GetSimpleMaterial() { return SimpleMaterial; }
-	[[nodiscard]] TSharedPtr<FMaterial> GetGridMaterial() { return GridMaterial; }
-	[[nodiscard]] TSharedPtr<FMaterial> GetRotationGizmoMaterial() { return RotationGizmoMaterial; }
+	// 메쉬 보관 맵
+	TMap<FString, TSharedPtr<FMesh>> AllMeshMap;
+	// 머티리얼 보관 맵
+	TMap<FString, TSharedPtr<FMaterial>> AllMaterialMap;
+
+	// 메쉬 조회
+	TSharedPtr<FMesh> GetMesh(const FString& name) const
+	{
+		auto it = AllMeshMap.find(name);
+		if (it != AllMeshMap.end())
+			return it->second;
+		return nullptr;
+	}
+
+	// 메쉬 등록
+	TSharedPtr<FMesh> RegisterMesh(const FString& name, TSharedPtr<FMesh> inMesh)
+	{
+		AllMeshMap[name] = inMesh;
+		return inMesh;
+	}
+
+	// 머티리얼 조회
+	TSharedPtr<FMaterial> GetMaterial(const FString& name) const
+	{
+		auto it = AllMaterialMap.find(name);
+		if (it != AllMaterialMap.end())
+			return it->second;
+		return nullptr;
+	}
+
+	// 머티리얼 등록
+	TSharedPtr<FMaterial> RegisterMaterial(const FString& name, TSharedPtr<FMaterial> inMaterial)
+	{
+		AllMaterialMap[name] = inMaterial;
+		return inMaterial;
+	}
+
+	// 메쉬 전체 해제
+	void DestroyAllMeshes()
+	{
+		AllMeshMap.clear();
+	}
+
+	// 정점 배열 메쉬 캐싱 생성
+	TSharedPtr<FMesh> GetOrCreateMesh(const FString& name, const TArray<FVertexData>& vertices);
 
 private:
 	bool CreateCubeMesh(FRenderer& Renderer);
@@ -46,19 +77,27 @@ private:
 	bool CreateGridMaterial(FRenderer& Renderer);
 	bool CreateRotationGizmoMaterial(FRenderer& Renderer);
 
-private:
-	TSharedPtr<FMesh> CubeMesh;
-	TSharedPtr<FMesh> CylinderMesh;
-	TSharedPtr<FMesh> ConeMesh;
-	TSharedPtr<FMesh> ArrowMesh;
-	TSharedPtr<FMesh> CircleMesh;
-	TSharedPtr<FMesh> RotationGizmoMesh;
-	TSharedPtr<FMesh> SquareArrowMesh;
-	TSharedPtr<FMesh> GridMesh;
-	TSharedPtr<FMesh> SphereMesh;
-	TSharedPtr<FMesh> LineMesh;
-	TSharedPtr<FMesh> PlaneMesh;
-	TSharedPtr<FMaterial> SimpleMaterial;
-	TSharedPtr<FMaterial> GridMaterial;
-	TSharedPtr<FMaterial> RotationGizmoMaterial;
+	FRenderer* RendererRef = nullptr;
 };
+
+#include "FRenderer.h"
+
+inline TSharedPtr<FMesh> FRenderResourceLibrary::GetOrCreateMesh(const FString& name, const TArray<FVertexData>& vertices)
+{
+	auto it = AllMeshMap.find(name);
+	if (it != AllMeshMap.end())
+		return it->second;
+
+	FMeshDesc Desc{
+		.VertexData = vertices.data(),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+		.VertexCount = static_cast<uint32>(vertices.size())
+	};
+	TSharedPtr<FMesh> newMesh = RendererRef ? RendererRef->CreateMesh(Desc) : nullptr;
+	if (newMesh)
+	{
+		AllMeshMap[name] = newMesh;
+	}
+	return newMesh;
+}
