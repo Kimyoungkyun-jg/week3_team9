@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Analysis" />
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="MyEngine.vcxproj" Id="05383b45-2b78-451c-9197-8b61474a12bc" />
+</Solution>

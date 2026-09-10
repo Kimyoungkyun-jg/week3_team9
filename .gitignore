@@ -1,0 +1,10 @@
+# Build outputs
+Binaries/
+Intermediate/
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+
+# Dear ImGui
+imgui.ini
