@@ -70,60 +70,15 @@ void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV)
 	Context->UpdateSubresource(FrameConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
 	Context->VSSetConstantBuffers(1, 1, FrameConstantBuffer.GetAddressOf());
 	Context->PSSetConstantBuffers(1, 1, FrameConstantBuffer.GetAddressOf());
-};
-
+}
 void FRenderer::Draw(const FMesh& Mesh, const FMaterial& Material, const FObjectConstants& ObjectConstants)
 {
-	UpdateObjectConstants(ObjectConstants);
-
-	if (Mesh.GetVertexLayout() != Material.GetVertexLayout())
-	{
-		return;
-	}
-
-	const auto& Pipeline = Material.Pipeline;
-
-	Pipeline->Bind(*Context.Get());
-	Material.BindResources(*Context.Get());
-	Mesh.BindResources(*Context.Get());
-
-	Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-
-	if (Mesh.HasIndices())
-	{
-		Context->DrawIndexed(Mesh.IndexCount, 0, 0);
-	}
-	else
-	{
-		Context->Draw(Mesh.VertexCount, 0);
-	}
+	Draw(Mesh, Material, ObjectConstants, ObjectConstantBuffer.Get());
 }
 
 void FRenderer::DrawGrid(const FMesh& Mesh, const FMaterial& Material, const FGridConstants& GridConstants)
 {
-	UpdateGridConstants(GridConstants);
-
-	if (Mesh.GetVertexLayout() != Material.GetVertexLayout())
-	{
-		return;
-	}
-
-	const auto& Pipeline = Material.Pipeline;
-		
-	Pipeline->Bind(*Context.Get());
-	Material.BindResources(*Context.Get());
-	Mesh.BindResources(*Context.Get());
-
-	Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-
-	if (Mesh.HasIndices())
-	{
-		Context->DrawIndexed(Mesh.IndexCount, 0, 0);
-	}
-	else
-	{
-		Context->Draw(Mesh.VertexCount, 0);
-	}
+	Draw(Mesh, Material, GridConstants, GridConstantBuffer.Get());
 }
 
 void FRenderer::ClearDepth()
@@ -243,6 +198,7 @@ void FRenderer::GetDeviceAndContext_ImplDX11(ID3D11Device*& DeviceOut, ID3D11Dev
 	DeviceOut = Device.Get();
 	ContextOut = Context.Get();
 }
+
 
 bool FRenderer::InitializeDeviceAndSwapChain(HWND Window)
 {
@@ -466,48 +422,3 @@ bool FRenderer::InitializeGridConstantBuffers()
 
 	return true;
 }
-
-void FRenderer::UpdateObjectConstants(const FObjectConstants& Constants)
-{
-	static const FMatrix UnrealClipToD3DClip{
-		FVector{ 0.0f, 0.0f, 1.0f },
-		FVector{ 1.0f, 0.0f, 0.0f },
-		FVector{ 0.0f, 1.0f, 0.0f },
-		FVector{ 0.0f, 0.0f, 0.0f }
-	};
-
-	// 언리얼 Clip -> D3D Clip 좌표 변환
-	FObjectConstants ShaderConstants = Constants;
-	ShaderConstants.MVP *= UnrealClipToD3DClip;
-
-	D3D11_MAPPED_SUBRESOURCE MappedResource{};
-	Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
-	memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-	Context->Unmap(ObjectConstantBuffer.Get(), 0);
-
-	Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-	Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-}
-
-void FRenderer::UpdateGridConstants(const FGridConstants& Constants)
-{
-	static const FMatrix UnrealClipToD3DClip{
-		FVector{ 0.0f, 0.0f, 1.0f },
-		FVector{ 1.0f, 0.0f, 0.0f },
-		FVector{ 0.0f, 1.0f, 0.0f },
-		FVector{ 0.0f, 0.0f, 0.0f }
-	};
-
-	// 언리얼 Clip -> D3D Clip 좌표 변환
-	FGridConstants ShaderConstants = Constants;
-	ShaderConstants.MVP *= UnrealClipToD3DClip;
-
-	D3D11_MAPPED_SUBRESOURCE MappedResource{};
-	Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
-	memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-	Context->Unmap(GridConstantBuffer.Get(), 0);
-
-	Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-	Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-}
-

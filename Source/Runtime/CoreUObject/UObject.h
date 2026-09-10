@@ -15,10 +15,10 @@ class FReferenceCollector;
  * UObject를 상속받는 클래스는 반드시 GENERATED_BODY() 매크로를 사용해야 한다.
  * 또한 public 생성자를 만들면 안 된다.
  */
-#define GENERATED_BODY() \
-	template <typename TObject, typename... TArgs> \
-		requires std::derived_from<TObject, UObject> \
-	friend TObject* NewObject(TArgs&&... Args);
+#define GENERATED_BODY()								\
+	template <typename TObject, typename... TArgs>		\
+		requires std::derived_from<TObject, UObject>	\
+	friend TObject* NewObject(TArgs&&... Args);			\
 
 
  /*
@@ -36,41 +36,48 @@ class FReferenceCollector;
   * UObject 는 부모가 없어 ROOT 버전을 쓴다. 프로젝트에서 ROOT 버전은
   * UObject 한 곳에서만 사용한다.
   */
-#define DECLARE_ROOT_UCLASS(ClassName) \
-	public:\
-		virtual UClass* GetClass() const; \
-		static UClass* StaticClass(); \
-	private: \
-		static UClass* ClassInfo; \
-		static UObject* CreateObject();
+#define DECLARE_ROOT_UCLASS(ClassName)		\
+	public:									\
+		virtual UClass* GetClass() const;	\
+		static UClass* StaticClass();		\
+											\
+	private:								\
+		static UClass* ClassInfo;			\
+		static UObject* CreateObject();		\
 
-#define IMPLEMENT_ROOT_UCLASS(ClassName) \
-UObject* ClassName::CreateObject() { return NewObject<ClassName>(); } \
-UClass* ClassName::ClassInfo = UClass::RegisterToFactory( \
-    #ClassName, &ClassName::CreateObject, ""); \
-UClass* ClassName::StaticClass() { return ClassInfo; } \
-UClass* ClassName::GetClass() const { return StaticClass(); }
 
-#define DECLARE_UCLASS(ClassName, ParentClass) \
-public: \
-	UClass* GetClass() const override; \
-    static UClass* StaticClass(); \
-    using Super = ParentClass; \
-private: \
-    static UObject* CreateObject(); \
-	static UClass* ClassInfo;
+#define IMPLEMENT_ROOT_UCLASS(ClassName)																		\
+UObject* ClassName::CreateObject()		{ return NewObject<ClassName>(); }										\
+UClass* ClassName::ClassInfo			= UClass::RegisterToFactory(#ClassName, &ClassName::CreateObject, "");	\
+UClass* ClassName::StaticClass()		{ return ClassInfo; }													\
+UClass* ClassName::GetClass() const		{ return StaticClass(); }												\
 
-#define IMPLEMENT_UCLASS(ClassName, ParentClass) \
-UObject* ClassName::CreateObject() { return NewObject<ClassName>(); } \
-UClass* ClassName::ClassInfo = UClass::RegisterToFactory( \
-    #ClassName, &ClassName::CreateObject, #ParentClass);\
-UClass* ClassName::StaticClass() { return ClassInfo; } \
-UClass* ClassName::GetClass() const { return StaticClass(); }
 
-#define UCLASS_META(ClassName, Key, Value) \
-struct _MetaRegister_##ClassName##_##Key { \
-    _MetaRegister_##ClassName##_##Key() { ClassName::StaticClass()->SetMeta(#Key, Value); } \
-} _MetaRegisterInstance_##ClassName##_##Key;
+
+#define DECLARE_UCLASS(ClassName, ParentClass)	\
+public:											\
+	UClass* GetClass() const override;			\
+    static UClass* StaticClass();				\
+    using Super = ParentClass;					\
+												\
+private:										\
+    static UObject* CreateObject();				\
+	static UClass* ClassInfo;					\
+
+#define IMPLEMENT_UCLASS(ClassName, ParentClass)																\
+UObject* ClassName::CreateObject() { return NewObject<ClassName>(); }											\
+UClass* ClassName::ClassInfo = UClass::RegisterToFactory(#ClassName, &ClassName::CreateObject, #ParentClass);	\
+UClass* ClassName::StaticClass() { return ClassInfo; }															\
+UClass* ClassName::GetClass() const { return StaticClass(); }													\
+
+#define UCLASS_META(ClassName, Key, Value)					\
+struct _MetaRegister_##ClassName##_##Key					\
+{															\
+    _MetaRegister_##ClassName##_##Key()						\
+	{														\
+		ClassName::StaticClass()->SetMeta(#Key, Value);		\
+	}														\
+} _MetaRegisterInstance_##ClassName##_##Key;				\
 
 
 class UObject

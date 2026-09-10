@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "FMesh.h"
 #include "FMaterial.h"
@@ -17,8 +17,10 @@ public:
 	void Shutdown();
 	void BeginFrame();
 	void SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV);
+
 	void Draw(const FMesh& Mesh, const FMaterial& Material, const FObjectConstants& ObjectConstants);
 	void DrawGrid(const FMesh& Mesh, const FMaterial& Material, const FGridConstants& GridConstants);
+
 	void ClearDepth();
 	void SwapBuffer();
 	void OnWindowSize(UINT Width, UINT Height);
@@ -34,12 +36,59 @@ private:
 	bool InitializeDeviceAndSwapChain(HWND Window);
 	bool InitializeBackBufferAndDepthStencil();
 	bool InitializeConstantBuffers();
-
-	//TODO : Constant 데이터를 T로 받으면 좋을거같은데, 일단 하나 만들었음
 	bool InitializeGridConstantBuffers();
-	void UpdateObjectConstants(const FObjectConstants& Constants);
-	//TODO : Constant 데이터를 T로 받으면 좋을거같은데, 일단 하나 만들었음
-	void UpdateGridConstants(const FGridConstants& Constants);
+
+	template <typename T = FObjectConstants>
+	void Draw(const FMesh& Mesh, const FMaterial& Material, const T& ObjectConstants, ID3D11Buffer* Buffer)
+	{
+		UpdateConstants<T>(ObjectConstants, Buffer);
+
+		if (Mesh.GetVertexLayout() != Material.GetVertexLayout())
+		{
+			return;
+		}
+
+		const auto& Pipeline = Material.Pipeline;
+
+		Pipeline->Bind(*Context.Get());
+		Material.BindResources(*Context.Get());
+		Mesh.BindResources(*Context.Get());
+
+		Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+
+		if (Mesh.HasIndices())
+		{
+			Context->DrawIndexed(Mesh.IndexCount, 0, 0);
+		}
+		else
+		{
+			Context->Draw(Mesh.VertexCount, 0);
+		}
+	}
+
+	template <typename T>
+	void UpdateConstants(const T& Constants, ID3D11Buffer* Buffer)
+	{
+		static const FMatrix UnrealClipToD3DClip
+		{
+			FVector{ 0.0f, 0.0f, 1.0f },
+			FVector{ 1.0f, 0.0f, 0.0f },
+			FVector{ 0.0f, 1.0f, 0.0f },
+			FVector{ 0.0f, 0.0f, 0.0f }
+		};
+
+		// 언리얼 Clip -> D3D Clip 좌표 변환
+		T ShaderConstants = Constants;
+		ShaderConstants.MVP *= UnrealClipToD3DClip;
+
+		D3D11_MAPPED_SUBRESOURCE MappedResource{};
+		Context->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
+		memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
+		Context->Unmap(Buffer, 0);
+
+		Context->VSSetConstantBuffers(0, 1, &Buffer);
+		Context->PSSetConstantBuffers(0, 1, &Buffer);
+	}
 
 	[[nodiscard]]
 	TSharedPtr<FRenderPipeline> FindOrCreateRenderPipeline(const FMaterialDesc& Desc);
