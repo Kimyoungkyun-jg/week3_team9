@@ -14,6 +14,9 @@
 #include <wrl/client.h>
 
 
+class FTexture;
+struct FTextureDesc;
+
 inline FWString GetExecutableDirectory() {
   wchar_t Buffer[256];
   GetModuleFileNameW(nullptr, Buffer, 256);
@@ -76,6 +79,8 @@ public:
   [[nodiscard]]
   TSharedPtr<FRenderPipeline> CreateRenderPipeline(const FRenderPipelineDesc &Desc,
                                                   ERenderMode RenderMode = ERenderMode::Solid);
+  [[nodiscard]]
+  TSharedPtr<FTexture> CreateTexture(FTextureDesc& desc);
 
   // 파이프라인 조회
   [[nodiscard]]

@@ -404,6 +404,7 @@
     <ClInclude Include="Source\Runtime\Math\FVector2.h" />
     <ClInclude Include="Source\Runtime\Math\FVector4.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderResourceLibrary.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FTexture.h" />
     <ClInclude Include="Source\Runtime\Rendering\ShaderConstants.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderPipeline.h" />
     <ClInclude Include="Source\Runtime\Rendering\Vertices.h" />

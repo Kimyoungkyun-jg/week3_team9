@@ -11,6 +11,7 @@
 
 
 class FRenderer;
+class FTexture;
 
 class FRenderResourceLibrary final {
 public:
@@ -20,6 +21,8 @@ public:
   TMap<FString, TSharedPtr<FMesh>> AllMeshMap;
   // 머티리얼 보관 맵
   TMap<FString, TSharedPtr<FMaterial>> AllMaterialMap;
+  //텍스쳐 보관 맵
+  TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
 
   // 메쉬 조회
   TSharedPtr<FMesh> GetMesh(const FString &name) const {
@@ -62,6 +65,11 @@ public:
                                          TSharedPtr<FMaterial> inMaterial) {
     AllMaterialMap[name] = inMaterial;
     return inMaterial;
+  }
+
+  void RegisterTexture(const FString& name, TSharedPtr<FTexture> texture)
+  {
+      AllTextureMap[name] = texture;
   }
 
   // 개별 머티리얼 접근자
@@ -137,6 +145,7 @@ private:
   bool CreateSimpleMaterial(FRenderer &Renderer);
   bool CreateGridMaterial(FRenderer &Renderer);
   bool CreateRotationGizmoMaterial(FRenderer &Renderer);
+  bool CreateTextures(FRenderer& Renderer);
 
 
   // 개별 리소스 멤버 변수
