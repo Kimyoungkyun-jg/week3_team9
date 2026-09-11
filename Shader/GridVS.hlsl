@@ -9,7 +9,9 @@ cbuffer GridConstant : register(b0)
 struct VS_INPUT
 {
     float3 Position : POSITION;
-    float3 Color : COLOR;
+    float4 Color : COLOR;
+    float2 UV : TEXCOORD0;
+    float3 Normal : NORMAL;
 };
 
 struct PS_INPUT
@@ -24,6 +26,6 @@ PS_INPUT MainVS(VS_INPUT Input)
     float4 Local = float4(Input.Position, 1.0f);
 
     Output.Position = mul(Local, MVP);
-    Output.WorldPos = mul(Local, World).xyz; // ← .xyz
+    Output.WorldPos = mul(Local, World).xyz;
     return Output;
 }

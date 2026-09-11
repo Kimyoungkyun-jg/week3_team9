@@ -1,10 +1,11 @@
-﻿#include "FImguiControlPanelWindow.h"
+#include "FImguiControlPanelWindow.h"
 #include "ThirdParty/Imgui/imgui.h"
 #include "ThirdParty/Imgui/imgui_internal.h"
 #include "ThirdParty/Imgui/imgui_impl_dx11.h"
 #include "ThirdParty/Imgui/imgui_impl_win32.h"
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/Core/FString.h"
+#include "Runtime/Rendering/FRenderer.h"
 #include <Windows.h>
 #include <ShlObj.h>
 #include <filesystem>
@@ -66,6 +67,31 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::InputInt("##SpawnCount", &spawnCount);
     ImGui::SameLine();
     ImGui::Text("Number of spawn");
+
+    // 그리드 설정
+    float CellSize = Editor.GetGrid().GetCellSize();
+    ImGui::SetNextItemWidth(180.0f);
+    if (ImGui::DragFloat("##GridCellSize", &CellSize, 0.05f, 0.1f, 15.0f, "%.2f"))
+    {
+        Editor.GetGrid().SetCellSize(CellSize);
+    }
+    ImGui::SameLine();
+    ImGui::Text("Grid Cell Size");
+
+    // 래스터라이저 상태 설정
+    FRenderer* Renderer = Editor.GetRendererLibrary() ? Editor.GetRendererLibrary()->GetRenderer() : nullptr;
+    if (Renderer)
+    {
+        int CurrentMode = static_cast<int>(Renderer->GetRenderMode());
+        const char* RenderModes[] = { "Solid", "Wireframe" };
+        ImGui::SetNextItemWidth(180.0f);
+        if (ImGui::Combo("##RenderMode", &CurrentMode, RenderModes, IM_ARRAYSIZE(RenderModes)))
+        {
+            Renderer->SetRenderMode(static_cast<ERenderMode>(CurrentMode));
+        }
+        ImGui::SameLine();
+        ImGui::Text("Rasterizer State");
+    }
 
     //씬 저장, 로드
     static char sceneName[128] = "Default";
