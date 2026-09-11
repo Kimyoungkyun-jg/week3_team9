@@ -63,7 +63,7 @@ FNameEntry FNamePool::AddEntry(const FString& Item)
 
 	if (!bFound)
 	{
-		Entry.ComparisonIndex = ComparisonBucket.size();
+		Entry.ComparisonIndex = static_cast<int32>(ComparisonBucket.size());
 		ComparisonBucket.push_back(LowerItem);
 	}
 
@@ -81,7 +81,7 @@ FNameEntry FNamePool::AddEntry(const FString& Item)
 
 	if (!bFound)
 	{
-		Entry.DisplayIndex = DisplayBucket.size();
+		Entry.DisplayIndex = static_cast<int32>(DisplayBucket.size());
 		DisplayBucket.push_back(Item);
 	}
 
