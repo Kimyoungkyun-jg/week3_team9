@@ -15,3 +15,4 @@ void UPlaneComp::OnRegister(UScene& Scene)
 	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Plane"));
 	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
 }
+

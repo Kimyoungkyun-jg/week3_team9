@@ -6,9 +6,9 @@
 # define UE_LOG(...) FLogManager::Get().AddLog(0, __VA_ARGS__);
 # define UE_LOG_WARN(...) FLogManager::Get().AddLog(1, __VA_ARGS__);
 # define UE_LOG_ERROR(...) FLogManager::Get().AddLog(2, __VA_ARGS__);
-# define UE_DEBUG_LOG(...) FLogManager::Get().AddLog(0, __FILE__, __LINE__, __VA_ARGS__);
-# define UE_DEBUG_LOG_WARN(...) FLogManager::Get().AddLog(1, __FILE__, __LINE__, __VA_ARGS__);
-# define UE_DEBUG_LOG_ERROR(...) FLogManager::Get().AddLog(2, __FILE__, __LINE__, __VA_ARGS__);
+# define UE_DEBUG_LOG(...) FLogManager::Get().AddDebugLog(0, __FILE__, __LINE__, __VA_ARGS__);
+# define UE_DEBUG_LOG_WARN(...) FLogManager::Get().AddDebugLog(1, __FILE__, __LINE__, __VA_ARGS__);
+# define UE_DEBUG_LOG_ERROR(...) FLogManager::Get().AddDebugLog(2, __FILE__, __LINE__, __VA_ARGS__);
 //# define UE_LOG(...) FLogManager::Get().AddLog(__VA_ARGS__)
 
 class FLogManager {
@@ -39,7 +39,7 @@ public:
 		Logs.push_back(buf);
 	}
 
-	void AddLog(int msgType, const char* File, int Line, const char* fmt, ...) {
+	void AddDebugLog(int msgType, const char* File, int Line, const char* fmt, ...) {
 		char buf[1024];
 		
 		const char* FileName = std::strrchr(File, '\\');

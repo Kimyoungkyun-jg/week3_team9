@@ -1,10 +1,11 @@
-﻿#include "FImguiControlPanelWindow.h"
+#include "FImguiControlPanelWindow.h"
 #include "ThirdParty/Imgui/imgui.h"
 #include "ThirdParty/Imgui/imgui_internal.h"
 #include "ThirdParty/Imgui/imgui_impl_dx11.h"
 #include "ThirdParty/Imgui/imgui_impl_win32.h"
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/Core/FString.h"
+#include "Runtime/Engine/ShowFlags.h"
 #include <Windows.h>
 #include <ShlObj.h>
 #include <filesystem>
@@ -66,6 +67,53 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::InputInt("##SpawnCount", &spawnCount);
     ImGui::SameLine();
     ImGui::Text("Number of spawn");
+
+    // 그리드 설정
+    float CellSize = Editor.GetGrid().GetCellSize();
+    ImGui::SetNextItemWidth(180.0f);
+    if (ImGui::DragFloat("##GridCellSize", &CellSize, 0.05f, 0.1f, 15.0f, "%.2f"))
+    {
+        Editor.GetGrid().SetCellSize(CellSize);
+    }
+    ImGui::SameLine();
+    ImGui::Text("Grid Cell Size");
+
+    // 뷰포트 렌더 모드 및 쇼 플래그 설정
+    FEditorViewport* ActiveViewport = Editor.GetActiveViewport();
+    if (ActiveViewport)
+    {
+        // 뷰 모드 드롭박스
+        int CurrentViewMode = static_cast<int>(ActiveViewport->ViewMode);
+        const char* ViewModes[] = { "Lit", "Unlit", "Wireframe" };
+        ImGui::SetNextItemWidth(180.0f);
+        if (ImGui::Combo("##ViewMode", &CurrentViewMode, ViewModes, IM_ARRAYSIZE(ViewModes)))
+        {
+            ActiveViewport->ViewMode = static_cast<EViewModeIndex>(CurrentViewMode);
+        }
+        ImGui::SameLine();
+        ImGui::Text("View Mode");
+
+        // 쇼 플래그 드롭박스
+        ImGui::SetNextItemWidth(180.0f);
+        if (ImGui::BeginCombo("##ShowFlags", "Show Flags"))
+        {
+            bool bPrimitives = ActiveViewport->HasShowFlag(EEngineShowFlags::SF_Primitives);
+            if (ImGui::Checkbox("Primitives", &bPrimitives))
+            {
+                ActiveViewport->ToggleShowFlag(EEngineShowFlags::SF_Primitives);
+            }
+
+            bool bBillboardText = ActiveViewport->HasShowFlag(EEngineShowFlags::SF_BillboardText);
+            if (ImGui::Checkbox("Billboard Text", &bBillboardText))
+            {
+                ActiveViewport->ToggleShowFlag(EEngineShowFlags::SF_BillboardText);
+            }
+
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+        ImGui::Text("Show Flags");
+    }
 
     //씬 저장, 로드
     static char sceneName[128] = "Default";
