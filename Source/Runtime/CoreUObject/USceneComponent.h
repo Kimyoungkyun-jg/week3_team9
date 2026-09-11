@@ -30,7 +30,9 @@ protected:
 
 public:
 	FTransform& GetRelativeTransform() { return RelativeTransform; }
-	virtual void SetRelativeTransform(FTransform& RelativeTransform);
+	virtual void SetRelativeTransform(const FTransform& RelativeTransform);
+	FTransform GetGlobalTransform();
+	//void SetRelativeTransformFromGlobal(const FTransform& GlobalTransform);
 
   void RegisterComponentWithScene(UScene &Scene);
   void UnregisterComponentFromScene(UScene &Scene);

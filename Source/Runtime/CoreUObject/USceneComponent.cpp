@@ -8,7 +8,7 @@
 
 IMPLEMENT_UCLASS(USceneComponent, UObject)
 
-void USceneComponent::SetRelativeTransform(FTransform& RelativeTransform)
+void USceneComponent::SetRelativeTransform(const FTransform& RelativeTransform)
 {
     this->RelativeTransform = RelativeTransform;
 }
