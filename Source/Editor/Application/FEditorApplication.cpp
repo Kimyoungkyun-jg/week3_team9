@@ -25,20 +25,23 @@ void FEditorApplication::Initialize_Runtime(
   this->SceneManager = SceneManager;
   this->curScene = SceneManager->CurrentScene;
 
+
   Editor.Initialize(RendererLibrary, SceneManager);
 
-	UCubeComp* CubeComp = NewObject<UCubeComp>();
-	FTransform& CubeTransform = CubeComp->GetRelativeTransform();
-	CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-	CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-	CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+	//UCubeComp* CubeComp = NewObject<UCubeComp>();
+	//FTransform& CubeTransform = CubeComp->GetRelativeTransform();
+	//CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+	//CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+	//CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
-  AActor *Cube =
-      curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
-                                   FVector(0.5f, 0.5f, 0.5f)   // Scale
-      );
+ // AActor *Cube =
+ //     curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
+ //                                  FVector(0.5f, 0.5f, 0.5f)   // Scale
+ //     );
 
-  Cube->SetRootComponent(CubeComp);
+ // Cube->SetRootComponent(CubeComp);
+  
+
 
   UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
   FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
@@ -48,13 +51,14 @@ void FEditorApplication::Initialize_Runtime(
 
   AActor* BillBoard =
       curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
-          FVector(0.5f, 0.5f, 0.5f)   // Scale
+          FVector(5.0f, 5.0f, 5.0f)   // Scale
       );
+
 
   BillBoard->SetRootComponent(BillBoardComp);
 
 
-  Editor.SelectActor(Cube);
+  //Editor.SelectActor(Cube);
 
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};

@@ -51,6 +51,7 @@ public:
   [[nodiscard]] TSharedPtr<FMesh> GetSphereMesh() const { return SphereMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetLineMesh() const { return LineMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetPlaneMesh() const { return PlaneMesh; }
+  [[nodiscard]] TSharedPtr<FMesh> GetRectMesh() const { return RectMesh; }
 
   // 머티리얼 조회
   TSharedPtr<FMaterial> GetMaterial(const FString &name) const {
@@ -100,6 +101,7 @@ public:
     SphereMesh.reset();
     LineMesh.reset();
     PlaneMesh.reset();
+    RectMesh.reset();
   }
 
   // 머티리얼 전체 해제
@@ -149,6 +151,7 @@ private:
   bool CreateSphereMesh(FRenderer &Renderer);
   bool CreateLineMesh(FRenderer &Renderer);
   bool CreatePlaneMesh(FRenderer &Renderer);
+  bool CreateRectMesh(FRenderer &Renderer);
 
 
   bool CreateSimpleMaterial(FRenderer &Renderer);
@@ -174,6 +177,7 @@ private:
   TSharedPtr<FMesh> SphereMesh;
   TSharedPtr<FMesh> LineMesh;
   TSharedPtr<FMesh> PlaneMesh;
+  TSharedPtr<FMesh> RectMesh;
 
   TSharedPtr<FMaterial> SimpleMaterial;
   TSharedPtr<FMaterial> GridMaterial;

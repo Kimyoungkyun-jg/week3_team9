@@ -4,13 +4,14 @@
 #include "FMesh.h"
 #include "FRenderPipeline.h"
 #include "Runtime/Core/PointerTypes.h"
+#include "Runtime/Rendering/FTexture.h"
 #include "ShaderConstants.h"
 #include "Vertices.h"
 #include <Windows.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
-#include "Runtime/Rendering/FTexture.h"
+
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
@@ -20,7 +21,7 @@ bool FRenderer::Initialize(HWND Window) {
     return false;
   }
 
-  LineBatcher.Initialize(Device.Get()); //batch line
+  LineBatcher.Initialize(Device.Get()); // batch line
 
   return true;
 }
@@ -75,10 +76,8 @@ void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV) {
 };
 
 void FRenderer::Draw(const FMesh &Mesh, const FMaterial &Material,
-                     const FObjectConstants &ObjectConstants) 
-{
+                     const FObjectConstants &ObjectConstants) {
   UpdateObjectConstants(ObjectConstants);
-
 
   TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
   if (CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
@@ -139,9 +138,8 @@ void FRenderer::OnWindowSize(UINT Width, UINT Height) {
   InitializeBackBufferAndDepthStencil();
 }
 
-void FRenderer::FlushLineBatch(const FMatrix& ViewProjection)
-{
-    LineBatcher.Flush(*Context.Get(), *this, ViewProjection);
+void FRenderer::FlushLineBatch(const FMatrix &ViewProjection) {
+  LineBatcher.Flush(*Context.Get(), *this, ViewProjection);
 }
 
 TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
@@ -207,7 +205,7 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST
                                 : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	Mesh->LocalBounds = FAxisAlignedBoundingBox{ *Mesh.get()};
+  Mesh->LocalBounds = FAxisAlignedBoundingBox{*Mesh.get()};
   return Mesh;
 }
 
@@ -229,8 +227,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   Pipeline->desc = Desc;
 
   Microsoft::WRL::ComPtr<ID3DBlob> Blob;
-  HRESULT Result =
-      D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
+  HRESULT Result = D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -244,8 +241,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
 
   Result = Device->CreateInputLayout(
       FVertexLayouts::Layout, FVertexLayouts::NumElements,
-      Blob->GetBufferPointer(), Blob->GetBufferSize(),
-      &Pipeline->InputLayout);
+      Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -255,9 +251,9 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  Result = Device->CreatePixelShader(Blob->GetBufferPointer(),
-                                     Blob->GetBufferSize(), nullptr,
-                                     &Pipeline->PixelShader);
+  Result =
+      Device->CreatePixelShader(Blob->GetBufferPointer(), Blob->GetBufferSize(),
+                                nullptr, &Pipeline->PixelShader);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -271,7 +267,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   };
 
   Result = Device->CreateRasterizerState(&RasterizerDesc,
-                                        &Pipeline->RasterizerState);
+                                         &Pipeline->RasterizerState);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -283,7 +279,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   };
 
   Result = Device->CreateDepthStencilState(&DepthStencilDesc,
-                                          &Pipeline->DepthStencilState);
+                                           &Pipeline->DepthStencilState);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -305,42 +301,41 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   return Pipeline;
 }
 
-TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc& desc)
-{
-    auto Texture = TSharedPtr<FTexture>{ new FTexture() };
+TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
+  auto Texture = TSharedPtr<FTexture>{new FTexture()};
 
-    D3D11_TEXTURE2D_DESC TextureDesc = {
-        .Width = desc.Width,
-        .Height = desc.Height,
-        .MipLevels = 1u,
-        .ArraySize = 1u,
-        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-        .SampleDesc = {.Count = 1u },
-        .Usage = D3D11_USAGE_DEFAULT,
-        .BindFlags = D3D11_BIND_SHADER_RESOURCE,
-    };
+  D3D11_TEXTURE2D_DESC TextureDesc = {
+      .Width = desc.Width,
+      .Height = desc.Height,
+      .MipLevels = 1u,
+      .ArraySize = 1u,
+      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+      .SampleDesc = {.Count = 1u},
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+  };
 
-    D3D11_SUBRESOURCE_DATA InitialData = {
-        .pSysMem = desc.PixelData,
-        .SysMemPitch = desc.RowPitch,
-    };
+  D3D11_SUBRESOURCE_DATA InitialData = {
+      .pSysMem = desc.PixelData,
+      .SysMemPitch = desc.RowPitch,
+  };
 
-    HRESULT Result = Device->CreateTexture2D(&TextureDesc, &InitialData, &Texture->Texture2D);
-    if (FAILED(Result))
-    {
-        return nullptr;
-    }
+  HRESULT Result =
+      Device->CreateTexture2D(&TextureDesc, &InitialData, &Texture->Texture2D);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
 
-    Result = Device->CreateShaderResourceView(Texture->Texture2D.Get(), nullptr, &Texture->TextureSRV);
-    if (FAILED(Result))
-    {
-        return nullptr;
-    }
+  Result = Device->CreateShaderResourceView(Texture->Texture2D.Get(), nullptr,
+                                            &Texture->TextureSRV);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
 
-    Texture->Width = desc.Width;
-    Texture->Height = desc.Height;
+  Texture->Width = desc.Width;
+  Texture->Height = desc.Height;
 
-    return Texture;
+  return Texture;
 }
 
 TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
@@ -539,7 +534,6 @@ bool FRenderer::InitializeConstantBuffers() {
 
   return true;
 }
-
 
 bool FRenderer::InitializeGridConstantBuffers() {
   D3D11_BUFFER_DESC GridConstantBufferDesc = {

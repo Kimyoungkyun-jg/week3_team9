@@ -22,7 +22,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
       !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
       !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
-      !CreatePlaneMesh(Renderer) ||
+      !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
       !CreateTexturedMaterial(Renderer)) {
@@ -593,6 +593,40 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
   return PlaneMesh != nullptr;
 }
 
+bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
+  // 사각형 정점 배열
+  const TArray<FVertexData> Vertices = {
+      {0.0f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+  };
+
+  // 양면 인덱스 배열
+  const TArray<uint32> Indices = {
+      0, 1, 2, 0, 2, 3,
+      0, 2, 1, 0, 3, 2
+  };
+
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = sizeof(FVertexData),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
+
+  // 사각형 메쉬 생성 및 등록
+  RectMesh = RegisterMesh("Rect", Renderer.CreateMesh(MeshDesc));
+  if (RectMesh) {
+    AllMeshMap["Rectangle"] = RectMesh;
+  }
+  return RectMesh != nullptr;
+}
+
 bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   FWString Path = GetExecutableDirectory();
 
@@ -635,7 +669,7 @@ bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
   Material->SetPipeLine(Pipeline);
 
   // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-  Material->SetTexture(GetTexture("sandclock"));
+  Material->SetTexture(GetTexture("test"));
 
   return true;
 }
@@ -695,7 +729,7 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
 
         // 확장자 제거는 stem()이 해줌
         FString KeyWide = Entry.path().stem().string();          // "icon"
-        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::towlower);
+        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
 
         int W = 0, H = 0, ChannelsInFile = 0;
         unsigned char* Pixels = stbi_load(
