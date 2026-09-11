@@ -421,7 +421,6 @@
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_textedit.h" />
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_truetype.h" />
     <ClInclude Include="Source\ThirdParty\Json\json.hpp" />
-    <ClInclude Include="TMap.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
