@@ -4,6 +4,8 @@
 #include "Runtime/Rendering/FMesh.h"
 #include <limits>
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
+#include "Runtime/Core/Log.h"
+
 
 FRay FRayCastingManager::CreateRayFromScreenPosition(const FCamera& Camera, const FVector2& MousePosition, const FVector2& ViewportSize)
 {
@@ -13,7 +15,6 @@ FRay FRayCastingManager::CreateRayFromScreenPosition(const FCamera& Camera, cons
 	FMatrix InvVP;
 	Camera.CreateViewProjectionMatrix().Inverse(InvVP);
 
-	
 	const float screenNdcX = (MousePosition.X / ViewportWidth) * 2.0f - 1.0f;
 	const float screenNdcY = 1.0f - (MousePosition.Y / ViewportHeight) * 2.0f;
 
@@ -87,6 +88,44 @@ bool FRayCastingManager::RayIntersectsMesh(const FRay& Ray, const FMesh& Mesh, c
 		return false;
 	}
 
+	// AABB
+	FAxisAlignedBoundingBox AABB = Mesh.GetLocalBounds();
+	
+	// Ray를 Object 좌표계로 변환
+	FMatrix InvM;
+	if (!ModelMatrix.Inverse(InvM))
+	{
+		return false;
+	}
+
+	const FVector ObjectOrigin = InvM.TransformPointRow(Ray.Origin);
+	const FVector ObjectDirection = InvM.TransformPointRow(Ray.Direction, 0.0f);
+	const FRay ObjectRay{ ObjectOrigin, ObjectDirection };
+	
+	// AABB 판별. 자세한 설명은 공부중....
+	float TXMin = (AABB.Min.X - ObjectOrigin.X) / ObjectDirection.X;
+	float TXMax = (AABB.Max.X - ObjectOrigin.X) / ObjectDirection.X;
+
+	if (TXMin > TXMax) { std::swap(TXMin, TXMax); }
+
+	float TYMin = (AABB.Min.Y - ObjectOrigin.Y) / ObjectDirection.Y;
+	float TYMax = (AABB.Max.Y - ObjectOrigin.Y) / ObjectDirection.Y;
+
+	if (TYMin > TYMax) { std::swap(TYMin, TYMax); }
+	if ((TXMin > TYMax) || TYMin > TXMax) { return false; }
+
+	if (TYMin > TXMin) { TXMin = TYMin; }
+	if (TYMax < TXMax) { TXMax = TYMax; }
+
+	float TZMin = (AABB.Min.Z - ObjectOrigin.Z) / ObjectDirection.Z;
+	float TZMax = (AABB.Max.Z - ObjectOrigin.Z) / ObjectDirection.Z;
+
+	if (TZMin > TZMax) { std::swap(TZMin, TZMax); }
+	if (TXMin > TZMax || TZMin > TXMax) { return false; }
+
+	if (TZMin > TXMin) { TXMin = TZMin; }
+	if (TZMax < TXMax) { TXMax = TZMax; }
+
 	const uint32 elementCount = Mesh.HasIndices()
 		? static_cast<uint32>(Indices.size())
 		: static_cast<uint32>(Positions.size());
@@ -112,13 +151,8 @@ bool FRayCastingManager::RayIntersectsMesh(const FRay& Ray, const FMesh& Mesh, c
 		FVector B = Positions[i1];
 		FVector C = Positions[i2];
 
-		// Local space → World space
-		A = ModelMatrix.TransformPointRow(A);
-		B = ModelMatrix.TransformPointRow(B);
-		C = ModelMatrix.TransformPointRow(C);
-
 		float HitT = 0.0f;
-		if (RayIntersectsTriangle(Ray, A, B, C, HitT) &&
+		if (RayIntersectsTriangle(ObjectRay, A, B, C, HitT) &&
 			HitT < ClosestHit)
 		{
 			ClosestHit = HitT;

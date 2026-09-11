@@ -50,7 +50,6 @@ void FRenderer::BeginFrame()
 	Context->RSSetViewports(1, &Viewport);
 	Context->OMSetRenderTargets(1, BackBufferRTV.GetAddressOf(), DepthStencilView.Get());
 
-
 	constexpr float ClearColor[] = { 0.05f, 0.05f, 0.08f, 1.0f };
 	Context->ClearRenderTargetView(BackBufferRTV.Get(), ClearColor);
 	Context->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -86,7 +85,6 @@ void FRenderer::ClearDepth()
 	Context->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
-
 void FRenderer::SwapBuffer()
 {
 	SwapChain->Present(1u, 0u);
@@ -115,12 +113,13 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 	{
 		return nullptr;
 	}
+
 	if (Desc.IndexCount > 0 && (!Desc.IndexData || Desc.IndexDataSize == 0))
 	{
 		return nullptr;
 	}
 
-	auto Mesh = TSharedPtr<FMesh>{ new FMesh() };
+	TSharedPtr<FMesh> Mesh = MakeShared<FMesh>();
 	Mesh->VertexLayout = Desc.VertexLayout;
 
 	D3D11_BUFFER_DESC VertexBufferDesc = {
@@ -138,6 +137,7 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 	{
 		return nullptr;
 	}
+
 	Mesh->VertexCount = Desc.VertexCount;
 	Mesh->VertexStride = Desc.VertexStride;
 
@@ -159,6 +159,7 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 			return nullptr;
 		}
 	}
+
 	Mesh->IndexCount = Desc.IndexCount;
 
 	const auto* vertices =
@@ -177,13 +178,14 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 	}
 
 	Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	Mesh->LocalBounds = FAxisAlignedBoundingBox{ *Mesh.get()};
 
 	return Mesh;
 }
 
 TSharedPtr<FMaterial> FRenderer::CreateMaterial(const FMaterialDesc& Desc)
 {
-	TSharedPtr<FMaterial> Material{ new FMaterial() };
+	TSharedPtr<FMaterial> Material{ MakeShared<FMaterial>() };
 
 	Material->Pipeline = FindOrCreateRenderPipeline(Desc);
 	if (!Material->Pipeline)
@@ -335,7 +337,7 @@ TSharedPtr<FRenderPipeline> FRenderer::FindOrCreateRenderPipeline(const FMateria
 {
 	// TODO: 이미 만들었던 파이프라인 있는지 찾아서 쓰기
 
-	TSharedPtr<FRenderPipeline> Pipeline{ new FRenderPipeline() };
+	TSharedPtr<FRenderPipeline> Pipeline{ MakeShared<FRenderPipeline>() };
 	Pipeline->VertexLayout = Desc.VertexLayout;
 
 	Microsoft::WRL::ComPtr<ID3DBlob> Blob;	

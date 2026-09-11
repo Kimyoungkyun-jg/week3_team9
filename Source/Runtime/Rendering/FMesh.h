@@ -5,6 +5,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include "Runtime/Core/TArray.h"
+#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 
 class FRenderer;
 
@@ -19,10 +20,9 @@ public:
 	[[nodiscard]] uint32 GetIndexCount() const { return IndexCount; }
 	[[nodiscard]] const TArray<FVector>& GetPositions() const { return Positions; }
 	[[nodiscard]] const TArray<uint32>& GetIndices() const { return Indices; }
+	[[nodiscard]] const FAxisAlignedBoundingBox& GetLocalBounds() const { return LocalBounds; }
 
 private:
-	FMesh() = default;
-
 	void BindResources(ID3D11DeviceContext& Context) const;
 
 	EVertexLayout VertexLayout = EVertexLayout::None;
@@ -38,6 +38,7 @@ private:
 	TArray<uint32> Indices;
 
 	D3D11_PRIMITIVE_TOPOLOGY Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	FAxisAlignedBoundingBox LocalBounds = {};
 };
 
 struct FMeshDesc

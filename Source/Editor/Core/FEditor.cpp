@@ -21,7 +21,7 @@ void FEditor::Process()
 		USceneComponent* SceneComp = SelectedObject->Cast<USceneComponent>();
 		if (SceneComp)
 		{
-			SceneComp->RelativeTransform = SelectedTransform;
+			SceneComp->GetRelativeTransform() = SelectedTransform;
 		}
 	}
 }
@@ -87,8 +87,8 @@ bool FEditor::SelectObject(UObject* Object)
 	USceneComponent* SceneComp = SelectedObject->Cast<USceneComponent>();
 	if (SceneComp)
 	{
-		SelectedTransform = SceneComp->RelativeTransform;
-		SelectedEulerDegDisplay = SceneComp->RelativeTransform.Rotation.GetEulerXYZ();
+		SelectedTransform = SceneComp->GetRelativeTransform();
+		SelectedEulerDegDisplay = SelectedTransform.Rotation.GetEulerXYZ();
 	}
 
 	return true;
@@ -101,7 +101,7 @@ void FEditor::UnSelectObject()
 		USceneComponent* SceneComp = SelectedObject->Cast<USceneComponent>();
 		if (SceneComp)
 		{
-			SceneComp->RelativeTransform = SelectedTransform;
+			SceneComp->GetRelativeTransform() = SelectedTransform;
 		}
 	}
 	SelectedObject = nullptr;
@@ -157,9 +157,10 @@ UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type)
 	// 완전히 겹치지 않게 살짝 오프셋 (임시)
 	static int SpawnSerial = 0;
 	const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
-	Component->RelativeTransform.Location = FVector{ Offset, 0.0f, 0.0f };
-	Component->RelativeTransform.Rotation = FQuaternion::Identity();
-	Component->RelativeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+	FTransform& Transform = Component->GetRelativeTransform();
+	Transform.Location = FVector{ Offset, 0.0f, 0.0f };
+	Transform.Rotation = FQuaternion::Identity();
+	Transform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
 	SceneManager->CurrentScene->RegisterComponent(*Component);
 	SelectObject(Component);

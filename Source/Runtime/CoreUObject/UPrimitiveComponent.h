@@ -4,6 +4,7 @@
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Rendering/FMaterial.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -15,6 +16,8 @@ public:
 	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
 	[[nodiscard]] FMatrix GetModelMatrix() const { return RelativeTransform.ToMatrix(); }
 
+	virtual void SetRelativeTransform(FTransform& RelativeTransform) override;
+
 protected:
 	UPrimitiveComponent() = default;
 
@@ -24,4 +27,5 @@ protected:
 private:
 	TSharedPtr<FMesh> PrimitiveMesh;
 	TSharedPtr<FMaterial> PrimitiveMaterial;
+	TSharedPtr<FAxisAlignedBoundingBox> BoundingBox;
 };

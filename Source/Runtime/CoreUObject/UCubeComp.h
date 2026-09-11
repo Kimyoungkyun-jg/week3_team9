@@ -11,13 +11,6 @@ class UCubeComp : public UPrimitiveComponent
 protected:
 	explicit UCubeComp() = default;
 
+public:
 	void OnRegister(UScene& Scene) override;
 };
-
-inline void UCubeComp::OnRegister(UScene& Scene)
-{
-	UPrimitiveComponent::OnRegister(Scene);
-	
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Cube"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
-}

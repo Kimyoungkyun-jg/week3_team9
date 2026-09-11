@@ -12,8 +12,6 @@ public:
 	[[nodiscard]] EVertexLayout GetVertexLayout() const { return VertexLayout; }
 
 private:
-	FRenderPipeline() = default;
-
 	void Bind(ID3D11DeviceContext& Context) const;
 
 	EVertexLayout VertexLayout = EVertexLayout::None;
