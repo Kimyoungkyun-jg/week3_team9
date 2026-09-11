@@ -29,7 +29,7 @@ void FEditorApplication::Initialize_Runtime(FRenderResourceLibrary* RendererLibr
 	CubeComp->RelativeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
 	CubeComp->RelativeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
 	CubeComp->RelativeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-	SceneManager->CurrentScene->RegisterComponent(*CubeComp);
+	//SceneManager->CurrentScene->RegisterComponent(*CubeComp);
 
 		
 	AActor* Cube = curScene->SpawnActor<AActor>(
@@ -101,7 +101,7 @@ void FEditorApplication::Render()
 	{
 		RenderView->RenderGrid(EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
 			EditorViewport.LengthUV, Editor.GetGrid());
-		for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetPrimitiveComponents())
+		for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
 		{
 			RenderView->Render(EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
 				EditorViewport.LengthUV, PrimitiveComponent, PrimitiveComponent == Editor.GetSelectedObject());

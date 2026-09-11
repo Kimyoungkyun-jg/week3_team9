@@ -20,7 +20,8 @@ protected:
 
 public:
 	USceneComponent* GetRootComponent() const { return RootComponent; }
-	void SetRootComponent(USceneComponent* InRootComponent) { RootComponent = InRootComponent; }
+	void SetRootComponent(USceneComponent* InRootComponent); //root 입력받으면서 동시에 AttachedComp에 제일 먼저 넣기
+
 
 	FTransform GetTransform() const { return RootComponent ? RootComponent->GetRelativeTransform() : FTransform{}; }
 	void SetTransform(const FTransform& NewTransform) { if (RootComponent) RootComponent->SetRelativeTransform(NewTransform); }
@@ -29,5 +30,12 @@ public:
 	virtual void Update(float DeltaTime);
 
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
+
+
+	void SetScene(UScene* InScene) { OwningScene = InScene; }
+	void RegisterAllComponents(UScene& Scene);
+	void UnregisterComponentFromScene(UScene& Scene);
+private:
+	UScene* OwningScene = nullptr; // SpawnActor될 때 설정됨
 };
 

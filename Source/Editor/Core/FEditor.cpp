@@ -18,16 +18,16 @@ void FEditor::Initialize(FRenderResourceLibrary* RendererLibrary, USceneManager*
 void FEditor::Process()
 {
 	//// 씬의 액터 및 컴포넌트 업데이트
-	//if (SceneManager && SceneManager->CurrentScene)
-	//{
-	//	for (AActor* Actor : SceneManager->CurrentScene->GetActors())
-	//	{
-	//		if (Actor)
-	//		{
-	//			Actor->Update(FTimeManager::Get().GetDeltaTime());
-	//		}
-	//	}
-	//}
+	if (SceneManager && SceneManager->CurrentScene)
+	{
+		for (AActor* Actor : SceneManager->CurrentScene->GetActors())
+		{
+			if (Actor)
+			{
+				Actor->Update(FTimeManager::Get().GetDeltaTime());
+			}
+		}
+	}
 
 
 
@@ -136,7 +136,7 @@ TArray<UPrimitiveComponent*> FEditor::GetPrimitiveComponents() const
 	{
 		return {};
 	}
-	return SceneManager->CurrentScene->GetPrimitiveComponents();
+	return SceneManager->CurrentScene->GetRenderComponents();
 }
 
 void FEditor::ClearSelectionForGC()
@@ -178,8 +178,7 @@ UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type)
 	Component->RelativeTransform.Location = FVector{ Offset, 0.0f, 0.0f };
 	Component->RelativeTransform.Rotation = FQuaternion::Identity();
 	Component->RelativeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-
-	SceneManager->CurrentScene->RegisterComponent(*Component);
+	Component->RegisterComponentWithScene(*SceneManager->CurrentScene);
 	SelectObject(Component);
 	return Component;
 }

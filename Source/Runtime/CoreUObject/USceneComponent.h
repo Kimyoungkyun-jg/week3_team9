@@ -6,7 +6,7 @@
 
 class UScene;
 
-class USceneComponent : public UObject
+class USceneComponent : public UObject //
 {
 	GENERATED_BODY()
 	DECLARE_UCLASS(USceneComponent, UObject)
@@ -24,9 +24,14 @@ protected:
 	virtual void OnRegister(UScene& Scene) {}
 	virtual void OnUnregister(UScene& Scene) {}
 
+
 public:
 	FTransform GetRelativeTransform();
 	void SetRelativeTransform(FTransform RelativeTransform);
 	FTransform GetGlobalTransform();
 	void SetRelativeTransformFromGlobal(FTransform GlobalTransform);
+
+
+	void RegisterComponentWithScene(UScene& Scene);
+	void UnregisterComponentFromScene(UScene& Scene);
 };
