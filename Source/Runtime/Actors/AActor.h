@@ -33,7 +33,10 @@ public:
 
 
 	void SetScene(UScene* InScene) { OwningScene = InScene; }
+	void Destroy();
+
 	void RegisterAllComponents(UScene& Scene);
+	void UnregisterAllComponents(UScene& Scene);
 	void UnregisterComponentFromScene(UScene& Scene);
 private:
 	UScene* OwningScene = nullptr; // SpawnActor될 때 설정됨

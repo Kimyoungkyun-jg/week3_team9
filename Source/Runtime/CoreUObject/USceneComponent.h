@@ -1,37 +1,43 @@
-﻿#pragma once
+#pragma once
 
-#include "UObject.h"
 #include "Runtime/Geometry/FTransform.h"
 #include "ThirdParty/Json/json.hpp"
+#include "UObject.h"
+
 
 class UScene;
+class AActor;
 
-class USceneComponent : public UObject //
+class USceneComponent : public UObject
 {
-	GENERATED_BODY()
-	DECLARE_UCLASS(USceneComponent, UObject)
-	friend UScene;
+  GENERATED_BODY()
+  DECLARE_UCLASS(USceneComponent, UObject)
+  friend UScene;
 
 public:
-	FTransform RelativeTransform;
-	json::JSON Serialize() const override;
-	bool Deserialize(const json::JSON& data) override;
-	virtual void Update(float DeltaTime) {}
+  AActor* GetOwner() const { return Owner; }
+  void SetOwner(AActor* InOwner) { Owner = InOwner; }
+
+  FTransform RelativeTransform;
+  json::JSON Serialize() const override;
+  bool Deserialize(const json::JSON &data) override;
+  virtual void Update(float DeltaTime) {}
 
 protected:
-	USceneComponent() = default;
+  USceneComponent() = default;
 
-	virtual void OnRegister(UScene& Scene) {}
-	virtual void OnUnregister(UScene& Scene) {}
-
+  virtual void OnRegister(UScene &Scene) {}
+  virtual void OnUnregister(UScene &Scene) {}
 
 public:
-	FTransform GetRelativeTransform();
-	void SetRelativeTransform(FTransform RelativeTransform);
-	FTransform GetGlobalTransform();
-	void SetRelativeTransformFromGlobal(FTransform GlobalTransform);
+  FTransform GetRelativeTransform();
+  void SetRelativeTransform(FTransform RelativeTransform);
+  FTransform GetGlobalTransform();
+  void SetRelativeTransformFromGlobal(FTransform GlobalTransform);
 
+  void RegisterComponentWithScene(UScene &Scene);
+  void UnregisterComponentFromScene(UScene &Scene);
 
-	void RegisterComponentWithScene(UScene& Scene);
-	void UnregisterComponentFromScene(UScene& Scene);
+protected:
+  AActor* Owner = nullptr; // 소유 액터
 };

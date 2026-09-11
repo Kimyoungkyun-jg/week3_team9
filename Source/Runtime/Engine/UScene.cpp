@@ -1,4 +1,4 @@
-﻿#include "UScene.h"
+#include "UScene.h"
 
 #include "Runtime/CoreUObject/USceneComponent.h"
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
@@ -47,12 +47,9 @@ void UScene::AddReferencedObjects(FReferenceCollector& Collector)
 {
 	UObject::AddReferencedObjects(Collector);
 
-	// 액터들이 GC에 의해 삭제되지 않도록 보호
+	// 액터 참조 수집
 	for (AActor* Actor : Actors)
-	{
 		Collector.AddReferencedObject(Actor);
-	}
-
 
 	for (USceneComponent* Component : RenderComponents)
 		Collector.AddReferencedObject(Component);

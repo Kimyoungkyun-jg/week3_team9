@@ -23,7 +23,7 @@
     <Filter Include="Source\Runtime\Engine">
       <UniqueIdentifier>{99c01897-05bf-43cd-9f9f-ea8a04872d62}</UniqueIdentifier>
     </Filter>
-        <Filter Include="Source\Runtime\Actors">
+    <Filter Include="Source\Runtime\Actors">
       <UniqueIdentifier>{6d84f881-2c9b-4b2a-89a1-05d8f6d89342}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\CoreUObject">
@@ -160,7 +160,7 @@
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.cpp">
       <Filter>Source\Editor\UI\Imgui</Filter>
     </ClCompile>
-        <ClCompile Include="Source\Runtime\Actors\AActor.cpp">
+    <ClCompile Include="Source\Runtime\Actors\AActor.cpp">
       <Filter>Source\Runtime\Actors</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp">
@@ -193,6 +193,12 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UPlaneComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
@@ -216,7 +222,7 @@
     <ClInclude Include="Source\Runtime\Core\TMap.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
-        <ClInclude Include="Source\Runtime\Actors\AActor.h">
+    <ClInclude Include="Source\Runtime\Actors\AActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h">
@@ -381,6 +387,8 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">

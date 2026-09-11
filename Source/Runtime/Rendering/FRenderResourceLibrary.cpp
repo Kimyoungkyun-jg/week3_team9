@@ -1,708 +1,716 @@
-﻿#include "FRenderResourceLibrary.h"
+#include "FRenderResourceLibrary.h"
 #include "Vertices.h"
 
+#include "FRenderer.h"
 #include "Runtime/Core/TArray.h"
-#include "Runtime/Rendering/FRenderer.h"
-#include "Runtime/Math/FVector.h"
-#include <Windows.h>
-#include <cmath>
-#include <filesystem>
-#include <numbers>
 #include "Runtime/Geometry/Sphere.h"
+#include "Runtime/Math/FVector.h"
+#include "Runtime/Rendering/FRenderer.h"
+#include <cmath>
+#include <numbers>
 
-namespace
-{
-	FWString GetExecutableDirectory()
-	{
-		wchar_t Buffer[256];
-		GetModuleFileNameW(nullptr, Buffer, 256);
-		return std::filesystem::path(Buffer).parent_path();
-	}
+bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
+  RendererRef = &Renderer;
+  if (!CreateCubeMesh(Renderer) ||
+      !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
+      !CreateConeMesh(Renderer) || !CreateArrowMesh(Renderer) ||
+      !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
+      !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
+      !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
+      !CreatePlaneMesh(Renderer) || !InitializePipeLines(Renderer) ||
+      !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
+      !CreateRotationGizmoMaterial(Renderer)) {
+    return false;
+  }
+
+  return true;
 }
 
-bool FRenderResourceLibrary::Initialize(FRenderer& Renderer)
-{
-	RendererRef = &Renderer;
-	if (!CreateCubeMesh(Renderer) ||
-		!CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f ,1.0f) ||
-		!CreateConeMesh(Renderer) ||
-		!CreateArrowMesh(Renderer) ||
-		!CreateSimpleMaterial(Renderer) ||
-		!CreateGridMaterial(Renderer) ||
-		!CreateCircleMesh(Renderer) ||
-		!CreateRotationGizmoMesh(Renderer) ||
-		!CreateSquareArrowMesh(Renderer) ||
-		!CreateGridMesh(Renderer) ||
-		!CreateSphereMesh(Renderer) ||
-		!CreateLineMesh(Renderer) ||
-		!CreatePlaneMesh(Renderer) ||
-		!CreateRotationGizmoMaterial(Renderer))
-	{
-		return false;
-	}
+bool FRenderResourceLibrary::CreateCubeMesh(FRenderer &Renderer) {
+  FMeshDesc MeshDesc{
+      .VertexData = CubeVertices,
+      .VertexDataSize = static_cast<uint32>(sizeof(CubeVertices)),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(std::size(CubeVertices)),
+      .IndexData = CubeIndices,
+      .IndexDataSize = static_cast<uint32>(sizeof(CubeIndices)),
+      .IndexCount = static_cast<uint32>(std::size(CubeIndices)),
+  };
 
-	return true;
+  CubeMesh = RegisterMesh("Cube", Renderer.CreateMesh(MeshDesc));
+  return CubeMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateCubeMesh(FRenderer& Renderer)
-{
-	FMeshDesc MeshDesc{
-		.VertexData = CubeVertices,
-		.VertexDataSize = static_cast<uint32>(sizeof(CubeVertices)),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-		.VertexCount = static_cast<uint32>(std::size(CubeVertices)),
-		.IndexData = CubeIndices,
-		.IndexDataSize = static_cast<uint32>(sizeof(CubeIndices)),
-		.IndexCount = static_cast<uint32>(std::size(CubeIndices)),
-	};
+bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
+                                                float Height, uint32 SliceCount,
+                                                float TopRadius,
+                                                float BottomRadius) {
+  constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
+  const float DTheta = TAU / static_cast<float>(SliceCount);
 
-	RegisterMesh("Cube", Renderer.CreateMesh(MeshDesc));
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
 
-	return GetMesh("Cube") != nullptr;
+  Vertices.reserve(SliceCount * 4 + 2);
+  Indices.reserve(SliceCount * 12);
+
+  const float HalfH = Height * 0.5f;
+
+  const uint32 TopCenterIndex = static_cast<uint32>(Vertices.size());
+  Vertices.push_back({0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
+                      0.0f, 1.0f, 0.0f});
+
+  const uint32 TopRingStart = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({TopRadius * std::cos(Theta), HalfH,
+                        TopRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+                        0.5f + 0.5f * std::cos(Theta),
+                        0.5f + 0.5f * std::sin(Theta), 0.0f, 1.0f, 0.0f});
+  }
+
+  const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
+  Vertices.push_back({0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
+                      0.0f, -1.0f, 0.0f});
+
+  const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
+                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+                        0.5f + 0.5f * std::cos(Theta),
+                        0.5f + 0.5f * std::sin(Theta), 0.0f, -1.0f, 0.0f});
+  }
+
+  const uint32 SideTopStart = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({TopRadius * std::cos(Theta), HalfH,
+                        TopRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+                        static_cast<float>(i) / static_cast<float>(SliceCount),
+                        0.0f, std::cos(Theta), 0.0f, std::sin(Theta)});
+  }
+
+  const uint32 SideBottomStart = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
+                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+                        static_cast<float>(i) / static_cast<float>(SliceCount),
+                        1.0f, std::cos(Theta), 0.0f, std::sin(Theta)});
+  }
+
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    Indices.push_back(TopCenterIndex);
+    Indices.push_back(TopRingStart + Next);
+    Indices.push_back(TopRingStart + i);
+  }
+
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    Indices.push_back(BottomCenterIndex);
+    Indices.push_back(BottomRingStart + i);
+    Indices.push_back(BottomRingStart + Next);
+  }
+
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+
+    const uint32 TL = SideTopStart + i;
+    const uint32 TR = SideTopStart + Next;
+    const uint32 BL = SideBottomStart + i;
+    const uint32 BR = SideBottomStart + Next;
+
+    Indices.push_back(BL);
+    Indices.push_back(TL);
+    Indices.push_back(BR);
+
+    Indices.push_back(BR);
+    Indices.push_back(TL);
+    Indices.push_back(TR);
+  }
+
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
+
+  CylinderMesh = RegisterMesh("Cylinder", Renderer.CreateMesh(MeshDesc));
+  return CylinderMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer& Renderer, float Height, uint32 SliceCount, float TopRadius, float BottomRadius)
-{
-	constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
-	const float DTheta = TAU / static_cast<float>(SliceCount);
+bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
+  constexpr float BottomRadius = 0.5f;
+  constexpr float Height = 1.0f;
+  constexpr uint32 SliceCount = 24;
+  constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
+  const float DTheta = TAU / static_cast<float>(SliceCount);
 
-	TArray<FVertexData> Vertices;
-	TArray<uint32> Indices;
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
 
-	Vertices.reserve(SliceCount * 4 + 2);
-	Indices.reserve(SliceCount * 12);
+  Vertices.reserve(SliceCount * 2 + 2);
+  Indices.reserve(SliceCount * 6);
 
-	const float HalfH = Height * 0.5f;
+  const float HalfH = Height * 0.5f;
 
-	const uint32 TopCenterIndex = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ 0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f });
+  const uint32 ApexIndex = static_cast<uint32>(Vertices.size());
+  Vertices.push_back({0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.0f,
+                      0.0f, 1.0f, 0.0f});
 
-	const uint32 TopRingStart = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			TopRadius * std::cos(Theta), HalfH, TopRadius * std::sin(Theta),
-			0.0f, 0.0f, 1.0f, 1.0f,
-			0.5f + 0.5f * std::cos(Theta), 0.5f + 0.5f * std::sin(Theta),
-			0.0f, 1.0f, 0.0f
-		});
-	}
+  const uint32 SideBaseStart = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
+                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+                        static_cast<float>(i) / static_cast<float>(SliceCount),
+                        1.0f, std::cos(Theta), 0.0f, std::sin(Theta)});
+  }
 
-	const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ 0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, -1.0f, 0.0f });
+  const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
+  Vertices.push_back({0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
+                      0.0f, -1.0f, 0.0f});
 
-	const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
-			0.0f, 0.0f, 1.0f, 1.0f,
-			0.5f + 0.5f * std::cos(Theta), 0.5f + 0.5f * std::sin(Theta),
-			0.0f, -1.0f, 0.0f
-		});
-	}
+  const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
+                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+                        0.5f + 0.5f * std::cos(Theta),
+                        0.5f + 0.5f * std::sin(Theta), 0.0f, -1.0f, 0.0f});
+  }
 
-	const uint32 SideTopStart = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			TopRadius * std::cos(Theta), HalfH, TopRadius * std::sin(Theta),
-			0.0f, 0.0f, 1.0f, 1.0f,
-			static_cast<float>(i) / static_cast<float>(SliceCount), 0.0f,
-			std::cos(Theta), 0.0f, std::sin(Theta)
-		});
-	}
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    Indices.push_back(ApexIndex);
+    Indices.push_back(SideBaseStart + Next);
+    Indices.push_back(SideBaseStart + i);
+  }
 
-	const uint32 SideBottomStart = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
-			0.0f, 0.0f, 1.0f, 1.0f,
-			static_cast<float>(i) / static_cast<float>(SliceCount), 1.0f,
-			std::cos(Theta), 0.0f, std::sin(Theta)
-		});
-	}
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    Indices.push_back(BottomCenterIndex);
+    Indices.push_back(BottomRingStart + Next);
+    Indices.push_back(BottomRingStart + i);
+  }
 
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		Indices.push_back(TopCenterIndex);
-		Indices.push_back(TopRingStart + Next);
-		Indices.push_back(TopRingStart + i);
-	}
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
 
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		Indices.push_back(BottomCenterIndex);
-		Indices.push_back(BottomRingStart + i);
-		Indices.push_back(BottomRingStart + Next);
-	}
-
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-
-		const uint32 TL = SideTopStart + i;
-		const uint32 TR = SideTopStart + Next;
-		const uint32 BL = SideBottomStart + i;
-		const uint32 BR = SideBottomStart + Next;
-
-		Indices.push_back(BL);
-		Indices.push_back(TL);
-		Indices.push_back(BR);
-
-		Indices.push_back(BR);
-		Indices.push_back(TL);
-		Indices.push_back(TR);
-	}
-
-	FMeshDesc MeshDesc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
-	};
-
-	RegisterMesh("Cylinder", Renderer.CreateMesh(MeshDesc));
-	return GetMesh("Cylinder") != nullptr;
+  ConeMesh = RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
+  return ConeMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateConeMesh(FRenderer& Renderer)
-{
-	constexpr float BottomRadius = 0.5f;
-	constexpr float Height = 1.0f;
-	constexpr uint32 SliceCount = 24;
-	constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
-	const float DTheta = TAU / static_cast<float>(SliceCount);
+bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
+  constexpr uint32 SliceCount = 16u;
+  constexpr float ShaftLength = 0.75f;
+  constexpr float ShaftRadius = 0.025f;
+  constexpr float HeadRadius = 0.075f;
+  constexpr float HeadLength = 0.25f;
+  constexpr float DTheta =
+      2.0f * std::numbers::pi_v<float> / static_cast<float>(SliceCount);
 
-	TArray<FVertexData> Vertices;
-	TArray<uint32> Indices;
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
 
-	Vertices.reserve(SliceCount * 2 + 2);
-	Indices.reserve(SliceCount * 6);
+  Vertices.reserve(SliceCount * 5 + 3);
+  Indices.reserve(SliceCount * 18);
 
-	const float HalfH = Height * 0.5f;
+  const uint32 ShaftBottomCenter = static_cast<uint32>(Vertices.size());
+  Vertices.push_back({0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f,
+                      -1.0f, 0.0f, 0.0f});
 
-	const uint32 ApexIndex = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ 0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f });
+  const uint32 ShaftBottomRing = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({0.0f, ShaftRadius * std::cos(Theta),
+                        ShaftRadius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f,
+                        0.0f, 0.0f, -1.0f, 0.0f, 0.0f});
+  }
 
-	const uint32 SideBaseStart = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
-			0.0f, 0.0f, 1.0f, 1.0f,
-			static_cast<float>(i) / static_cast<float>(SliceCount), 1.0f,
-			std::cos(Theta), 0.0f, std::sin(Theta)
-		});
-	}
+  const uint32 ShaftSideBottom = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({0.0f, ShaftRadius * std::cos(Theta),
+                        ShaftRadius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f,
+                        0.0f, 0.0f, 0.0f, std::cos(Theta), std::sin(Theta)});
+  }
 
-	const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ 0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.0f, -1.0f, 0.0f });
+  const uint32 ShaftSideTop = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({ShaftLength, ShaftRadius * std::cos(Theta),
+                        ShaftRadius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f,
+                        1.0f, 0.0f, 0.0f, std::cos(Theta), std::sin(Theta)});
+  }
 
-	const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			BottomRadius * std::cos(Theta), -HalfH, BottomRadius * std::sin(Theta),
-			0.0f, 0.0f, 1.0f, 1.0f,
-			0.5f + 0.5f * std::cos(Theta), 0.5f + 0.5f * std::sin(Theta),
-			0.0f, -1.0f, 0.0f
-		});
-	}
+  const uint32 HeadBaseCenter = static_cast<uint32>(Vertices.size());
+  Vertices.push_back({ShaftLength, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f,
+                      0.5f, -1.0f, 0.0f, 0.0f});
 
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		Indices.push_back(ApexIndex);
-		Indices.push_back(SideBaseStart + Next);
-		Indices.push_back(SideBaseStart + i);
-	}
+  const uint32 HeadBaseRing = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({ShaftLength, HeadRadius * std::cos(Theta),
+                        HeadRadius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f,
+                        0.0f, 0.0f, -1.0f, 0.0f, 0.0f});
+  }
 
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		Indices.push_back(BottomCenterIndex);
-		Indices.push_back(BottomRingStart + Next);
-		Indices.push_back(BottomRingStart + i);
-	}
+  const uint32 HeadSideBase = static_cast<uint32>(Vertices.size());
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    Vertices.push_back({ShaftLength, HeadRadius * std::cos(Theta),
+                        HeadRadius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f,
+                        0.0f, 0.0f, 0.0f, std::cos(Theta), std::sin(Theta)});
+  }
 
-	FMeshDesc MeshDesc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
-	};
+  const uint32 HeadTip = static_cast<uint32>(Vertices.size());
+  Vertices.push_back({ShaftLength + HeadLength, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                      1.0f, 1.0f, 0.5f, 1.0f, 0.0f, 0.0f});
 
-	RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
-	return GetMesh("Cone") != nullptr;
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    Indices.push_back(ShaftBottomCenter);
+    Indices.push_back(ShaftBottomRing + Next);
+    Indices.push_back(ShaftBottomRing + i);
+  }
+
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    const uint32 BL = ShaftSideBottom + i;
+    const uint32 BR = ShaftSideBottom + Next;
+    const uint32 TL = ShaftSideTop + i;
+    const uint32 TR = ShaftSideTop + Next;
+
+    Indices.push_back(BL);
+    Indices.push_back(TL);
+    Indices.push_back(BR);
+
+    Indices.push_back(BR);
+    Indices.push_back(TL);
+    Indices.push_back(TR);
+  }
+
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    Indices.push_back(HeadBaseCenter);
+    Indices.push_back(HeadBaseRing + Next);
+    Indices.push_back(HeadBaseRing + i);
+  }
+
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const uint32 Next = (i + 1) % SliceCount;
+    Indices.push_back(HeadSideBase + i);
+    Indices.push_back(HeadTip);
+    Indices.push_back(HeadSideBase + Next);
+  }
+
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
+
+  ArrowMesh = RegisterMesh("Arrow", Renderer.CreateMesh(MeshDesc));
+  return ArrowMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateArrowMesh(FRenderer& Renderer)
-{
-	constexpr uint32 SliceCount = 16u;
-	constexpr float ShaftLength = 0.75f;
-	constexpr float ShaftRadius = 0.025f;
-	constexpr float HeadRadius = 0.075f;
-	constexpr float HeadLength = 0.25f;
-	constexpr float DTheta = 2.0f * std::numbers::pi_v<float> / static_cast<float>(SliceCount);
+bool FRenderResourceLibrary::CreateCircleMesh(FRenderer &Renderer) {
+  constexpr uint32 SliceCount = 32u;
+  constexpr float Radius = 1.0f;
+  constexpr float Width = 0.07f;
 
-	TArray<FVertexData> Vertices;
-	TArray<uint32> Indices;
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
 
-	Vertices.reserve(SliceCount * 5 + 3);
-	Indices.reserve(SliceCount * 18);
+  Vertices.reserve(SliceCount * 2);
+  Indices.reserve(SliceCount * 6);
 
-	const uint32 ShaftBottomCenter = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f });
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    float Theta = 2.0f * std::numbers::pi_v<float> * static_cast<float>(i) /
+                  static_cast<float>(SliceCount);
+    float InnerRadius = Radius - Width * 0.5f;
+    float OuterRadius = Radius + Width * 0.5f;
 
-	const uint32 ShaftBottomRing = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			0.0f, ShaftRadius * std::cos(Theta), ShaftRadius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f,
-			-1.0f, 0.0f, 0.0f
-		});
-	}
+    Vertices.push_back({0.0f, InnerRadius * std::cos(Theta),
+                        InnerRadius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f,
+                        0.0f, 0.0f, 1.0f, 0.0f, 0.0f});
+    Vertices.push_back({0.0f, OuterRadius * std::cos(Theta),
+                        OuterRadius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f,
+                        1.0f, 1.0f, 1.0f, 0.0f, 0.0f});
 
-	const uint32 ShaftSideBottom = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			0.0f, ShaftRadius * std::cos(Theta), ShaftRadius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f,
-			0.0f, std::cos(Theta), std::sin(Theta)
-		});
-	}
+    uint32 InnerCurrent = 2 * i;
+    uint32 OuterCurrent = 2 * i + 1;
+    uint32 InnerNext = (2 * (i + 1)) % (SliceCount * 2);
+    uint32 OuterNext = (2 * (i + 1) + 1) % (SliceCount * 2);
 
-	const uint32 ShaftSideTop = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			ShaftLength, ShaftRadius * std::cos(Theta), ShaftRadius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			1.0f, 0.0f,
-			0.0f, std::cos(Theta), std::sin(Theta)
-		});
-	}
+    Indices.push_back(InnerCurrent);
+    Indices.push_back(OuterCurrent);
+    Indices.push_back(InnerNext);
 
-	const uint32 HeadBaseCenter = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ ShaftLength, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f });
+    Indices.push_back(InnerNext);
+    Indices.push_back(OuterCurrent);
+    Indices.push_back(OuterNext);
 
-	const uint32 HeadBaseRing = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			ShaftLength, HeadRadius * std::cos(Theta), HeadRadius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f,
-			-1.0f, 0.0f, 0.0f
-		});
-	}
+    Indices.push_back(OuterCurrent);
+    Indices.push_back(InnerCurrent);
+    Indices.push_back(InnerNext);
 
-	const uint32 HeadSideBase = static_cast<uint32>(Vertices.size());
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const float Theta = static_cast<float>(i) * DTheta;
-		Vertices.push_back({
-			ShaftLength, HeadRadius * std::cos(Theta), HeadRadius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f,
-			0.0f, std::cos(Theta), std::sin(Theta)
-		});
-	}
+    Indices.push_back(OuterCurrent);
+    Indices.push_back(InnerNext);
+    Indices.push_back(OuterNext);
+  }
 
-	const uint32 HeadTip = static_cast<uint32>(Vertices.size());
-	Vertices.push_back({ ShaftLength + HeadLength, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f, 0.0f });
+  const FMeshDesc Desc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
 
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		Indices.push_back(ShaftBottomCenter);
-		Indices.push_back(ShaftBottomRing + Next);
-		Indices.push_back(ShaftBottomRing + i);
-	}
-
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		const uint32 BL = ShaftSideBottom + i;
-		const uint32 BR = ShaftSideBottom + Next;
-		const uint32 TL = ShaftSideTop + i;
-		const uint32 TR = ShaftSideTop + Next;
-
-		Indices.push_back(BL);
-		Indices.push_back(TL);
-		Indices.push_back(BR);
-
-		Indices.push_back(BR);
-		Indices.push_back(TL);
-		Indices.push_back(TR);
-	}
-
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		Indices.push_back(HeadBaseCenter);
-		Indices.push_back(HeadBaseRing + Next);
-		Indices.push_back(HeadBaseRing + i);
-	}
-
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		const uint32 Next = (i + 1) % SliceCount;
-		Indices.push_back(HeadSideBase + i);
-		Indices.push_back(HeadTip);
-		Indices.push_back(HeadSideBase + Next);
-	}
-
-	FMeshDesc MeshDesc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
-	};
-
-	RegisterMesh("Arrow", Renderer.CreateMesh(MeshDesc));
-	return GetMesh("Arrow") != nullptr;
+  CircleMesh = RegisterMesh("Circle", Renderer.CreateMesh(Desc));
+  return CircleMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateCircleMesh(FRenderer& Renderer)
-{
-	constexpr uint32 SliceCount = 32u;
-	constexpr float Radius = 1.0f;
-	constexpr float Width = 0.07f;
+bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer &Renderer) {
+  constexpr uint32 SliceCount = 32u;
+  constexpr float Radius = 1.0f;
 
-	TArray<FVertexData> Vertices;
-	TArray<uint32> Indices;
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
 
-	Vertices.reserve(SliceCount * 2);
-	Indices.reserve(SliceCount * 6);
+  Vertices.reserve(SliceCount * 2);
+  Indices.reserve(SliceCount * 6);
 
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		float Theta = 2.0f * std::numbers::pi_v<float> * static_cast<float>(i) / static_cast<float>(SliceCount);
-		float InnerRadius = Radius - Width * 0.5f;
-		float OuterRadius = Radius + Width * 0.5f;
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    float Theta = 2.0f * std::numbers::pi_v<float> * static_cast<float>(i) /
+                  static_cast<float>(SliceCount);
 
-		Vertices.push_back({
-			0.0f, InnerRadius * std::cos(Theta), InnerRadius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f,
-			1.0f, 0.0f, 0.0f
-		});
-		Vertices.push_back({
-			0.0f, OuterRadius * std::cos(Theta), OuterRadius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			1.0f, 1.0f,
-			1.0f, 0.0f, 0.0f
-		});
+    Vertices.push_back({0.0f, Radius * std::cos(Theta),
+                        Radius * std::sin(Theta), -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                        0.0f, -1.0f, 0.0f, 0.0f});
+    Vertices.push_back({0.0f, Radius * std::cos(Theta),
+                        Radius * std::sin(Theta), 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+                        0.0f, 1.0f, 0.0f, 0.0f});
 
-		uint32 InnerCurrent = 2 * i;
-		uint32 OuterCurrent = 2 * i + 1;
-		uint32 InnerNext = (2 * (i + 1)) % (SliceCount * 2);
-		uint32 OuterNext = (2 * (i + 1) + 1) % (SliceCount * 2);
+    if (i == 0)
+      continue;
 
-		Indices.push_back(InnerCurrent);
-		Indices.push_back(OuterCurrent);
-		Indices.push_back(InnerNext);
+    Indices.push_back(2u * i - 2u);
+    Indices.push_back(2u * i + 1u);
+    Indices.push_back(2u * i - 1u);
 
-		Indices.push_back(InnerNext);
-		Indices.push_back(OuterCurrent);
-		Indices.push_back(OuterNext);
+    Indices.push_back(2u * i - 2u);
+    Indices.push_back(2u * i);
+    Indices.push_back(2u * i + 1u);
 
-		Indices.push_back(OuterCurrent);
-		Indices.push_back(InnerCurrent);
-		Indices.push_back(InnerNext);
+    Indices.push_back(2u * i - 2u);
+    Indices.push_back(2u * i - 1u);
+    Indices.push_back(2u * i + 1u);
 
-		Indices.push_back(OuterCurrent);
-		Indices.push_back(InnerNext);
-		Indices.push_back(OuterNext);
-	}
+    Indices.push_back(2u * i - 2u);
+    Indices.push_back(2u * i);
+    Indices.push_back(2u * i - 1u);
 
-	const FMeshDesc Desc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
-	};
+    Indices.push_back(2u * i - 2u);
+    Indices.push_back(2u * i + 1u);
+    Indices.push_back(2u * i);
 
-	RegisterMesh("Circle", Renderer.CreateMesh(Desc));
-	return GetMesh("Circle") != nullptr;
+    Indices.push_back(2u * i - 2u);
+    Indices.push_back(2u * i);
+    Indices.push_back(2u * i + 1u);
+  }
+  Indices[0] = 2u * SliceCount - 2u;
+  Indices[1] = 2u * SliceCount - 1u;
+  Indices[3] = 2u * SliceCount - 2u;
+  Indices[5] = 2u * SliceCount - 1u;
+  Indices[6] = 2u * SliceCount - 2u;
+  Indices[9] = 2u * SliceCount - 2u;
+
+  const FMeshDesc Desc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
+
+  RotationGizmoMesh = RegisterMesh("RotationGizmo", Renderer.CreateMesh(Desc));
+  return RotationGizmoMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer& Renderer)
-{
-	constexpr uint32 SliceCount = 32u;
-	constexpr float Radius = 1.0f;
+bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
+  constexpr float ShaftLength = 0.85f;
+  constexpr float ShaftRadius = 0.025f;
+  constexpr float ArrowLength = 1.0f;
+  constexpr float TipSize = ArrowLength - ShaftLength;
 
-	TArray<FVertexData> Vertices;
-	TArray<uint32> Indices;
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
 
-	Vertices.reserve(SliceCount * 2);
-	Indices.reserve(SliceCount * 6);
+  Vertices.reserve(16u);
+  Indices.reserve(72u);
 
-	for (uint32 i = 0; i < SliceCount; ++i)
-	{
-		float Theta = 2.0f * std::numbers::pi_v<float> * static_cast<float>(i) / static_cast<float>(SliceCount);
+  for (const auto &v : ColoredCubeVertices) {
+    float ScaledX = v.x * ShaftLength;
+    float ScaledY = v.y * ShaftRadius;
+    float ScaledZ = v.z * ShaftRadius;
+    Vertices.push_back({ScaledX + ShaftLength * 0.5f, ScaledY, ScaledZ, v.r,
+                        v.g, v.b, v.a, v.u, v.v, v.nx, v.ny, v.nz});
+  }
 
-		Vertices.push_back({
-			0.0f, Radius * std::cos(Theta), Radius * std::sin(Theta),
-			-1.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f,
-			-1.0f, 0.0f, 0.0f
-		});
-		Vertices.push_back({
-			0.0f, Radius * std::cos(Theta), Radius * std::sin(Theta),
-			1.0f, 0.0f, 0.0f, 1.0f,
-			1.0f, 0.0f,
-			1.0f, 0.0f, 0.0f
-		});
+  for (const auto &Index : CubeIndices) {
+    Indices.push_back(Index);
+  }
 
-		if (i == 0) continue;
+  for (const auto &v : ColoredCubeVertices) {
+    float ScaledX = v.x * TipSize;
+    float ScaledY = v.y * TipSize;
+    float ScaledZ = v.z * TipSize;
+    Vertices.push_back({ScaledX + TipSize * 0.5f + ShaftLength, ScaledY,
+                        ScaledZ, v.r, v.g, v.b, v.a, v.u, v.v, v.nx, v.ny,
+                        v.nz});
+  }
 
-		Indices.push_back(2u * i - 2u);
-		Indices.push_back(2u * i + 1u);
-		Indices.push_back(2u * i - 1u);
+  for (const auto &Index : CubeIndices) {
+    Indices.push_back(Index + 8u);
+  }
 
-		Indices.push_back(2u * i - 2u);
-		Indices.push_back(2u * i);
-		Indices.push_back(2u * i + 1u);
+  const FMeshDesc Desc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
 
-		Indices.push_back(2u * i - 2u);
-		Indices.push_back(2u * i - 1u);
-		Indices.push_back(2u * i + 1u);
-
-		Indices.push_back(2u * i - 2u);
-		Indices.push_back(2u * i);
-		Indices.push_back(2u * i - 1u);
-
-		Indices.push_back(2u * i - 2u);
-		Indices.push_back(2u * i + 1u);
-		Indices.push_back(2u * i);
-
-		Indices.push_back(2u * i - 2u);
-		Indices.push_back(2u * i);
-		Indices.push_back(2u * i + 1u);
-	}
-	Indices[0] = 2u * SliceCount - 2u;
-	Indices[1] = 2u * SliceCount - 1u;
-	Indices[3] = 2u * SliceCount - 2u;
-	Indices[5] = 2u * SliceCount - 1u;
-	Indices[6] = 2u * SliceCount - 2u;
-	Indices[9] = 2u * SliceCount - 2u;
-
-	const FMeshDesc Desc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
-	};
-
-	RegisterMesh("RotationGizmo", Renderer.CreateMesh(Desc));
-	return GetMesh("RotationGizmo") != nullptr;
+  SquareArrowMesh = RegisterMesh("SquareArrow", Renderer.CreateMesh(Desc));
+  return SquareArrowMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer& Renderer)
-{
-	constexpr float ShaftLength = 0.85f;
-	constexpr float ShaftRadius = 0.025f;
-	constexpr float ArrowLength = 1.0f;
-	constexpr float TipSize = ArrowLength - ShaftLength;
+bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
+  constexpr float HalfW = 50.0f;
+  constexpr float HalfH = 50.0f;
 
-	TArray<FVertexData> Vertices;
-	TArray<uint32> Indices;
+  const TArray<FVertexData> Vertices = {
+      {-HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+       1.0f},
+      {HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+       1.0f},
+      {HalfW, HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+       1.0f},
+      {-HalfW, HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+       1.0f},
+  };
+  const TArray<uint32> Indices = {0, 1, 2, 0, 2, 3};
 
-	Vertices.reserve(16u);
-	Indices.reserve(72u);
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = sizeof(FVertexData),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
 
-	for (const auto& v : ColoredCubeVertices)
-	{
-		float ScaledX = v.x * ShaftLength;
-		float ScaledY = v.y * ShaftRadius;
-		float ScaledZ = v.z * ShaftRadius;
-		Vertices.push_back({
-			ScaledX + ShaftLength * 0.5f, ScaledY, ScaledZ,
-			v.r, v.g, v.b, v.a,
-			v.u, v.v,
-			v.nx, v.ny, v.nz
-		});
-	}
-
-	for (const auto& Index : CubeIndices)
-	{
-		Indices.push_back(Index);
-	}
-
-	for (const auto& v : ColoredCubeVertices)
-	{
-		float ScaledX = v.x * TipSize;
-		float ScaledY = v.y * TipSize;
-		float ScaledZ = v.z * TipSize;
-		Vertices.push_back({
-			ScaledX + TipSize * 0.5f + ShaftLength, ScaledY, ScaledZ,
-			v.r, v.g, v.b, v.a,
-			v.u, v.v,
-			v.nx, v.ny, v.nz
-		});
-	}
-
-	for (const auto& Index : CubeIndices)
-	{
-		Indices.push_back(Index + 8u);
-	}
-
-	const FMeshDesc Desc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
-	};
-
-	RegisterMesh("SquareArrow", Renderer.CreateMesh(Desc));
-	return GetMesh("SquareArrow") != nullptr;
+  GridMesh = RegisterMesh("Grid", Renderer.CreateMesh(MeshDesc));
+  return GridMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateGridMesh(FRenderer& Renderer)
-{
-	constexpr float HalfW = 50.0f;
-	constexpr float HalfH = 50.0f;
+bool FRenderResourceLibrary::CreateSphereMesh(FRenderer &Renderer) {
+  auto Vertices = CreateSphereVertices(0.5f, 20, 20, false);
 
-	const TArray<FVertexData> Vertices = {
-		{ -HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f },
-		{  HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f },
-		{  HalfW,  HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f },
-		{ -HalfW,  HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f },
-	};
-	const TArray<uint32> Indices = { 0, 1, 2, 0, 2, 3 };
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = sizeof(FVertexData),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+  };
 
-	FMeshDesc MeshDesc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = sizeof(FVertexData),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-		.IndexData = Indices.data(),
-		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-		.IndexCount = static_cast<uint32>(Indices.size()),
-	};
-
-	RegisterMesh("Grid", Renderer.CreateMesh(MeshDesc));
-	return GetMesh("Grid") != nullptr;
+  SphereMesh = RegisterMesh("Sphere", Renderer.CreateMesh(MeshDesc));
+  return SphereMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateSphereMesh(FRenderer& Renderer)
-{
-	auto Vertices = CreateSphereVertices(0.5f, 20, 20, false);
-	
-	FMeshDesc MeshDesc{
-		.VertexData = Vertices.data(),
-		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-		.VertexStride = sizeof(FVertexData),
-		.VertexCount = static_cast<uint32>(Vertices.size()),
-	};
+bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
+  FMeshDesc Desc{.VertexData = LineVertices,
+                 .VertexDataSize = static_cast<uint32>(sizeof(LineVertices)),
+                 .VertexStride = sizeof(FVertexData),
+                 .VertexCount = static_cast<uint32>(std::size(LineVertices)),
+                 .bIsLine = true};
 
-	RegisterMesh("Sphere", Renderer.CreateMesh(MeshDesc));
-	return GetMesh("Sphere") != nullptr;
+  LineMesh = RegisterMesh("Line", Renderer.CreateMesh(Desc));
+  return LineMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateLineMesh(FRenderer& Renderer)
-{
-	FMeshDesc Desc{
-		.VertexData = LineVertices,
-		.VertexDataSize = static_cast<uint32>(sizeof(LineVertices)),
-		.VertexStride = sizeof(FVertexData),
-		.VertexCount = static_cast<uint32>(std::size(LineVertices)),
-		.bIsLine = true
-	};
+bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
+  FMeshDesc Desc{
+      .VertexData = PlaneVertices,
+      .VertexDataSize = static_cast<uint32>(sizeof(PlaneVertices)),
+      .VertexStride = sizeof(FVertexData),
+      .VertexCount = static_cast<uint32>(std::size(PlaneVertices)),
+  };
 
-	RegisterMesh("Line", Renderer.CreateMesh(Desc));
-	return GetMesh("Line") != nullptr;
+  PlaneMesh = RegisterMesh("Plane", Renderer.CreateMesh(Desc));
+  return PlaneMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer& Renderer)
-{
-	FMeshDesc Desc{
-		.VertexData = PlaneVertices,
-		.VertexDataSize = static_cast<uint32>(sizeof(PlaneVertices)),
-		.VertexStride = sizeof(FVertexData),
-		.VertexCount = static_cast<uint32>(std::size(PlaneVertices)),
-	};
+bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
 
-	RegisterMesh("Plane", Renderer.CreateMesh(Desc));
-	return GetMesh("Plane") != nullptr;
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/ExamplePS.cso",
+  };
+
+  SimpleMaterial = RegisterMaterial("Simple", Renderer.CreateMaterial(Desc));
+
+  if (SimpleMaterial) {
+    SimpleMaterial->SetPipeLine(
+        GetPipeline(EBuiltinPipeline::Simple_Solid));
+    return true;
+  } else {
+    return false;
+  }
 }
 
-bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer& Renderer)
-{
-	FWString Path = GetExecutableDirectory();
+bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
 
-	FMaterialDesc Desc = {
-		.VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-		.PixelShaderFileName = Path + L"/Shader/ExamplePS.cso",
-	};
-	
-	RegisterMaterial("Simple", Renderer.CreateMaterial(Desc));
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/GridVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/GridPS.cso",
+  };
 
-	return GetMaterial("Simple") != nullptr;
+  GridMaterial = RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
+
+  if (GridMaterial) {
+    GridMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Grid));
+    return true;
+  } else {
+    return false;
+  }
 }
 
-bool FRenderResourceLibrary::CreateGridMaterial(FRenderer& Renderer)
-{
-	FWString Path = GetExecutableDirectory();
+bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
 
-	FMaterialDesc Desc = {
-		.VertexShaderFileName = Path + L"/Shader/GridVS.cso",
-		.PixelShaderFileName = Path + L"/Shader/GridPS.cso",
-	};
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/RotationGizmoVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/RotationGizmoPS.cso",
+  };
 
-	RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
+  RotationGizmoMaterial = RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
 
-	return GetMaterial("Grid") != nullptr;
+  if (RotationGizmoMaterial) {
+    RotationGizmoMaterial->SetPipeLine(
+        GetPipeline(EBuiltinPipeline::RotationGizmo));
+    return true;
+  } else {
+    return false;
+  }
 }
 
-bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer& Renderer)
-{
-	FWString Path = GetExecutableDirectory();
+bool FRenderResourceLibrary::CreateSolidWireframePipeline(
+    FRenderer &Renderer) {
+  const FWString Path = GetExecutableDirectory();
+  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
+  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
 
-	FMaterialDesc Desc = {
-		.VertexShaderFileName = Path + L"/Shader/RotationGizmoVS.cso",
-		.PixelShaderFileName = Path + L"/Shader/RotationGizmoPS.cso",
-	};
+  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+    return false;
+  }
 
-	RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
+  FRenderPipelineDesc Desc = {
+      .VertexShaderFileName = VsPath,
+      .PixelShaderFileName = PsPath,
+      .bEnableDepthTest = true,
+  };
 
-	return GetMaterial("RotationGizmo") != nullptr;
+  // 솔리드 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> SolidPipeline =
+      Renderer.CreateRenderPipeline(Desc, ERenderMode::Solid);
+  if (SolidPipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
+  }
+
+  // 와이어프레임 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> WireframePipeline =
+      Renderer.CreateRenderPipeline(Desc, ERenderMode::Wireframe);
+  if (WireframePipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
+  }
+
+  return SolidPipeline != nullptr && WireframePipeline != nullptr;
 }
+
+bool FRenderResourceLibrary::InitializePipeLines(FRenderer &Renderer) {
+  // 솔리드 및 와이어프레임 파이프라인 개별 생성
+  CreateSolidWireframePipeline(Renderer);
+
+  const FWString Path = GetExecutableDirectory();
+
+  for (const FPipelineEntry &Entry : pipelineTable) {
+    // 이미 등록된 경우 건너뜀
+    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
+      continue;
+    }
+
+    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
+    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
+
+    // 셰이더 파일 미존재 시 건너뜀
+    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+      continue;
+    }
+
+    FRenderPipelineDesc PipelineDesc = {
+        .VertexShaderFileName = VsPath,
+        .PixelShaderFileName = PsPath,
+        .bEnableDepthTest = true,
+    };
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        Renderer.CreateRenderPipeline(PipelineDesc);
+    if (!Pipeline) {
+      return false;
+    }
+
+    AllPipelineMap[Entry.Id] = Pipeline;
+  }
+  return true;
+}
+
+

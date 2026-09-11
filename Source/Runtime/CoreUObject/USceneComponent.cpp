@@ -18,6 +18,19 @@ void USceneComponent::SetRelativeTransform(FTransform RelativeTransform)
     this->RelativeTransform = RelativeTransform;
 }
 
+FTransform USceneComponent::GetGlobalTransform() //나중에 부모 rootcomponent world좌표 써야됨
+{
+    if (!Owner || Owner->GetRootComponent() == this)
+    {
+        return RelativeTransform;
+    }
+
+    //부모(RootComponent)의 월드 트랜스폼 가져오기
+    FTransform ParentWorld = Owner->GetRootComponent()->GetGlobalTransform();
+    //부모 트랜스폼 * 내 상대 트랜스폼
+    return ParentWorld * RelativeTransform;
+}
+
 json::JSON USceneComponent::Serialize() const
 {
     FVector tmpRot = RelativeTransform.Rotation.GetEulerXYZ();

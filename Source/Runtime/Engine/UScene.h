@@ -79,6 +79,9 @@ public:
   void AddRenderComponent(UPrimitiveComponent *prim);
   void RemoveRenderComponent(UPrimitiveComponent *prim);
 
+
+  void DestroyActor(AActor* Actor);
+
 private:
   explicit UScene(FRenderResourceLibrary &RenderResources)
       : RenderResourceLibrary(RenderResources) {}

@@ -1,23 +1,35 @@
-﻿#pragma once
+#pragma once
 
 #include "Vertices.h"
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "Runtime/Core/FString.h"
 
-class FRenderPipeline final
-{
-	friend class FRenderer;
+struct FRenderPipelineDesc {
+  FWString VertexShaderFileName;
+  FWString PixelShaderFileName;
+  bool bEnableDepthTest = true;
+
+  bool operator==(const FRenderPipelineDesc &) const = default;
+};
+
+class FRenderPipeline final {
+  friend class FRenderer;
 
 public:
-	FRenderPipeline() = default;
+  [[nodiscard]] FRenderPipelineDesc GetPipelineDesc() const { return desc; }
 
 private:
-	void Bind(ID3D11DeviceContext& Context) const;
+  FRenderPipeline() = default;
 
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
+  FRenderPipelineDesc desc;
 
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState;
+  void Bind(ID3D11DeviceContext &Context) const;
+
+  Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
+  Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
+  Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
+
+  Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState;
+  Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState;
 };
