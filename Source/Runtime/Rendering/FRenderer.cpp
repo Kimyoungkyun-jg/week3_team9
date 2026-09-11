@@ -384,7 +384,7 @@ TSharedPtr<FRenderPipeline> FRenderer::FindOrCreateRenderPipeline(const FMateria
 	}
 
 	
-	Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements, Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+	Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements, Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout); //Layout과 NumElents 는 고정
 	if (FAILED(Result))
 	{
 		return nullptr;

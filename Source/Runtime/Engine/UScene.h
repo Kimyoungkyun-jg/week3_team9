@@ -39,7 +39,7 @@ public:
 			Transform.Location = Location;
 			Transform.Scale3D = Scale;
 			Actor->GetRootComponent()->SetRelativeTransform(Transform);
-			RegisterComponent(*Actor->GetRootComponent());
+			//RegisterComponent(*Actor->GetRootComponent());
 		}
 		Actors.push_back(Actor);
 		return Actor;

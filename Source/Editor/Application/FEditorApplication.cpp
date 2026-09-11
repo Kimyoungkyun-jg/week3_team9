@@ -32,12 +32,12 @@ void FEditorApplication::Initialize_Runtime(FRenderResourceLibrary* RendererLibr
 	SceneManager->CurrentScene->RegisterComponent(*CubeComp);
 
 		
-	//AActor* Cube = curScene->SpawnActor<AActor>(
-	//	FVector(1.0f, 1.0f, 0.25f), // Location
-	//	FVector(0.5f, 0.5f, 0.5f)   // Scale
-	//);
+	AActor* Cube = curScene->SpawnActor<AActor>(
+		FVector(1.0f, 1.0f, 0.25f), // Location
+		FVector(0.5f, 0.5f, 0.5f)   // Scale
+	);
 
-	//Cube->AddComponent(CubeComp);
+	Cube->SetRootComponent(CubeComp);
 
 
 	Editor.SelectObject(CubeComp);

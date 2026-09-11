@@ -17,17 +17,17 @@ void FEditor::Initialize(FRenderResourceLibrary* RendererLibrary, USceneManager*
 
 void FEditor::Process()
 {
-	// 씬의 액터 및 컴포넌트 업데이트
-	if (SceneManager && SceneManager->CurrentScene)
-	{
-		for (AActor* Actor : SceneManager->CurrentScene->GetActors())
-		{
-			if (Actor)
-			{
-				Actor->Update(FTimeManager::Get().GetDeltaTime());
-			}
-		}
-	}
+	//// 씬의 액터 및 컴포넌트 업데이트
+	//if (SceneManager && SceneManager->CurrentScene)
+	//{
+	//	for (AActor* Actor : SceneManager->CurrentScene->GetActors())
+	//	{
+	//		if (Actor)
+	//		{
+	//			Actor->Update(FTimeManager::Get().GetDeltaTime());
+	//		}
+	//	}
+	//}
 
 
 
