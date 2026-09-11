@@ -20,8 +20,6 @@ public:
   [[nodiscard]] FRenderPipelineDesc GetPipelineDesc() const { return desc; }
 
 private:
-  FRenderPipeline() = default;
-
   FRenderPipelineDesc desc;
 
   void Bind(ID3D11DeviceContext &Context) const;

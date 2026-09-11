@@ -23,8 +23,7 @@ inline FWString GetExecutableDirectory() {
   return std::filesystem::path(Buffer).parent_path();
 }
 
-// 렌더링 모드
-enum class ERenderMode : uint8 { Solid, Wireframe };
+#include "Runtime/Engine/ShowFlags.h"
 
 // 내장 파이프라인 종류
 enum class EBuiltinPipeline : uint8 {
@@ -65,8 +64,8 @@ public:
   void SwapBuffer();
   void OnWindowSize(UINT Width, UINT Height);
 
-  ERenderMode GetRenderMode() const { return CurrentRenderMode; }
-  void SetRenderMode(ERenderMode InMode) { CurrentRenderMode = InMode; }
+  EViewModeIndex GetRenderMode() const { return CurrentRenderMode; }
+  void SetRenderMode(EViewModeIndex InMode) { CurrentRenderMode = InMode; }
 
   [[nodiscard]]
   TSharedPtr<FMesh> CreateMesh(const FMeshDesc &Desc);
@@ -78,7 +77,7 @@ public:
 
   [[nodiscard]]
   TSharedPtr<FRenderPipeline> CreateRenderPipeline(const FRenderPipelineDesc &Desc,
-                                                  ERenderMode RenderMode = ERenderMode::Solid);
+                                                  EViewModeIndex RenderMode = EViewModeIndex::VMI_Lit);
   [[nodiscard]]
   TSharedPtr<FTexture> CreateTexture(FTextureDesc& desc);
 
@@ -120,5 +119,5 @@ private:
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> EditorViewPortSRV;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
 
-  ERenderMode CurrentRenderMode = ERenderMode::Solid;
+  EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
 };

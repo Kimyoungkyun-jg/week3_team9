@@ -26,12 +26,11 @@ void FEditorApplication::Initialize_Runtime(
 
   Editor.Initialize(RendererLibrary, SceneManager);
 
-  UCubeComp *CubeComp = NewObject<UCubeComp>();
-  CubeComp->RelativeTransform.Location = FVector{1.0f, 1.0f, 0.25f};
-  CubeComp->RelativeTransform.Rotation =
-      FQuaternion::FromEulerXYZDeg(FVector{0.5f, 0.5f, 0.5f});
-  CubeComp->RelativeTransform.Scale3D = FVector{0.5f, 0.5f, 0.5f};
-  // SceneManager->CurrentScene->RegisterComponent(*CubeComp);
+	UCubeComp* CubeComp = NewObject<UCubeComp>();
+	FTransform& CubeTransform = CubeComp->GetRelativeTransform();
+	CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+	CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+	CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
   AActor *Cube =
       curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
@@ -92,21 +91,25 @@ void FEditorApplication::Render() {
   const TArray<FEditorViewport> &EditorViewports = Editor.GetViewports();
 
   for (auto &EditorViewport : EditorViewports) {
+    if (RenderView) {
+      RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
+    }
+
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    for (auto &PrimitiveComponent :
-         SceneManager->CurrentScene->GetRenderComponents()) {
-      const bool bSelected =
-          (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
-           PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
+    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives)) {
+      for (auto &PrimitiveComponent :
+           SceneManager->CurrentScene->GetRenderComponents()) {
+        const bool bSelected =
+            (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
+             PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
 
-
-
-      RenderView->Render(EditorViewport.ViewportCamera,
-                         EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                         PrimitiveComponent, bSelected);
+        RenderView->Render(EditorViewport.ViewportCamera,
+                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
+                           PrimitiveComponent, bSelected);
+      }
     }
 
     if (Editor.ObjectSelected()) // 기즈모 그리기

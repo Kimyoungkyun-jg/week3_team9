@@ -10,30 +10,29 @@ class AActor;
 
 class USceneComponent : public UObject
 {
-  GENERATED_BODY()
-  DECLARE_UCLASS(USceneComponent, UObject)
-  friend UScene;
+	GENERATED_BODY()
+	DECLARE_UCLASS(USceneComponent, UObject)
 
 public:
   AActor* GetOwner() const { return Owner; }
   void SetOwner(AActor* InOwner) { Owner = InOwner; }
 
-  FTransform RelativeTransform;
   json::JSON Serialize() const override;
   bool Deserialize(const json::JSON &data) override;
   virtual void Update(float DeltaTime) {}
 
+	virtual void OnRegister(UScene& Scene) {}
+	virtual void OnUnregister(UScene& Scene) {}
 protected:
   USceneComponent() = default;
 
-  virtual void OnRegister(UScene &Scene) {}
-  virtual void OnUnregister(UScene &Scene) {}
+	FTransform RelativeTransform;
 
 public:
-  FTransform GetRelativeTransform();
-  void SetRelativeTransform(FTransform RelativeTransform);
-  FTransform GetGlobalTransform();
-  void SetRelativeTransformFromGlobal(FTransform GlobalTransform);
+	FTransform& GetRelativeTransform() { return RelativeTransform; }
+	virtual void SetRelativeTransform(const FTransform& RelativeTransform);
+	FTransform GetGlobalTransform();
+	//void SetRelativeTransformFromGlobal(const FTransform& GlobalTransform);
 
   void RegisterComponentWithScene(UScene &Scene);
   void UnregisterComponentFromScene(UScene &Scene);
