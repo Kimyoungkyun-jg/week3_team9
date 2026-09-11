@@ -5,7 +5,7 @@
 #include "ThirdParty/Imgui/imgui_impl_win32.h"
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/Core/FString.h"
-#include "Runtime/Rendering/FRenderer.h"
+#include "Runtime/Engine/ShowFlags.h"
 #include <Windows.h>
 #include <ShlObj.h>
 #include <filesystem>
@@ -78,19 +78,41 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::SameLine();
     ImGui::Text("Grid Cell Size");
 
-    // 래스터라이저 상태 설정
-    FRenderer* Renderer = Editor.GetRendererLibrary() ? Editor.GetRendererLibrary()->GetRenderer() : nullptr;
-    if (Renderer)
+    // 뷰포트 렌더 모드 및 쇼 플래그 설정
+    FEditorViewport* ActiveViewport = Editor.GetActiveViewport();
+    if (ActiveViewport)
     {
-        int CurrentMode = static_cast<int>(Renderer->GetRenderMode());
-        const char* RenderModes[] = { "Solid", "Wireframe" };
+        // 뷰 모드 드롭박스
+        int CurrentViewMode = static_cast<int>(ActiveViewport->ViewMode);
+        const char* ViewModes[] = { "Lit", "Unlit", "Wireframe" };
         ImGui::SetNextItemWidth(180.0f);
-        if (ImGui::Combo("##RenderMode", &CurrentMode, RenderModes, IM_ARRAYSIZE(RenderModes)))
+        if (ImGui::Combo("##ViewMode", &CurrentViewMode, ViewModes, IM_ARRAYSIZE(ViewModes)))
         {
-            Renderer->SetRenderMode(static_cast<ERenderMode>(CurrentMode));
+            ActiveViewport->ViewMode = static_cast<EViewModeIndex>(CurrentViewMode);
         }
         ImGui::SameLine();
-        ImGui::Text("Rasterizer State");
+        ImGui::Text("View Mode");
+
+        // 쇼 플래그 드롭박스
+        ImGui::SetNextItemWidth(180.0f);
+        if (ImGui::BeginCombo("##ShowFlags", "Show Flags"))
+        {
+            bool bPrimitives = ActiveViewport->HasShowFlag(EEngineShowFlags::SF_Primitives);
+            if (ImGui::Checkbox("Primitives", &bPrimitives))
+            {
+                ActiveViewport->ToggleShowFlag(EEngineShowFlags::SF_Primitives);
+            }
+
+            bool bBillboardText = ActiveViewport->HasShowFlag(EEngineShowFlags::SF_BillboardText);
+            if (ImGui::Checkbox("Billboard Text", &bBillboardText))
+            {
+                ActiveViewport->ToggleShowFlag(EEngineShowFlags::SF_BillboardText);
+            }
+
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+        ImGui::Text("Show Flags");
     }
 
     //씬 저장, 로드

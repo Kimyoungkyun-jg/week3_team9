@@ -92,21 +92,25 @@ void FEditorApplication::Render() {
   const TArray<FEditorViewport> &EditorViewports = Editor.GetViewports();
 
   for (auto &EditorViewport : EditorViewports) {
+    if (RenderView) {
+      RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
+    }
+
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    for (auto &PrimitiveComponent :
-         SceneManager->CurrentScene->GetRenderComponents()) {
-      const bool bSelected =
-          (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
-           PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
+    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives)) {
+      for (auto &PrimitiveComponent :
+           SceneManager->CurrentScene->GetRenderComponents()) {
+        const bool bSelected =
+            (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
+             PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
 
-
-
-      RenderView->Render(EditorViewport.ViewportCamera,
-                         EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                         PrimitiveComponent, bSelected);
+        RenderView->Render(EditorViewport.ViewportCamera,
+                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
+                           PrimitiveComponent, bSelected);
+      }
     }
 
     if (Editor.ObjectSelected()) // 기즈모 그리기

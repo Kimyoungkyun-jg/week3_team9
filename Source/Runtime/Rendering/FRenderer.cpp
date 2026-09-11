@@ -76,7 +76,7 @@ void FRenderer::Draw(const FMesh &Mesh, const FMaterial &Material,
 
 
   TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
-  if (CurrentRenderMode == ERenderMode::Wireframe) {
+  if (CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
     Pipeline = GetPipeline(EBuiltinPipeline::Simple_Wireframe);
   }
 
@@ -213,7 +213,7 @@ void FRenderer::GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,
 
 TSharedPtr<FRenderPipeline>
 FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
-                                ERenderMode RenderMode) {
+                                EViewModeIndex RenderMode) {
   TSharedPtr<FRenderPipeline> Pipeline{new FRenderPipeline()};
   Pipeline->desc = Desc;
 
@@ -252,7 +252,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   }
 
   D3D11_RASTERIZER_DESC RasterizerDesc{
-      .FillMode = (RenderMode == ERenderMode::Wireframe)
+      .FillMode = (RenderMode == EViewModeIndex::VMI_Wireframe)
                       ? D3D11_FILL_WIREFRAME
                       : D3D11_FILL_SOLID,
       .CullMode = D3D11_CULL_BACK,
@@ -305,14 +305,14 @@ bool FRenderer::CreateSolidWireframePipeline() {
 
   // 솔리드 파이프라인 생성 및 등록
   TSharedPtr<FRenderPipeline> SolidPipeline =
-      CreateRenderPipeline(Desc, ERenderMode::Solid);
+      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
   if (SolidPipeline) {
     AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
   }
 
   // 와이어프레임 파이프라인 생성 및 등록
   TSharedPtr<FRenderPipeline> WireframePipeline =
-      CreateRenderPipeline(Desc, ERenderMode::Wireframe);
+      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
   if (WireframePipeline) {
     AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
   }
@@ -347,7 +347,7 @@ bool FRenderer::InitializePipeLines() {
     };
 
     TSharedPtr<FRenderPipeline> Pipeline =
-        CreateRenderPipeline(PipelineDesc, ERenderMode::Solid);
+        CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
     if (!Pipeline) {
       return false;
     }
