@@ -24,7 +24,7 @@ public:
     void RebuildTextMesh();
 private:
     TSharedPtr<FFont> Font;
-    FString Text;
+    FString Text = "Hello Jungle World!";
 
     FMeshDesc MeshData;
 };
