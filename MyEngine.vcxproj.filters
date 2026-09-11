@@ -205,6 +205,12 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\FNamePool.cpp">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\FName.cpp">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
@@ -395,9 +401,15 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
-    <ClInclude Include="TMap.h" />
     <ClInclude Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.h">
       <Filter>Source\Runtime\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\FTexture.h" />
+    <ClInclude Include="Source\Runtime\Core\FNamePool.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\FName.h">
+      <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
