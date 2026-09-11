@@ -1,513 +1,535 @@
-﻿#include "FRenderer.h"
+#include "FRenderer.h"
 
-#include "ShaderConstants.h"
-#include "FMesh.h"
 #include "FMaterial.h"
+#include "FMesh.h"
 #include "FRenderPipeline.h"
-#include "Vertices.h"
 #include "Runtime/Core/PointerTypes.h"
+#include "ShaderConstants.h"
+#include "Vertices.h"
 #include <Windows.h>
 #include <d3d11.h>
-#include <wrl/client.h>
 #include <d3dcompiler.h>
+#include <wrl/client.h>
 
-bool FRenderer::Initialize(HWND Window)
-{
-	if (!InitializeDeviceAndSwapChain(Window) ||
-		!InitializeBackBufferAndDepthStencil() ||
-		!InitializeConstantBuffers()||
-		!InitializeGridConstantBuffers())
-	{
-		Shutdown();
-		return false;
-	}
+bool FRenderer::Initialize(HWND Window) {
+  if (!InitializeDeviceAndSwapChain(Window) ||
+      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers() ||
+      !InitializeGridConstantBuffers() || !InitializePipeLines()) {
+    Shutdown();
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-void FRenderer::Shutdown()
-{
-	if (Context)
-	{
-		Context->ClearState();
-		Context->Flush();
-	}
+void FRenderer::Shutdown() {
+  if (Context) {
+    Context->ClearState();
+    Context->Flush();
+  }
 
-	ObjectConstantBuffer.Reset();
-	GridConstantBuffer.Reset();
+  AllPipelineMap.clear();
+  ObjectConstantBuffer.Reset();
+  GridConstantBuffer.Reset();
 
-	BackBufferRTV.Reset();
-	DepthStencilView.Reset();
-	DepthStencilBuffer.Reset();
+  BackBufferRTV.Reset();
+  DepthStencilView.Reset();
+  DepthStencilBuffer.Reset();
 
-	SwapChain.Reset();
-	Context.Reset();
-	Device.Reset();
+  SwapChain.Reset();
+  Context.Reset();
+  Device.Reset();
 }
 
-void FRenderer::BeginFrame()
-{
-	Context->RSSetViewports(1, &Viewport);
-	Context->OMSetRenderTargets(1, BackBufferRTV.GetAddressOf(), DepthStencilView.Get());
+void FRenderer::BeginFrame() {
+  Context->RSSetViewports(1, &Viewport);
+  Context->OMSetRenderTargets(1, BackBufferRTV.GetAddressOf(),
+                              DepthStencilView.Get());
 
-
-	constexpr float ClearColor[] = { 0.05f, 0.05f, 0.08f, 1.0f };
-	Context->ClearRenderTargetView(BackBufferRTV.Get(), ClearColor);
-	Context->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+  constexpr float ClearColor[] = {0.05f, 0.05f, 0.08f, 1.0f};
+  Context->ClearRenderTargetView(BackBufferRTV.Get(), ClearColor);
+  Context->ClearDepthStencilView(
+      DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
-void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV)
-{
-	// Viewport는 전체 백버퍼 크기를 유지하고, UV는 그리기 직전에 픽셀로 변환한다.
-	D3D11_VIEWPORT RenderViewport = Viewport;
-	RenderViewport.TopLeftX = TopLeftUV.X * Viewport.Width;
-	RenderViewport.TopLeftY = TopLeftUV.Y * Viewport.Height;
-	RenderViewport.Width = LengthUV.X * Viewport.Width;
-	RenderViewport.Height = LengthUV.Y * Viewport.Height;
-	Context->RSSetViewports(1, &RenderViewport);
+void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV) {
+  // Viewport는 전체 백버퍼 크기를 유지하고, UV는 그리기 직전에 픽셀로 변환한다.
+  D3D11_VIEWPORT RenderViewport = Viewport;
+  RenderViewport.TopLeftX = TopLeftUV.X * Viewport.Width;
+  RenderViewport.TopLeftY = TopLeftUV.Y * Viewport.Height;
+  RenderViewport.Width = LengthUV.X * Viewport.Width;
+  RenderViewport.Height = LengthUV.Y * Viewport.Height;
+  Context->RSSetViewports(1, &RenderViewport);
 
-	FFrameConstants Constants{ FVector2{ RenderViewport.Width, RenderViewport.Height } };
-	Context->UpdateSubresource(FrameConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
-	Context->VSSetConstantBuffers(1, 1, FrameConstantBuffer.GetAddressOf());
-	Context->PSSetConstantBuffers(1, 1, FrameConstantBuffer.GetAddressOf());
+  FFrameConstants Constants{
+      FVector2{RenderViewport.Width, RenderViewport.Height}};
+  Context->UpdateSubresource(FrameConstantBuffer.Get(), 0, nullptr, &Constants,
+                             0, 0);
+  Context->VSSetConstantBuffers(1, 1, FrameConstantBuffer.GetAddressOf());
+  Context->PSSetConstantBuffers(1, 1, FrameConstantBuffer.GetAddressOf());
 };
 
-void FRenderer::Draw(const FMesh& Mesh, const FMaterial& Material, const FObjectConstants& ObjectConstants)
+void FRenderer::Draw(const FMesh &Mesh, const FMaterial &Material,
+                     const FObjectConstants &ObjectConstants) 
 {
-	UpdateObjectConstants(ObjectConstants);
+  UpdateObjectConstants(ObjectConstants);
 
-	if (Mesh.GetVertexLayout() != Material.GetVertexLayout())
-	{
-		return;
-	}
 
-	const auto& Pipeline = Material.Pipeline;
+  TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
+  if (CurrentRenderMode == ERenderMode::Wireframe) {
+    Pipeline = GetPipeline(EBuiltinPipeline::Simple_Wireframe);
+  }
 
-	Pipeline->Bind(*Context.Get());
-	Material.BindResources(*Context.Get());
-	Mesh.BindResources(*Context.Get());
+  if (Pipeline) {
+    Pipeline->Bind(*Context.Get());
+  }
 
-	Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+  Material.BindResources(*Context.Get());
+  Mesh.BindResources(*Context.Get());
 
-	if (Mesh.HasIndices())
-	{
-		Context->DrawIndexed(Mesh.IndexCount, 0, 0);
-	}
-	else
-	{
-		Context->Draw(Mesh.VertexCount, 0);
-	}
+  Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+
+  if (Mesh.HasIndices()) {
+    Context->DrawIndexed(Mesh.IndexCount, 0, 0);
+  } else {
+    Context->Draw(Mesh.VertexCount, 0);
+  }
 }
 
-void FRenderer::DrawGrid(const FMesh& Mesh, const FMaterial& Material, const FGridConstants& GridConstants)
-{
-	UpdateGridConstants(GridConstants);
+void FRenderer::DrawGrid(const FMesh &Mesh, const FMaterial &Material,
+                         const FGridConstants &GridConstants) {
+  UpdateGridConstants(GridConstants);
+  const auto &Pipeline = Material.Pipeline;
 
-	if (Mesh.GetVertexLayout() != Material.GetVertexLayout())
-	{
-		return;
-	}
+  Pipeline->Bind(*Context.Get());
+  Material.BindResources(*Context.Get());
+  Mesh.BindResources(*Context.Get());
 
-	const auto& Pipeline = Material.Pipeline;
-		
-	Pipeline->Bind(*Context.Get());
-	Material.BindResources(*Context.Get());
-	Mesh.BindResources(*Context.Get());
+  Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
-	Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-
-	if (Mesh.HasIndices())
-	{
-		Context->DrawIndexed(Mesh.IndexCount, 0, 0);
-	}
-	else
-	{
-		Context->Draw(Mesh.VertexCount, 0);
-	}
+  if (Mesh.HasIndices()) {
+    Context->DrawIndexed(Mesh.IndexCount, 0, 0);
+  } else {
+    Context->Draw(Mesh.VertexCount, 0);
+  }
 }
 
-void FRenderer::ClearDepth()
-{
-	Context->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+void FRenderer::ClearDepth() {
+  Context->ClearDepthStencilView(
+      DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
+void FRenderer::SwapBuffer() { SwapChain->Present(1u, 0u); }
 
-void FRenderer::SwapBuffer()
-{
-	SwapChain->Present(1u, 0u);
+void FRenderer::OnWindowSize(UINT Width, UINT Height) {
+  Context->OMSetRenderTargets(0, nullptr, nullptr);
+  BackBufferRTV.Reset();
+  DepthStencilView.Reset();
+  DepthStencilBuffer.Reset();
+
+  SwapChain->ResizeBuffers(0, Width, Height, DXGI_FORMAT_UNKNOWN, 0);
+  Viewport.Width = static_cast<float>(Width);
+  Viewport.Height = static_cast<float>(Height);
+
+  InitializeBackBufferAndDepthStencil();
 }
 
-void FRenderer::OnWindowSize(UINT Width, UINT Height)
-{
-	Context->OMSetRenderTargets(0, nullptr, nullptr);
-	BackBufferRTV.Reset();
-	DepthStencilView.Reset();
-	DepthStencilBuffer.Reset();
+TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
+  if (!Desc.VertexData || Desc.VertexCount == 0 || Desc.VertexDataSize == 0 ||
+      Desc.VertexStride == 0) {
+    return nullptr;
+  }
+  if (Desc.IndexCount > 0 && (!Desc.IndexData || Desc.IndexDataSize == 0)) {
+    return nullptr;
+  }
 
-	SwapChain->ResizeBuffers(0, Width, Height, DXGI_FORMAT_UNKNOWN, 0);
-	Viewport.Width = static_cast<float>(Width);
-	Viewport.Height = static_cast<float>(Height);
+  auto Mesh = TSharedPtr<FMesh>{new FMesh()};
+  D3D11_BUFFER_DESC VertexBufferDesc = {
+      .ByteWidth = Desc.VertexDataSize,
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+  };
 
-	InitializeBackBufferAndDepthStencil();
+  D3D11_SUBRESOURCE_DATA VertexData = {
+      .pSysMem = Desc.VertexData,
+  };
+
+  HRESULT Result =
+      Device->CreateBuffer(&VertexBufferDesc, &VertexData, &Mesh->VertexBuffer);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+  Mesh->VertexCount = Desc.VertexCount;
+  Mesh->VertexStride = Desc.VertexStride;
+
+  if (Desc.IndexCount > 0 && Desc.IndexData) {
+    D3D11_BUFFER_DESC IndexBufferDesc = {
+        .ByteWidth = Desc.IndexDataSize,
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_INDEX_BUFFER,
+    };
+
+    D3D11_SUBRESOURCE_DATA IndexData = {
+        .pSysMem = Desc.IndexData,
+    };
+
+    Result =
+        Device->CreateBuffer(&IndexBufferDesc, &IndexData, &Mesh->IndexBuffer);
+    if (FAILED(Result)) {
+      return nullptr;
+    }
+  }
+  Mesh->IndexCount = Desc.IndexCount;
+
+  const auto *vertices = static_cast<const FVertexData *>(Desc.VertexData);
+
+  Mesh->Positions.reserve(Desc.VertexCount);
+  for (uint32 i = 0; i < Desc.VertexCount; ++i) {
+    Mesh->Positions.push_back(
+        FVector{vertices[i].x, vertices[i].y, vertices[i].z});
+  }
+
+  if (Desc.IndexCount > 0) {
+    const auto *indices = static_cast<const uint32 *>(Desc.IndexData);
+    Mesh->Indices.assign(indices, indices + Desc.IndexCount);
+  }
+
+  Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST
+                                : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	Mesh->LocalBounds = FAxisAlignedBoundingBox{ *Mesh.get()};
+  return Mesh;
 }
 
-TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
-{
-	if (!Desc.VertexData ||
-		Desc.VertexCount == 0 ||
-		Desc.VertexDataSize == 0 ||
-		Desc.VertexStride == 0)
-	{
-		return nullptr;
-	}
-	if (Desc.IndexCount > 0 && (!Desc.IndexData || Desc.IndexDataSize == 0))
-	{
-		return nullptr;
-	}
-
-	auto Mesh = TSharedPtr<FMesh>{ new FMesh() };
-	Mesh->VertexLayout = Desc.VertexLayout;
-
-	D3D11_BUFFER_DESC VertexBufferDesc = {
-		.ByteWidth = Desc.VertexDataSize,
-		.Usage = D3D11_USAGE_DEFAULT,
-		.BindFlags = D3D11_BIND_VERTEX_BUFFER,
-	};
-
-	D3D11_SUBRESOURCE_DATA VertexData = {
-		.pSysMem = Desc.VertexData,
-	};
-
-	HRESULT Result = Device->CreateBuffer(&VertexBufferDesc, &VertexData, &Mesh->VertexBuffer);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
-	Mesh->VertexCount = Desc.VertexCount;
-	Mesh->VertexStride = Desc.VertexStride;
-
-	if (Desc.IndexCount > 0 && Desc.IndexData)
-	{
-		D3D11_BUFFER_DESC IndexBufferDesc = {
-			.ByteWidth = Desc.IndexDataSize,
-			.Usage = D3D11_USAGE_DEFAULT,
-			.BindFlags = D3D11_BIND_INDEX_BUFFER,
-		};
-
-		D3D11_SUBRESOURCE_DATA IndexData = {
-			.pSysMem = Desc.IndexData,
-		};
-
-		Result = Device->CreateBuffer(&IndexBufferDesc, &IndexData, &Mesh->IndexBuffer);
-		if (FAILED(Result))
-		{
-			return nullptr;
-		}
-	}
-	Mesh->IndexCount = Desc.IndexCount;
-
-	const auto* vertices =
-		static_cast<const FVertexPositionColor*>(Desc.VertexData);
-
-	Mesh->Positions.reserve(Desc.VertexCount);
-	for (uint32 i = 0; i < Desc.VertexCount; ++i)
-	{
-		Mesh->Positions.push_back(vertices[i].Position);
-	}
-
-	if (Desc.IndexCount > 0)
-	{
-		const auto* indices = static_cast<const uint32*>(Desc.IndexData);
-		Mesh->Indices.assign(indices, indices + Desc.IndexCount);
-	}
-
-	Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-
-	return Mesh;
+TSharedPtr<FMaterial> FRenderer::CreateMaterial(const FMaterialDesc &Desc) {
+  TSharedPtr<FMaterial> Material{new FMaterial()};
+  return Material;
 }
 
-TSharedPtr<FMaterial> FRenderer::CreateMaterial(const FMaterialDesc& Desc)
-{
-	TSharedPtr<FMaterial> Material{ new FMaterial() };
-
-	Material->Pipeline = FindOrCreateRenderPipeline(Desc);
-	if (!Material->Pipeline)
-	{
-		return nullptr;
-	}
-
-	return Material;
+void FRenderer::GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,
+                                             ID3D11DeviceContext *&ContextOut) {
+  DeviceOut = Device.Get();
+  ContextOut = Context.Get();
 }
 
-void FRenderer::GetDeviceAndContext_ImplDX11(ID3D11Device*& DeviceOut, ID3D11DeviceContext*& ContextOut) {
-	DeviceOut = Device.Get();
-	ContextOut = Context.Get();
+TSharedPtr<FRenderPipeline>
+FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
+                                ERenderMode RenderMode) {
+  TSharedPtr<FRenderPipeline> Pipeline{new FRenderPipeline()};
+  Pipeline->desc = Desc;
+
+  Microsoft::WRL::ComPtr<ID3DBlob> Blob;
+  HRESULT Result =
+      D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  Result = Device->CreateVertexShader(Blob->GetBufferPointer(),
+                                      Blob->GetBufferSize(), nullptr,
+                                      &Pipeline->VertexShader);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  Result = Device->CreateInputLayout(
+      FVertexLayouts::Layout, FVertexLayouts::NumElements,
+      Blob->GetBufferPointer(), Blob->GetBufferSize(),
+      &Pipeline->InputLayout);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  Result = D3DReadFileToBlob(Desc.PixelShaderFileName.c_str(), &Blob);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  Result = Device->CreatePixelShader(Blob->GetBufferPointer(),
+                                     Blob->GetBufferSize(), nullptr,
+                                     &Pipeline->PixelShader);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  D3D11_RASTERIZER_DESC RasterizerDesc{
+      .FillMode = (RenderMode == ERenderMode::Wireframe)
+                      ? D3D11_FILL_WIREFRAME
+                      : D3D11_FILL_SOLID,
+      .CullMode = D3D11_CULL_BACK,
+      .FrontCounterClockwise = false,
+  };
+
+  Result = Device->CreateRasterizerState(&RasterizerDesc,
+                                        &Pipeline->RasterizerState);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  D3D11_DEPTH_STENCIL_DESC DepthStencilDesc{
+      .DepthEnable = Desc.bEnableDepthTest,
+      .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
+      .DepthFunc = D3D11_COMPARISON_LESS,
+  };
+
+  Result = Device->CreateDepthStencilState(&DepthStencilDesc,
+                                          &Pipeline->DepthStencilState);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  return Pipeline;
 }
 
-bool FRenderer::InitializeDeviceAndSwapChain(HWND Window)
-{
-	constexpr D3D_FEATURE_LEVEL FeatureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
+TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
+  auto it = AllPipelineMap.find(Id);
+  if (it != AllPipelineMap.end()) {
+    return it->second;
+  }
+  return nullptr;
+}
 
-	DXGI_SWAP_CHAIN_DESC SwapChainDesc{
-		.BufferDesc = {
-			.Width = 0u,
-			.Height = 0u,
-			.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB,
-		},
-		.SampleDesc = {
-			.Count = 1u,
-		},
-		.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
-		.BufferCount = 2u,
-		.OutputWindow = Window,
-		.Windowed = true,
-		.SwapEffect = DXGI_SWAP_EFFECT_DISCARD,
-	};
+bool FRenderer::CreateSolidWireframePipeline() {
+  const FWString Path = GetExecutableDirectory();
+  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
+  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
 
-	UINT CreateDeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+    return false;
+  }
+
+  FRenderPipelineDesc Desc = {
+      .VertexShaderFileName = VsPath,
+      .PixelShaderFileName = PsPath,
+      .bEnableDepthTest = true,
+  };
+
+  // 솔리드 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> SolidPipeline =
+      CreateRenderPipeline(Desc, ERenderMode::Solid);
+  if (SolidPipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
+  }
+
+  // 와이어프레임 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> WireframePipeline =
+      CreateRenderPipeline(Desc, ERenderMode::Wireframe);
+  if (WireframePipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
+  }
+
+  return SolidPipeline != nullptr && WireframePipeline != nullptr;
+}
+
+bool FRenderer::InitializePipeLines() {
+  // 솔리드 및 와이어프레임 파이프라인 개별 생성
+  CreateSolidWireframePipeline();
+
+  const FWString Path = GetExecutableDirectory();
+
+  for (const FPipelineEntry &Entry : pipelineTable) {
+    // 이미 등록된 경우 건너뜀
+    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
+      continue;
+    }
+
+    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
+    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
+
+    // 셰이더 파일 미존재 시 건너뜀
+    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+      continue;
+    }
+
+    FRenderPipelineDesc PipelineDesc = {
+        .VertexShaderFileName = VsPath,
+        .PixelShaderFileName = PsPath,
+        .bEnableDepthTest = true,
+    };
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        CreateRenderPipeline(PipelineDesc, ERenderMode::Solid);
+    if (!Pipeline) {
+      return false;
+    }
+
+    AllPipelineMap[Entry.Id] = Pipeline;
+  }
+  return true;
+}
+
+bool FRenderer::InitializeDeviceAndSwapChain(HWND Window) {
+  constexpr D3D_FEATURE_LEVEL FeatureLevels[] = {D3D_FEATURE_LEVEL_11_0};
+
+  DXGI_SWAP_CHAIN_DESC SwapChainDesc{
+      .BufferDesc =
+          {
+              .Width = 0u,
+              .Height = 0u,
+              .Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB,
+          },
+      .SampleDesc =
+          {
+              .Count = 1u,
+          },
+      .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+      .BufferCount = 2u,
+      .OutputWindow = Window,
+      .Windowed = true,
+      .SwapEffect = DXGI_SWAP_EFFECT_DISCARD,
+  };
+
+  UINT CreateDeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifndef NDEBUG
-	CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+  CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	HRESULT Result = D3D11CreateDeviceAndSwapChain(
-		nullptr,
-		D3D_DRIVER_TYPE_HARDWARE,
-		nullptr,
-		CreateDeviceFlags,
-		FeatureLevels,
-		ARRAYSIZE(FeatureLevels),
-		D3D11_SDK_VERSION,
-		&SwapChainDesc,
-		&SwapChain,
-		&Device,
-		nullptr,
-		&Context);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+  HRESULT Result = D3D11CreateDeviceAndSwapChain(
+      nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, CreateDeviceFlags,
+      FeatureLevels, ARRAYSIZE(FeatureLevels), D3D11_SDK_VERSION,
+      &SwapChainDesc, &SwapChain, &Device, nullptr, &Context);
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	RECT ClientRect{};
-	GetClientRect(Window, &ClientRect);
+  RECT ClientRect{};
+  GetClientRect(Window, &ClientRect);
 
-	Viewport = {
-		.TopLeftX = 0.0f,
-		.TopLeftY = 0.0f,
-		.Width = static_cast<float>(ClientRect.right - ClientRect.left),
-		.Height = static_cast<float>(ClientRect.bottom - ClientRect.top),
-		.MinDepth = 0.0f,
-		.MaxDepth = 1.0f,
-	};
+  Viewport = {
+      .TopLeftX = 0.0f,
+      .TopLeftY = 0.0f,
+      .Width = static_cast<float>(ClientRect.right - ClientRect.left),
+      .Height = static_cast<float>(ClientRect.bottom - ClientRect.top),
+      .MinDepth = 0.0f,
+      .MaxDepth = 1.0f,
+  };
 
-	return true;
+  return true;
 }
 
-bool FRenderer::InitializeBackBufferAndDepthStencil()
-{
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> BackBuffer;
-	HRESULT Result = SwapChain->GetBuffer(0, IID_PPV_ARGS(&BackBuffer));
-	if (FAILED(Result))
-	{
-		return false;
-	}
+bool FRenderer::InitializeBackBufferAndDepthStencil() {
+  Microsoft::WRL::ComPtr<ID3D11Texture2D> BackBuffer;
+  HRESULT Result = SwapChain->GetBuffer(0, IID_PPV_ARGS(&BackBuffer));
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	Result = Device->CreateRenderTargetView(BackBuffer.Get(), nullptr, &BackBufferRTV);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+  Result =
+      Device->CreateRenderTargetView(BackBuffer.Get(), nullptr, &BackBufferRTV);
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	D3D11_TEXTURE2D_DESC DepthStencilDesc = {
-		.Width = static_cast<UINT>(Viewport.Width),
-		.Height = static_cast<UINT>(Viewport.Height),
-		.MipLevels = 1u,
-		.ArraySize = 1u,
-		.Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
-		.SampleDesc = {
-			.Count = 1u,
-		},
-		.Usage = D3D11_USAGE_DEFAULT,
-		.BindFlags = D3D11_BIND_DEPTH_STENCIL,
-	};
+  D3D11_TEXTURE2D_DESC DepthStencilDesc = {
+      .Width = static_cast<UINT>(Viewport.Width),
+      .Height = static_cast<UINT>(Viewport.Height),
+      .MipLevels = 1u,
+      .ArraySize = 1u,
+      .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      .SampleDesc =
+          {
+              .Count = 1u,
+          },
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_DEPTH_STENCIL,
+  };
 
-	Result = Device->CreateTexture2D(&DepthStencilDesc, nullptr, &DepthStencilBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+  Result =
+      Device->CreateTexture2D(&DepthStencilDesc, nullptr, &DepthStencilBuffer);
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	Result = Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr, &DepthStencilView);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+  Result = Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr,
+                                          &DepthStencilView);
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-bool FRenderer::InitializeConstantBuffers()
-{
-	D3D11_BUFFER_DESC ObjectConstantBufferDesc = {
-		.ByteWidth = sizeof(FObjectConstants),
-		.Usage = D3D11_USAGE_DYNAMIC,
-		.BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-		.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-	};
+bool FRenderer::InitializeConstantBuffers() {
+  D3D11_BUFFER_DESC ObjectConstantBufferDesc = {
+      .ByteWidth = sizeof(FObjectConstants),
+      .Usage = D3D11_USAGE_DYNAMIC,
+      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+      .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+  };
 
-	HRESULT Result = Device->CreateBuffer(&ObjectConstantBufferDesc, nullptr, &ObjectConstantBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+  HRESULT Result = Device->CreateBuffer(&ObjectConstantBufferDesc, nullptr,
+                                        &ObjectConstantBuffer);
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	D3D11_BUFFER_DESC FrameConstantBufferDesc = {
-		.ByteWidth = sizeof(FFrameConstants),
-		.Usage = D3D11_USAGE_DEFAULT,
-		.BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-	};
+  D3D11_BUFFER_DESC FrameConstantBufferDesc = {
+      .ByteWidth = sizeof(FFrameConstants),
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+  };
 
-	Result = Device->CreateBuffer(&FrameConstantBufferDesc, nullptr, &FrameConstantBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+  Result = Device->CreateBuffer(&FrameConstantBufferDesc, nullptr,
+                                &FrameConstantBuffer);
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-TSharedPtr<FRenderPipeline> FRenderer::FindOrCreateRenderPipeline(const FMaterialDesc& Desc)
-{
-	// TODO: 이미 만들었던 파이프라인 있는지 찾아서 쓰기
 
-	TSharedPtr<FRenderPipeline> Pipeline{ new FRenderPipeline() };
-	Pipeline->VertexLayout = Desc.VertexLayout;
+bool FRenderer::InitializeGridConstantBuffers() {
+  D3D11_BUFFER_DESC GridConstantBufferDesc = {
+      .ByteWidth = sizeof(FGridConstants),
+      .Usage = D3D11_USAGE_DYNAMIC,
+      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+      .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+  };
 
-	Microsoft::WRL::ComPtr<ID3DBlob> Blob;	
-	HRESULT Result = D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
+  HRESULT Result = Device->CreateBuffer(&GridConstantBufferDesc, nullptr,
+                                        &GridConstantBuffer);
+  if (FAILED(Result)) {
+    return false;
+  }
 
-	Result = Device->CreateVertexShader(
-		Blob->GetBufferPointer(),
-		Blob->GetBufferSize(),
-		nullptr,
-		&Pipeline->VertexShader);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
-
-	FVertexLayoutDesc LayoutDesc = GetVertexLayoutDesc(Desc.VertexLayout);
-	Result = Device->CreateInputLayout(LayoutDesc.InputElements, LayoutDesc.InputElementCount, Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
-
-	Result = D3DReadFileToBlob(Desc.PixelShaderFileName.c_str(), &Blob);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
-
-	Result = Device->CreatePixelShader(
-		Blob->GetBufferPointer(),
-		Blob->GetBufferSize(),
-		nullptr,
-		&Pipeline->PixelShader);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
-
-	D3D11_RASTERIZER_DESC RasterizerDesc{
-		.FillMode = D3D11_FILL_SOLID,
-		.CullMode = D3D11_CULL_BACK,
-		.FrontCounterClockwise = false,
-	};
-
-	Result = Device->CreateRasterizerState(&RasterizerDesc, &Pipeline->RasterizerState);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
-
-	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc{
-		.DepthEnable = Desc.bEnableDepthTest,
-		.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
-		.DepthFunc = D3D11_COMPARISON_LESS,
-	};
-
-	Result = Device->CreateDepthStencilState(&DepthStencilDesc, &Pipeline->DepthStencilState);
-	if (FAILED(Result))
-	{
-		return nullptr;
-	}
-
-	return Pipeline;
+  return true;
 }
 
-bool FRenderer::InitializeGridConstantBuffers()
-{
-	D3D11_BUFFER_DESC GridConstantBufferDesc = {
-		.ByteWidth = sizeof(FGridConstants),
-		.Usage = D3D11_USAGE_DYNAMIC,
-		.BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-		.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-	};
+void FRenderer::UpdateObjectConstants(const FObjectConstants &Constants) {
+  static const FMatrix UnrealClipToD3DClip{
+      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
+      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
 
-	HRESULT Result = Device->CreateBuffer(&GridConstantBufferDesc, nullptr, &GridConstantBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+  // 언리얼 Clip -> D3D Clip 좌표 변환
+  FObjectConstants ShaderConstants = Constants;
+  ShaderConstants.MVP *= UnrealClipToD3DClip;
 
-	return true;
+  D3D11_MAPPED_SUBRESOURCE MappedResource{};
+  Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
+               &MappedResource);
+  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
+  Context->Unmap(ObjectConstantBuffer.Get(), 0);
+
+  Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
+  Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
 }
 
-void FRenderer::UpdateObjectConstants(const FObjectConstants& Constants)
-{
-	static const FMatrix UnrealClipToD3DClip{
-		FVector{ 0.0f, 0.0f, 1.0f },
-		FVector{ 1.0f, 0.0f, 0.0f },
-		FVector{ 0.0f, 1.0f, 0.0f },
-		FVector{ 0.0f, 0.0f, 0.0f }
-	};
+void FRenderer::UpdateGridConstants(const FGridConstants &Constants) {
+  static const FMatrix UnrealClipToD3DClip{
+      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
+      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
 
-	// 언리얼 Clip -> D3D Clip 좌표 변환
-	FObjectConstants ShaderConstants = Constants;
-	ShaderConstants.MVP *= UnrealClipToD3DClip;
+  // 언리얼 Clip -> D3D Clip 좌표 변환
+  FGridConstants ShaderConstants = Constants;
+  ShaderConstants.MVP *= UnrealClipToD3DClip;
 
-	D3D11_MAPPED_SUBRESOURCE MappedResource{};
-	Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
-	memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-	Context->Unmap(ObjectConstantBuffer.Get(), 0);
+  D3D11_MAPPED_SUBRESOURCE MappedResource{};
+  Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
+               &MappedResource);
+  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
+  Context->Unmap(GridConstantBuffer.Get(), 0);
 
-	Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-	Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
+  Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
+  Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
 }
-
-void FRenderer::UpdateGridConstants(const FGridConstants& Constants)
-{
-	static const FMatrix UnrealClipToD3DClip{
-		FVector{ 0.0f, 0.0f, 1.0f },
-		FVector{ 1.0f, 0.0f, 0.0f },
-		FVector{ 0.0f, 1.0f, 0.0f },
-		FVector{ 0.0f, 0.0f, 0.0f }
-	};
-
-	// 언리얼 Clip -> D3D Clip 좌표 변환
-	FGridConstants ShaderConstants = Constants;
-	ShaderConstants.MVP *= UnrealClipToD3DClip;
-
-	D3D11_MAPPED_SUBRESOURCE MappedResource{};
-	Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
-	memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-	Context->Unmap(GridConstantBuffer.Get(), 0);
-
-	Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-	Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-}
-

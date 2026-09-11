@@ -12,6 +12,7 @@ void UPlaneComp::OnRegister(UScene& Scene)
 {
 	UPrimitiveComponent::OnRegister(Scene);
 
-	SetMesh(Scene.GetRenderResourceLibrary().GetPlaneMesh());
-	SetMaterial(Scene.GetRenderResourceLibrary().GetSimpleMaterial());
+	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Plane"));
+	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
 }
+

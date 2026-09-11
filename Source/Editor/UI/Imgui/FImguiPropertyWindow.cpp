@@ -1,5 +1,7 @@
-﻿#include "FImguiPropertyWindow.h"
+#include "FImguiPropertyWindow.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
+#include "Runtime/CoreUObject/UClass.h"
+#include "Runtime/Actors/AActor.h"
 #include "ThirdParty/Imgui/imgui.h"
 #include "ThirdParty/Imgui/imgui_internal.h"
 #include "ThirdParty/Imgui/imgui_impl_dx11.h"
@@ -8,19 +10,39 @@
 void FImguiPropertyWindow::Process(FEditor& Editor)
 {
 	USceneComponent* SceneComponent = nullptr;
-	if (Editor.GetSelectedObject() != nullptr)
-		SceneComponent = Editor.GetSelectedObject()->Cast<USceneComponent>();
+	AActor* SelectedActor = Editor.GetSelectedActor();
+	if (SelectedActor)
+	{
+		SceneComponent = SelectedActor->GetRootComponent();
+	}
 	ImGui::Begin("Jungle Property Window");
 
-
-	if (SceneComponent)
+	if (SelectedActor)
 	{
-		ImGui::DragFloat3("Translation", &Editor.SelectedTransform.Location.X, 0.01f);
-		if (ImGui::DragFloat3("Rotation (deg)", &Editor.SelectedEulerDegDisplay.X, 0.5f))
+		// 액터 정보 출력
+		const char* ActorClassName = SelectedActor->GetClass() ? SelectedActor->GetClass()->GetDisplayName().c_str() : "None";
+		ImGui::Text("Actor Class: %s", ActorClassName);
+		ImGui::Text("Actor UUID: %u", SelectedActor->GetUUID());
+
+		if (SceneComponent)
 		{
-			Editor.SelectedTransform.Rotation = FQuaternion::FromEulerXYZDeg(Editor.SelectedEulerDegDisplay);
+			// 컴포넌트 정보 출력
+			const char* CompClassName = SceneComponent->GetClass() ? SceneComponent->GetClass()->GetDisplayName().c_str() : "None";
+			ImGui::Text("Root Component: %s", CompClassName);
+			ImGui::Text("Component UUID: %u", SceneComponent->GetUUID());
 		}
-		ImGui::DragFloat3("Scale", &Editor.SelectedTransform.Scale3D.X, 0.01f);
+
+		ImGui::Separator();
+
+		if (SceneComponent)
+		{
+			ImGui::DragFloat3("Translation", &Editor.SelectedTransform.Location.X, 0.01f);
+			if (ImGui::DragFloat3("Rotation (deg)", &Editor.SelectedEulerDegDisplay.X, 0.5f))
+			{
+				Editor.SelectedTransform.Rotation = FQuaternion::FromEulerXYZDeg(Editor.SelectedEulerDegDisplay);
+			}
+			ImGui::DragFloat3("Scale", &Editor.SelectedTransform.Scale3D.X, 0.01f);
+		}
 	}
 	else
 	{

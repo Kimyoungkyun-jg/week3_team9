@@ -9,14 +9,8 @@ class USphereComp : public UPrimitiveComponent
 	GENERATED_BODY()
 
 protected:
+	explicit USphereComp() = default;
 
+public:
 	void OnRegister(UScene& Scene) override;
 };
-
-inline void USphereComp::OnRegister(UScene& Scene)
-{
-	UPrimitiveComponent::OnRegister(Scene);
-
-	SetMesh(Scene.GetRenderResourceLibrary().GetSphereMesh());
-	SetMaterial(Scene.GetRenderResourceLibrary().GetSimpleMaterial());
-}
