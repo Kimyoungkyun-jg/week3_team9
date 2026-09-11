@@ -24,7 +24,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
       !CreatePlaneMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
-      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer)) {
+      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
+      !CreateTexturedMaterial(Renderer)) {
     return false;
   }
 
@@ -611,6 +612,34 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   }
 }
 
+bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
+
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/TexturedPS.cso",
+  };
+
+  TSharedPtr<FMaterial> Material =
+      RegisterMaterial("Textured", Renderer.CreateMaterial(Desc));
+  if (!Material) {
+    return false;
+  }
+
+  TSharedPtr<FRenderPipeline> Pipeline =
+      Renderer.GetPipeline(EBuiltinPipeline::Textured);
+  if (!Pipeline) {
+    // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+    return false;
+  }
+  Material->SetPipeLine(Pipeline);
+
+  // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+  Material->SetTexture(GetTexture("sandclock"));
+
+  return true;
+}
+
 bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
   FWString Path = GetExecutableDirectory();
 
@@ -684,13 +713,19 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
         TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
         stbi_image_free(Pixels);
 
+        if (!Texture) continue;   // 실패한 텍스처는 맵에 넣지 않는다
 
         RegisterTexture(KeyWide, Texture);
-        if (!Texture) continue;
-        //RegisterTexture(ToNarrow(KeyWide), Texture);
     }
 
     return true;
+}
+
+bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& textureName)
+{
+
+
+    return false;
 }
 
 

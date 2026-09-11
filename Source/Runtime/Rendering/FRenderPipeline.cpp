@@ -9,4 +9,6 @@ void FRenderPipeline::Bind(ID3D11DeviceContext& Context) const
 
 	Context.RSSetState(RasterizerState.Get());
 	Context.OMSetDepthStencilState(DepthStencilState.Get(), 0);
+
+	Context.PSSetSamplers(0u, 1u, SamplerState.GetAddressOf());
 }

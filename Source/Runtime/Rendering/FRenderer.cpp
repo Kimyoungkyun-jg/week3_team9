@@ -279,6 +279,20 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
+  D3D11_SAMPLER_DESC SamplerDesc{
+      .Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+      .AddressU = D3D11_TEXTURE_ADDRESS_WRAP,
+      .AddressV = D3D11_TEXTURE_ADDRESS_WRAP,
+      .AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
+      .ComparisonFunc = D3D11_COMPARISON_NEVER,
+      .MaxLOD = D3D11_FLOAT32_MAX,
+  };
+
+  Result = Device->CreateSamplerState(&SamplerDesc, &Pipeline->SamplerState);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
   return Pipeline;
 }
 

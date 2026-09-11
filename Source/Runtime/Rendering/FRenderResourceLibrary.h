@@ -72,6 +72,15 @@ public:
       AllTextureMap[name] = texture;
   }
 
+  // 텍스처 조회. 없으면 nullptr
+  [[nodiscard]] TSharedPtr<FTexture> GetTexture(const FString& name) const
+  {
+      auto it = AllTextureMap.find(name);
+      if (it != AllTextureMap.end())
+          return it->second;
+      return nullptr;
+  }
+
   // 개별 머티리얼 접근자
   [[nodiscard]] TSharedPtr<FMaterial> GetSimpleMaterial() const { return SimpleMaterial; }
   [[nodiscard]] TSharedPtr<FMaterial> GetGridMaterial() const { return GridMaterial; }
@@ -145,7 +154,12 @@ private:
   bool CreateSimpleMaterial(FRenderer &Renderer);
   bool CreateGridMaterial(FRenderer &Renderer);
   bool CreateRotationGizmoMaterial(FRenderer &Renderer);
+  //시작시 1번만 호출
   bool CreateTextures(FRenderer& Renderer);
+  // 텍스처를 샘플링하는 머티리얼. CreateTextures 이후에 호출해야 함
+  bool CreateTexturedMaterial(FRenderer& Renderer);
+  bool CreateCommonMaterial(FRenderer& Renderer, FString& textureName);
+
 
 
   // 개별 리소스 멤버 변수
