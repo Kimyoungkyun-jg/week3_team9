@@ -299,6 +299,7 @@
     <ClCompile Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.cpp" />
     <ClCompile Include="Source\Runtime\Input\FCameraInputController.cpp" />
     <ClCompile Include="Source\Runtime\Input\FInputManager.cpp" />
+    <ClCompile Include="Source\Runtime\Rendering\FFont.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderer.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FMaterial.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FMesh.cpp" />
@@ -409,6 +410,7 @@
     <ClInclude Include="Source\Runtime\Math\FVector.h" />
     <ClInclude Include="Source\Runtime\Math\FVector2.h" />
     <ClInclude Include="Source\Runtime\Math\FVector4.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FFont.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderResourceLibrary.h" />
     <ClInclude Include="Source\Runtime\Rendering\ShaderConstants.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderPipeline.h" />
