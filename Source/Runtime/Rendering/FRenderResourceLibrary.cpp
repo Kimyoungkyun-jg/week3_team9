@@ -600,6 +600,8 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   if (SimpleMaterial) {
     SimpleMaterial->SetPipeLine(
         GetPipeline(EBuiltinPipeline::Simple_Solid));
+    SimpleMaterial->SetWireframePipeLine(
+        GetPipeline(EBuiltinPipeline::Simple_Wireframe));
     return true;
   } else {
     return false;

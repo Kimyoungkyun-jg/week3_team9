@@ -72,7 +72,17 @@ void FRenderer::Draw(const FMesh &Mesh, const FMaterial &Material,
                      const FObjectConstants &ObjectConstants,
                      ERenderMode InRenderMode) {
   UpdateObjectConstants(ObjectConstants);
+
+  // 렌더 모드 판별
+  const ERenderMode TargetMode = (InRenderMode == ERenderMode::Wireframe ||
+                                  CurrentRenderMode == ERenderMode::Wireframe)
+                                     ? ERenderMode::Wireframe
+                                     : ERenderMode::Solid;
+
   TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
+  if (TargetMode == ERenderMode::Wireframe && Material.WireframePipeline) {
+    Pipeline = Material.WireframePipeline;
+  }
 
   if (Pipeline) {
     Pipeline->Bind(*Context.Get());

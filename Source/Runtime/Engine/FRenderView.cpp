@@ -24,6 +24,7 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV,
     Constants.ColorOverride = FVector{1.0f, 1.0f, 1.0f};
     Constants.ColorOverrideAmount = 0.5f;
   }
+
   Renderer.Draw(*Rendered->GetMesh(), *Rendered->GetMaterial(), Constants);
 }
 
