@@ -14,12 +14,12 @@
 
 void FGizmo::Initialize(FRenderResourceLibrary& RenderResources)
 {
-	ArrowMesh = RenderResources.GetArrowMesh();
-	CircleMesh = RenderResources.GetCircleMesh();
-	RotationGizmoMesh = RenderResources.GetRotationGizmoMesh();
-	SquareArrowMesh = RenderResources.GetSquareArrowMesh();
-	Material = RenderResources.GetSimpleMaterial();
-	RotationGizmoMaterial = RenderResources.GetRotationGizmoMaterial();
+	ArrowMesh = RenderResources.GetMesh("Arrow");
+	CircleMesh = RenderResources.GetMesh("Circle");
+	RotationGizmoMesh = RenderResources.GetMesh("RotationGizmo");
+	SquareArrowMesh = RenderResources.GetMesh("SquareArrow");
+	Material = RenderResources.GetMaterial("Simple");
+	RotationGizmoMaterial = RenderResources.GetMaterial("RotationGizmo");
 }
 
 void FGizmo::Draw(FRenderer& Renderer, const FTransform& Transform, const FCamera& Camera) const
@@ -273,3 +273,4 @@ FVector2 FGizmo::WorldToViewport(const FVector& WorldPosition, const FCamera& Ca
 		(1.0f - Projected.Z) * 0.5f * ViewportSize.Y
 	};
 }
+

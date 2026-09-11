@@ -5,6 +5,10 @@
 #include "Runtime/Core/IntTypes.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
+#include "Runtime/CoreUObject/UObjectGlobals.h"
+#include "Runtime/Actors/AActor.h"
+#include <concepts>
+#include <type_traits>
 
 #include "ThirdParty/Json/json.hpp"
 
@@ -15,10 +19,48 @@ class UScene final : public UObject
 public:
 	void RegisterComponent(USceneComponent& Component);
 	void UnregisterComponent(USceneComponent& Component);
-	// TODO: 렌더링할 수 있는 컴포넌트만 가져오는데, 다른 방식으로 처리할 수도 있을 듯
+	// 렌더링 컴포넌트 목록 반환
 	[[nodiscard]] TArray<UPrimitiveComponent*> GetPrimitiveComponents() const;
-	// TODO: PrimitiveComponent가 Register할 때 얻으려고 필요한데 다른 방법은 없을까?
 	[[nodiscard]] FRenderResourceLibrary& GetRenderResourceLibrary() const { return RenderResourceLibrary; }
+
+	// 액터 목록 반환
+	[[nodiscard]] const TArray<AActor*>& GetActors() const { return Actors; }
+
+	// 위치와 크기를 지정하여 액터 생성
+	template <typename TActor, typename... TArgs>
+		requires std::derived_from<TActor, AActor>
+	TActor* SpawnActor(const FVector& Location, const FVector& Scale, TArgs&&... Args)
+	{
+		TActor* Actor = NewObject<TActor>(std::forward<TArgs>(Args)...);
+		Actor->SetRootComponent(NewObject<UPrimitiveComponent>());
+		if (Actor->GetRootComponent())
+		{
+			FTransform Transform{};
+			Transform.Location = Location;
+			Transform.Scale3D = Scale;
+			Actor->GetRootComponent()->SetRelativeTransform(Transform);
+			//RegisterComponent(*Actor->GetRootComponent());
+		}
+		Actors.push_back(Actor);
+		return Actor;
+	}
+
+	// 기본 위치와 크기로 액터 생성
+	template <typename TActor>
+		requires std::derived_from<TActor, AActor>
+	TActor* SpawnActor()
+	{
+		return SpawnActor<TActor>(FVector(0.0f, 0.0f, 0.0f), FVector(1.0f, 1.0f, 1.0f));
+	}
+
+	// 첫번째 인자가 벡터가 아닐 때 기본 위치와 크기 전달
+	template <typename TActor, typename FirstArg, typename... RestArgs>
+		requires std::derived_from<TActor, AActor> && (!std::is_same_v<std::decay_t<FirstArg>, FVector>)
+	TActor* SpawnActor(FirstArg&& First, RestArgs&&... Rest)
+	{
+		return SpawnActor<TActor>(FVector(0.0f, 0.0f, 0.0f), FVector(1.0f, 1.0f, 1.0f),
+			std::forward<FirstArg>(First), std::forward<RestArgs>(Rest)...);
+	}
 
 	json::JSON Serialize() const;
 	virtual bool Deserialize(const json::JSON& data) override;
@@ -31,11 +73,10 @@ private:
 		: RenderResourceLibrary(RenderResources)
 	{}
 
-	
-
 	uint32 Version = 1u;
 	uint32 NextUUID = 1u;
 	TArray<USceneComponent*> Components{};
+	TArray<AActor*> Actors{};
 
-	FRenderResourceLibrary& RenderResourceLibrary; // TODO: 추후 엔진으로부터 렌더러 추상화 시 제거
+	FRenderResourceLibrary& RenderResourceLibrary;
 };

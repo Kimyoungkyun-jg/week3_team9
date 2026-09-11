@@ -104,3 +104,4 @@ bool UScene::Deserialize(const json::JSON& data)
 	}
 	return true;
 }
+

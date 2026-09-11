@@ -15,11 +15,12 @@ public:
 	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
 	[[nodiscard]] FMatrix GetModelMatrix() const { return RelativeTransform.ToMatrix(); }
 
-protected:
-	UPrimitiveComponent() = default;
-
+	// 메쉬 및 재질 설정
 	void SetMesh(TSharedPtr<FMesh> Mesh) { PrimitiveMesh = std::move(Mesh); }
 	void SetMaterial(TSharedPtr<FMaterial> Material) { PrimitiveMaterial = std::move(Material); }
+
+protected:
+	UPrimitiveComponent() = default;
 
 private:
 	TSharedPtr<FMesh> PrimitiveMesh;

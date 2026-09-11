@@ -16,11 +16,14 @@ public:
 	FTransform RelativeTransform;
 	json::JSON Serialize() const override;
 	bool Deserialize(const json::JSON& data) override;
+	virtual void Update(float DeltaTime) {}
+
 protected:
 	USceneComponent() = default;
 
 	virtual void OnRegister(UScene& Scene) {}
 	virtual void OnUnregister(UScene& Scene) {}
+
 public:
 	FTransform GetRelativeTransform();
 	void SetRelativeTransform(FTransform RelativeTransform);
