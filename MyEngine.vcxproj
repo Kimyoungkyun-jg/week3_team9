@@ -264,11 +264,6 @@
   <ItemGroup>
     <ClCompile Include="Source\Editor\Application\FEditorApplication.cpp" />
     <ClCompile Include="Source\Editor\Core\FEditor.cpp" />
-    <ClCompile Include="Source\Editor\Core\FEditorInputManager.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="Source\Editor\EditorViewport\FEditorViewport.cpp" />
     <ClCompile Include="Source\Editor\Gizmo\FGizmo.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.cpp" />
@@ -282,6 +277,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FUObjectArray.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp" />
+    <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCylinderComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp" />

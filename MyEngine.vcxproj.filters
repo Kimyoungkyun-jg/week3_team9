@@ -187,8 +187,17 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UPlaneComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Rendering\FAxisAlignedBoundingBox.cpp">
+    <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.cpp">
+      <Filter>Source\Runtime\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -375,7 +384,12 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Rendering\FAxisAlignedBoundingBox.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
+    <ClInclude Include="TMap.h" />
+    <ClInclude Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.h">
+      <Filter>Source\Runtime\Geometry</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">

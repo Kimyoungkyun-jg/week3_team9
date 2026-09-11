@@ -12,5 +12,5 @@ void USphereComp::OnRegister(UScene& Scene)
 	UPrimitiveComponent::OnRegister(Scene);
 
 	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Sphere"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMesh("Sphere"));
+	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
 }

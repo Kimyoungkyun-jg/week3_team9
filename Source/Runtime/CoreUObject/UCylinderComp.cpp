@@ -11,5 +11,5 @@ void UCylinderComp::OnRegister(UScene& Scene)
 	UPrimitiveComponent::OnRegister(Scene);
 
 	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Cylinder"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Cylinder"));
+	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
 }
