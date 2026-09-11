@@ -5,3 +5,12 @@
 IMPLEMENT_UCLASS(USphereComp, UPrimitiveComponent)
 UCLASS_META(USphereComp, DisplayName, "Sphere")
 UCLASS_META(USphereComp, MeshName, "Sphere")
+
+
+void USphereComp::OnRegister(UScene& Scene)
+{
+	UPrimitiveComponent::OnRegister(Scene);
+
+	SetMesh(Scene.GetRenderResourceLibrary().GetSphereMesh());
+	SetMaterial(Scene.GetRenderResourceLibrary().GetSimpleMaterial());
+}

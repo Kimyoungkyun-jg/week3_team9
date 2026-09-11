@@ -24,26 +24,30 @@ void FEditorApplication::Initialize_Runtime(FRenderResourceLibrary* RendererLibr
 	Editor.Initialize(RendererLibrary, SceneManager);
 
 	UCubeComp* CubeComp = NewObject<UCubeComp>();
-	CubeComp->RelativeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-	CubeComp->RelativeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-	CubeComp->RelativeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+	FTransform& CubeTransform = CubeComp->GetRelativeTransform();
+	CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+	CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+	CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 	SceneManager->CurrentScene->RegisterComponent(*CubeComp);
 
 	UCylinderComp* CylinderCompX = NewObject<UCylinderComp>();
-	CylinderCompX->RelativeTransform.Location = FVector{ -0.7f, -0.5f, 0.35f };
-	CylinderCompX->RelativeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ -90.0f, 0.0f, 0.0f });
-	CylinderCompX->RelativeTransform.Scale3D = FVector{ 0.3f, 0.7f, 0.3f };
+	FTransform& CylinderCompXTransform = CylinderCompX->GetRelativeTransform();
+	CylinderCompXTransform.Location = FVector{ -0.7f, -0.5f, 0.35f };
+	CylinderCompXTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ -90.0f, 0.0f, 0.0f });
+	CylinderCompXTransform.Scale3D = FVector{ 0.3f, 0.7f, 0.3f };
 	SceneManager->CurrentScene->RegisterComponent(*CylinderCompX);
 
 	USphereComp* SphereComp = NewObject<USphereComp>();
-	SphereComp->RelativeTransform.Location = FVector{ -2.3f, 1.6f, 0.4f };
-	SphereComp->RelativeTransform.Scale3D = FVector{ 0.4f, 0.4f, 0.4f };
+	FTransform& SphereTransform = SphereComp->GetRelativeTransform();
+	SphereTransform.Location = FVector{ -2.3f, 1.6f, 0.4f };
+	SphereTransform.Scale3D = FVector{ 0.4f, 0.4f, 0.4f };
 	SceneManager->CurrentScene->RegisterComponent(*SphereComp);
 
 	UPlaneComp* PlaneComp = NewObject<UPlaneComp>();
-	PlaneComp->RelativeTransform.Location = FVector{ 0.7f, -0.3f, 1.0f };
-	PlaneComp->RelativeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.0f, 0.0f, -45.0f });
-	PlaneComp->RelativeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+	FTransform& PlaneTransform = PlaneComp->GetRelativeTransform();
+	PlaneTransform.Location = FVector{ 0.7f, -0.3f, 1.0f };
+	PlaneTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.0f, 0.0f, -45.0f });
+	PlaneTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 	SceneManager->CurrentScene->RegisterComponent(*PlaneComp);
 
 	Editor.SelectObject(CubeComp);

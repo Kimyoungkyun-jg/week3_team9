@@ -5,3 +5,11 @@
 IMPLEMENT_UCLASS(UCylinderComp, UPrimitiveComponent)
 UCLASS_META(UCylinderComp, DisplayName, "Cylinder")
 UCLASS_META(UCylinderComp, MeshName, "Cylinder")
+
+void UCylinderComp::OnRegister(UScene& Scene)
+{
+	UPrimitiveComponent::OnRegister(Scene);
+
+	SetMesh(Scene.GetRenderResourceLibrary().GetCylinderMesh());
+	SetMaterial(Scene.GetRenderResourceLibrary().GetSimpleMaterial());
+}

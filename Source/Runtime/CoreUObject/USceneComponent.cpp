@@ -6,12 +6,7 @@
 
 IMPLEMENT_UCLASS(USceneComponent, UObject)
 
-FTransform USceneComponent::GetRelativeTransform()
-{
-    return RelativeTransform;
-}
-
-void USceneComponent::SetRelativeTransform(FTransform RelativeTransform)
+void USceneComponent::SetRelativeTransform(FTransform& RelativeTransform)
 {
     this->RelativeTransform = RelativeTransform;
 }
@@ -46,5 +41,3 @@ bool USceneComponent::Deserialize(const json::JSON& data)
 
     return true;
 }
-
-
