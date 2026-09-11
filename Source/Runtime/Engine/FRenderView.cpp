@@ -17,9 +17,9 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV,
   // TODO: 렌더뷰가 렌더러 구현을 알게 해서 여기서 V, P 따로 받고
   // 월드축변환행렬을 곱하거나, 렌더러쪽 UpdateObjectConstants를 Draw함수 안에
   // 숨긴뒤 인수로 M, V, P와 월드축을 받게 하면 렌더뷰도 렌더러 구현 모름
-
   const FMatrix VP = Camera.CreateViewProjectionMatrix();
-  FObjectConstants Constants = {Rendered->RelativeTransform.ToMatrix() * VP};
+	FTransform& Transform = Rendered->GetRelativeTransform();
+	FObjectConstants Constants = { Transform.ToMatrix() * VP};
   if (bHighlighted) {
     Constants.ColorOverride = FVector{1.0f, 1.0f, 1.0f};
     Constants.ColorOverrideAmount = 0.5f;

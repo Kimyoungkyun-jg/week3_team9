@@ -197,6 +197,7 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST
                                 : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
+	Mesh->LocalBounds = FAxisAlignedBoundingBox{ *Mesh.get()};
   return Mesh;
 }
 

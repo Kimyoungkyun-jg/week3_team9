@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "UPrimitiveComponent.h"
 #include "Runtime/Engine/UScene.h"
@@ -9,15 +9,8 @@ class USphereComp : public UPrimitiveComponent
 	GENERATED_BODY()
 
 protected:
+	explicit USphereComp() = default;
 
+public:
 	void OnRegister(UScene& Scene) override;
 };
-
-inline void USphereComp::OnRegister(UScene& Scene)
-{
-	UPrimitiveComponent::OnRegister(Scene);
-
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Sphere"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
-}
-

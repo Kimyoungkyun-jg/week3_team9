@@ -26,12 +26,11 @@ void FEditorApplication::Initialize_Runtime(
 
   Editor.Initialize(RendererLibrary, SceneManager);
 
-  UCubeComp *CubeComp = NewObject<UCubeComp>();
-  CubeComp->RelativeTransform.Location = FVector{1.0f, 1.0f, 0.25f};
-  CubeComp->RelativeTransform.Rotation =
-      FQuaternion::FromEulerXYZDeg(FVector{0.5f, 0.5f, 0.5f});
-  CubeComp->RelativeTransform.Scale3D = FVector{0.5f, 0.5f, 0.5f};
-  // SceneManager->CurrentScene->RegisterComponent(*CubeComp);
+	UCubeComp* CubeComp = NewObject<UCubeComp>();
+	FTransform& CubeTransform = CubeComp->GetRelativeTransform();
+	CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+	CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+	CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
   AActor *Cube =
       curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location

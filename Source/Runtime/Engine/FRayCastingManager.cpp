@@ -4,6 +4,12 @@
 #include "Runtime/Rendering/FMesh.h"
 #include <limits>
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
+#include "Runtime/Core/Log.h"
+
+constexpr float Epsilon = 0.000001f;
+
+// TODO: DEBUG 테스트 변수 나중에 지울것
+int DEBUG_AABB_Count = 0;
 
 FRay FRayCastingManager::CreateRayFromScreenPosition(const FCamera& Camera, const FVector2& MousePosition, const FVector2& ViewportSize)
 {
@@ -13,7 +19,6 @@ FRay FRayCastingManager::CreateRayFromScreenPosition(const FCamera& Camera, cons
 	FMatrix InvVP;
 	Camera.CreateViewProjectionMatrix().Inverse(InvVP);
 
-	
 	const float screenNdcX = (MousePosition.X / ViewportWidth) * 2.0f - 1.0f;
 	const float screenNdcY = 1.0f - (MousePosition.Y / ViewportHeight) * 2.0f;
 
@@ -45,6 +50,8 @@ bool FRayCastingManager::RayIntersectsMeshes(
 	UPrimitiveComponent* ClosestComponent = nullptr;
 	FVector ClosestImpactPoint;
 
+	DEBUG_AABB_Count = 0;
+
 	for (UPrimitiveComponent* Component : Components)
 	{
 		if (!Component)
@@ -70,11 +77,52 @@ bool FRayCastingManager::RayIntersectsMeshes(
 			ClosestImpactPoint = ImpactPoint;
 		}
 	}
+
+	UE_LOG("AABB 판별: %d개", DEBUG_AABB_Count)
 	
 	HitComponent = ClosestComponent;
 	OutImpactPoint = ClosestImpactPoint;
 
 	return ClosestComponent != nullptr;
+}
+
+bool FRayCastingManager::RayIntersectsAABB(const FRay& Ray, const FAxisAlignedBoundingBox& AABB)
+{
+	// AABB 판별
+	// Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes//ray-box-intersection.html
+	// Source: https://gist.github.com/DomNomNom/46bb1ce47f68d255fd5d
+
+	FVector TMin;
+	FVector TMax;
+	for (int i = 0; i < 3; ++i)
+	{
+		if (std::abs(Ray.Direction[i]) < Epsilon)
+		{
+			if (Ray.Origin[i] < AABB.Min[i] && Ray.Origin[i] > AABB.Max[i])
+			{
+				return false;
+			}
+			else
+			{
+				continue;
+			}
+		}
+		else
+		{
+			TMin[i] = (AABB.Min[i] - Ray.Origin[i]) / Ray.Direction[i];
+			TMax[i] = (AABB.Max[i] - Ray.Origin[i]) / Ray.Direction[i];
+		}
+	}
+
+	float TNear = 0.0f;
+	float TFar = std::numeric_limits<float>::max();
+	for (int i = 0; i < 3; ++i)
+	{
+		TNear = std::max(TNear, std::min(TMin[i], TMax[i]));
+		TFar = std::min(TFar, std::max(TMin[i], TMax[i]));
+	}
+
+	return TNear <= TFar;
 }
 
 bool FRayCastingManager::RayIntersectsMesh(const FRay& Ray, const FMesh& Mesh, const FMatrix& ModelMatrix, float& OutDistance, FVector& OutImpactPoint)
@@ -86,6 +134,25 @@ bool FRayCastingManager::RayIntersectsMesh(const FRay& Ray, const FMesh& Mesh, c
 	{
 		return false;
 	}
+	
+	// Ray를 Object 좌표계로 변환
+	FMatrix InvM;
+	if (!ModelMatrix.Inverse(InvM))
+	{
+		return false;
+	}
+
+	const FVector ObjectOrigin = InvM.TransformPointRow(Ray.Origin);
+	const FVector ObjectDirection = InvM.TransformPointRow(Ray.Direction, 0.0f); // 1.0은 점을 나타내므로 0.0으로 하여 벡터로 유지
+	const FRay ObjectRay{ ObjectOrigin, ObjectDirection };
+
+	FAxisAlignedBoundingBox AABB = Mesh.GetLocalBounds();
+	if (!RayIntersectsAABB(ObjectRay, AABB))
+	{
+		return false;
+	}
+
+	++DEBUG_AABB_Count;
 
 	const uint32 elementCount = Mesh.HasIndices()
 		? static_cast<uint32>(Indices.size())
@@ -112,13 +179,8 @@ bool FRayCastingManager::RayIntersectsMesh(const FRay& Ray, const FMesh& Mesh, c
 		FVector B = Positions[i1];
 		FVector C = Positions[i2];
 
-		// Local space → World space
-		A = ModelMatrix.TransformPointRow(A);
-		B = ModelMatrix.TransformPointRow(B);
-		C = ModelMatrix.TransformPointRow(C);
-
 		float HitT = 0.0f;
-		if (RayIntersectsTriangle(Ray, A, B, C, HitT) &&
+		if (RayIntersectsTriangle(ObjectRay, A, B, C, HitT) &&
 			HitT < ClosestHit)
 		{
 			ClosestHit = HitT;
@@ -140,7 +202,6 @@ bool FRayCastingManager::RayIntersectsTriangle(
 	const FVector& C,
 	float& OutT)
 {
-	constexpr float Epsilon = 0.000001f;
 
 	const FVector edge1 = B - A;
 	const FVector edge2 = C - A;
