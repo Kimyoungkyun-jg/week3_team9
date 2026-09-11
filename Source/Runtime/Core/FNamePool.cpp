@@ -52,7 +52,7 @@ FNameEntry FNamePool::AddEntry(const FString& Item)
 
 	FNameEntry Entry;
 
-	// 메르센 홀수로 빠른 나머지 연산
+	// 비트 마스크로 빠른 나머지 계산
 	Entry.ComparisonBucketIndex = ComparisonHash & (BUCKET_COUNT - 1);
 	Entry.DisplayBucketIndex = DisplayHash & (BUCKET_COUNT - 1);
 
