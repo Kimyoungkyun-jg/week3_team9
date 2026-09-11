@@ -50,8 +50,8 @@ void FEditorApplication::Initialize_Runtime(
   BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
   AActor* BillBoard =
-      curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
-          FVector(5.0f, 5.0f, 5.0f)   // Scale
+      curScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
+          FVector(0.5f, 0.5f, 0.5f)   // Scale
       );
 
 

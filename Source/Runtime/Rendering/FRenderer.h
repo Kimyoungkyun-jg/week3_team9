@@ -60,10 +60,6 @@ public:
   void Shutdown();
   void BeginFrame();
   void SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV);
-  void Draw(const FMesh &Mesh, const FMaterial &Material,
-            const FObjectConstants &ObjectConstants);
-  void DrawGrid(const FMesh &Mesh, const FMaterial &Material,
-                const FGridConstants &GridConstants);
   void ClearDepth();
   void SwapBuffer();
   void OnWindowSize(UINT Width, UINT Height);
@@ -101,13 +97,6 @@ private:
   bool InitializePipeLines();
   bool CreateSolidWireframePipeline();
 
-  // 그리드 상수 버퍼 초기화
-  bool InitializeGridConstantBuffers();
-  void UpdateObjectConstants(const FObjectConstants &Constants);
-  // 그리드 상수 버퍼 업데이트
-  void UpdateGridConstants(const FGridConstants &Constants);
-
-
 private:
   Microsoft::WRL::ComPtr<ID3D11Device> Device;
   Microsoft::WRL::ComPtr<ID3D11DeviceContext> Context;
@@ -118,8 +107,11 @@ private:
   Microsoft::WRL::ComPtr<ID3D11Texture2D> DepthStencilBuffer;
   Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView;
 
-  Microsoft::WRL::ComPtr<ID3D11Buffer> ObjectConstantBuffer;
-  Microsoft::WRL::ComPtr<ID3D11Buffer> GridConstantBuffer;
+  // b0에 바인딩되는 모든 상수 타입이 공유한다.
+  static constexpr UINT ConstantBufferSize = 256u;
+  Microsoft::WRL::ComPtr<ID3D11Buffer> b0ConstantBuffer;
+
+  // b1뷰포트 단위. b0와 동시에 바인딩되므로 별도 버퍼가 필요하다.
   Microsoft::WRL::ComPtr<ID3D11Buffer> FrameConstantBuffer;
 
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> EditorViewPortRTV;
@@ -127,5 +119,61 @@ private:
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
 
   EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
-  FLineBatcher LineBatcher;
+public:
+
+  // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
+  template <typename TConstants>
+  void Draw(const FMesh& Mesh, const FMaterial& Material,
+      const TConstants& Constants, bool bApplyViewMode = true)
+  {
+      UpdateBuffer(Constants);
+
+      TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
+      if (bApplyViewMode && CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
+          Pipeline = GetPipeline(EBuiltinPipeline::Simple_Wireframe);
+      }
+      if (Pipeline) {
+          Pipeline->Bind(*Context.Get());
+      }
+
+      Material.BindResources(*Context.Get());
+      Mesh.BindResources(*Context.Get());
+
+      if (Mesh.HasIndices()) {
+          Context->DrawIndexed(Mesh.IndexCount, 0, 0);
+      }
+      else {
+          Context->Draw(Mesh.VertexCount, 0);
+      }
+  }
+private:
+  // 어느 상수 타입이든 b0 버퍼 하나에 써 넣는다.
+  // 크기가 맞는지는 컴파일 타임에 검사한다.
+  template <typename TConstants>
+  void UpdateBuffer(const TConstants& Constants)
+  {
+      static_assert(sizeof(TConstants) <= ConstantBufferSize);
+      static_assert(sizeof(TConstants) % 16 == 0);
+
+      // 언리얼 Clip -> D3D Clip 좌표 변환.
+      // MVP를 가진 상수 타입에만 적용한다(없는 타입은 그대로 통과).
+      TConstants ShaderConstants = Constants;
+      if constexpr (requires { ShaderConstants.MVP; }) {
+          static const FMatrix UnrealClipToD3DClip{
+              FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
+              FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
+          ShaderConstants.MVP *= UnrealClipToD3DClip;
+      }
+
+      D3D11_MAPPED_SUBRESOURCE Mapped{};
+      if (FAILED(Context->Map(b0ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Mapped))) {
+          return;
+      }
+      std::memcpy(Mapped.pData, &ShaderConstants, sizeof(TConstants));
+      Context->Unmap(b0ConstantBuffer.Get(), 0);
+
+      Context->VSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
+      Context->PSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
+  }
 };
+

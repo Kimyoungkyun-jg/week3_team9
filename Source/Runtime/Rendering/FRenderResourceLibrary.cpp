@@ -525,8 +525,8 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
 }
 
 bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
-  constexpr float HalfW = 50.0f;
-  constexpr float HalfH = 50.0f;
+  constexpr float HalfW = 10.0f;
+  constexpr float HalfH = 10.0f;
 
   const TArray<FVertexData> Vertices = {
       {-HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,

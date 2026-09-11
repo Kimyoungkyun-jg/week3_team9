@@ -240,15 +240,15 @@ void FGizmo::DrawAxis(FRenderer& Renderer, EGizmoHandle Handle, const FMatrix& M
 
 	if (ActiveHandle == Handle)
 	{
-		Renderer.Draw(*GizmoMesh, *GizmoMaterial, { MVP, ActiveColor, 1.0f });
+		Renderer.Draw<FObjectConstants>(*GizmoMesh, *GizmoMaterial, { MVP, ActiveColor, 1.0f });
 	}
 	else if (HoveredHandle == Handle && ActiveHandle == EGizmoHandle::None)
 	{
-		Renderer.Draw(*GizmoMesh, *GizmoMaterial, { MVP, HoverColor, 1.0f });
+		Renderer.Draw<FObjectConstants>(*GizmoMesh, *GizmoMaterial, { MVP, HoverColor, 1.0f });
 	}
 	else
 	{
-		Renderer.Draw(*GizmoMesh, *GizmoMaterial, { MVP, Color[static_cast<uint8>(Handle) - 1], 1.0f });
+		Renderer.Draw<FObjectConstants>(*GizmoMesh, *GizmoMaterial, { MVP, Color[static_cast<uint8>(Handle) - 1], 1.0f });
 	}
 }
 

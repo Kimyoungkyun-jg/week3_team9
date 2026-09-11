@@ -16,7 +16,7 @@
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
       !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers() ||
-      !InitializeGridConstantBuffers() || !InitializePipeLines()) {
+      !InitializePipeLines()) {
     Shutdown();
     return false;
   }
@@ -35,8 +35,8 @@ void FRenderer::Shutdown() {
   LineBatcher.Shutdown();
 
   AllPipelineMap.clear();
-  ObjectConstantBuffer.Reset();
-  GridConstantBuffer.Reset();
+  b0ConstantBuffer.Reset();
+  FrameConstantBuffer.Reset();
 
   BackBufferRTV.Reset();
   DepthStencilView.Reset();
@@ -506,16 +506,18 @@ bool FRenderer::InitializeBackBufferAndDepthStencil() {
   return true;
 }
 
-bool FRenderer::InitializeConstantBuffers() {
-  D3D11_BUFFER_DESC ObjectConstantBufferDesc = {
-      .ByteWidth = sizeof(FObjectConstants),
+bool FRenderer::InitializeConstantBuffers()
+{
+  // b0를 쓰는 모든 상수 타입이 공유하는 버퍼.
+  // 가장 큰 구조체보다 크게 잡아두고, 초과 여부는 UpdateBuffer의 static_assert가 잡는다.
+  D3D11_BUFFER_DESC b0Desc = {
+      .ByteWidth = ConstantBufferSize,
       .Usage = D3D11_USAGE_DYNAMIC,
       .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
       .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
   };
 
-  HRESULT Result = Device->CreateBuffer(&ObjectConstantBufferDesc, nullptr,
-                                        &ObjectConstantBuffer);
+  HRESULT Result = Device->CreateBuffer(&b0Desc, nullptr, &b0ConstantBuffer);
   if (FAILED(Result)) {
     return false;
   }

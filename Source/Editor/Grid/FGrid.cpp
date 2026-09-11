@@ -38,14 +38,14 @@ void FGrid::Draw(FRenderer& Renderer, const FCamera& Camera)
 	C.MVP = World * VP;  // 스왑은 UpdateGridConstants 가 함
 	C.CellSize = CellSize;
 
-	Renderer.DrawGrid(*GridMesh, *GridMaterial, C);
+	Renderer.Draw(*GridMesh, *GridMaterial, C, false);
 
 	if (!LineMesh || !LineMaterial) return;
 
 	const FMatrix LineMatrix = FMatrix::MakeTranslation(FVector{ -0.5f, 0.0f, 0.0f }) * FMatrix::MakeScale(FVector{ 100.0f * ScaleFactor, 0.5f * ScaleFactor, 0.5f * ScaleFactor });
-	Renderer.Draw(*LineMesh, *LineMaterial, { LineMatrix * FMatrix::MakeTranslation(FVector{ Camera.Position.X, 0.0f, 0.0f }) * VP, FVector{ 1.0f, 0.0f, 0.0f }, 1.0f });
-	Renderer.Draw(*LineMesh, *LineMaterial, { LineMatrix * FMatrix::MakeRotationZ(std::numbers::pi_v<float> * 0.5f) * FMatrix::MakeTranslation(FVector{ 0.0f, Camera.Position.Y, 0.0f }) * VP, FVector{ 0.0f, 1.0f, 0.0f }, 1.0f });
-	Renderer.Draw(*LineMesh, *LineMaterial, { LineMatrix * FMatrix::MakeRotationY(std::numbers::pi_v<float> * 0.5f) * FMatrix::MakeTranslation(FVector{ 0.0f, 0.0f, Camera.Position.Z }) * VP, FVector{ 0.0f, 0.0f, 1.0f }, 1.0f });
+	Renderer.Draw<FObjectConstants>(*LineMesh, *LineMaterial, { LineMatrix * FMatrix::MakeTranslation(FVector{ Camera.Position.X, 0.0f, 0.0f }) * VP, FVector{ 1.0f, 0.0f, 0.0f }, 1.0f });
+	Renderer.Draw<FObjectConstants>(*LineMesh, *LineMaterial, { LineMatrix * FMatrix::MakeRotationZ(std::numbers::pi_v<float> * 0.5f) * FMatrix::MakeTranslation(FVector{ 0.0f, Camera.Position.Y, 0.0f }) * VP, FVector{ 0.0f, 1.0f, 0.0f }, 1.0f });
+	Renderer.Draw<FObjectConstants>(*LineMesh, *LineMaterial, { LineMatrix * FMatrix::MakeRotationY(std::numbers::pi_v<float> * 0.5f) * FMatrix::MakeTranslation(FVector{ 0.0f, 0.0f, Camera.Position.Z }) * VP, FVector{ 0.0f, 0.0f, 1.0f }, 1.0f });
 }
 
 void FGrid::DrawLine(FRenderer& Renderer, const FCamera& Camera)
