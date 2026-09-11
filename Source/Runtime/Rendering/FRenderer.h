@@ -8,7 +8,7 @@
 #include "Runtime/Core/TMap.h"
 #include "Runtime/Math/FVector2.h"
 #include "ShaderConstants.h"
-#include "FLineBatcher.h"
+#include "Runtime/Rendering/FLineBatcher.h"
 
 #include <Windows.h>
 #include <d3d11.h>
@@ -98,6 +98,7 @@ private:
   bool CreateSolidWireframePipeline();
 
 private:
+    FLineBatcher LineBatcher;
   Microsoft::WRL::ComPtr<ID3D11Device> Device;
   Microsoft::WRL::ComPtr<ID3D11DeviceContext> Context;
   Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain;
