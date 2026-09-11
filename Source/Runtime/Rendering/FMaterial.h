@@ -16,8 +16,6 @@ public:
 	[[nodiscard]] EVertexLayout GetVertexLayout() const { return Pipeline->GetVertexLayout(); }
 
 private:
-	FMaterial() = default;
-
 	void BindResources(ID3D11DeviceContext& Context) const;
 
 	TSharedPtr<FRenderPipeline> Pipeline;

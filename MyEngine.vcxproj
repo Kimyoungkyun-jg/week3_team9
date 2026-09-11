@@ -134,7 +134,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
@@ -159,7 +159,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
@@ -182,7 +182,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
@@ -208,7 +208,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
@@ -264,6 +264,11 @@
   <ItemGroup>
     <ClCompile Include="Source\Editor\Application\FEditorApplication.cpp" />
     <ClCompile Include="Source\Editor\Core\FEditor.cpp" />
+    <ClCompile Include="Source\Editor\Core\FEditorInputManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Source\Editor\EditorViewport\FEditorViewport.cpp" />
     <ClCompile Include="Source\Editor\Gizmo\FGizmo.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.cpp" />
@@ -290,6 +295,7 @@
     <ClCompile Include="Source\Runtime\Engine\FTimeManager.cpp" />
     <ClCompile Include="Source\Runtime\Engine\UScene.cpp" />
     <ClCompile Include="Source\Runtime\Engine\USceneManager.cpp" />
+    <ClCompile Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.cpp" />
     <ClCompile Include="Source\Runtime\Input\FCameraInputController.cpp" />
     <ClCompile Include="Source\Runtime\Input\FInputManager.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderer.cpp" />
@@ -392,6 +398,7 @@
     <ClInclude Include="Source\Runtime\Engine\FCamera.h" />
     <ClInclude Include="Source\Runtime\Engine\FRayCastingManager.h" />
     <ClInclude Include="Source\Runtime\Engine\UScene.h" />
+    <ClInclude Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.h" />
     <ClInclude Include="Source\Runtime\Geometry\FTransform.h" />
     <ClInclude Include="Source\Runtime\Geometry\Sphere.h" />
     <ClInclude Include="Source\Runtime\Input\FCameraInputController.h" />

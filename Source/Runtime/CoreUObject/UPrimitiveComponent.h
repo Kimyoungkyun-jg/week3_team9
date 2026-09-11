@@ -4,7 +4,7 @@
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Rendering/FMaterial.h"
 #include "Runtime/Rendering/FMesh.h"
-#include "Runtime/Rendering/FAxisAlignedBoundingBox.h"
+#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 
 class UPrimitiveComponent : public USceneComponent
 {

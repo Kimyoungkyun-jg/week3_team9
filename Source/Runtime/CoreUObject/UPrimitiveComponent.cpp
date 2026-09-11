@@ -6,5 +6,5 @@ IMPLEMENT_UCLASS(UPrimitiveComponent, USceneComponent)
 
 void UPrimitiveComponent::SetRelativeTransform(FTransform& RelativeTransform)
 {
-	Super::SetRelativeTransform(RelativeTransform);
+	Super::SetRelativeTransform(RelativeTransform);	
 }
