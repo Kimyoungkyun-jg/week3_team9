@@ -15,6 +15,7 @@ struct FRenderPipelineDesc {
 
 class FRenderPipeline final {
   friend class FRenderer;
+  friend class FLineBatcher;
 
 public:
   [[nodiscard]] FRenderPipelineDesc GetPipelineDesc() const { return desc; }

@@ -1,8 +1,10 @@
-﻿#pragma once
+#pragma once
 
 #include "Runtime/Core/IntTypes.h"
 #include <cassert>
 #include <cmath>
+
+struct FVector4;
 
 struct FVector
 {
@@ -21,7 +23,7 @@ struct FVector
 
 	[[nodiscard]] constexpr FVector(float InX = 0.0f, float InY = 0.0f, float InZ = 0.0f);
 	// [[nodiscard]] explicit FVector(const FVector2& V, float InZ);
-	// [[nodiscard]] FVector(const FVector4& V);
+	[[nodiscard]] FVector(const FVector4& V);
 
 	[[nodiscard]] FVector operator+(const FVector& V) const;
 

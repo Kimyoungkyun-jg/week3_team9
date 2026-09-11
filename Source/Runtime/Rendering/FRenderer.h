@@ -8,10 +8,13 @@
 #include "Runtime/Core/TMap.h"
 #include "Runtime/Math/FVector2.h"
 #include "ShaderConstants.h"
+#include "FLineBatcher.h"
+
 #include <Windows.h>
 #include <d3d11.h>
 #include <filesystem>
 #include <wrl/client.h>
+
 
 
 inline FWString GetExecutableDirectory() {
@@ -61,6 +64,8 @@ public:
   void SwapBuffer();
   void OnWindowSize(UINT Width, UINT Height);
 
+  void FlushLineBatch(const FMatrix& ViewProjection);
+
   EViewModeIndex GetRenderMode() const { return CurrentRenderMode; }
   void SetRenderMode(EViewModeIndex InMode) { CurrentRenderMode = InMode; }
 
@@ -82,7 +87,7 @@ public:
 
   // 파이프라인 보관 맵
   TMap<EBuiltinPipeline, TSharedPtr<FRenderPipeline>> AllPipelineMap;
-
+  FLineBatcher& GetLineBatcher() { return LineBatcher; }
 private:
   bool InitializeDeviceAndSwapChain(HWND Window);
   bool InitializeBackBufferAndDepthStencil();
@@ -95,6 +100,7 @@ private:
   void UpdateObjectConstants(const FObjectConstants &Constants);
   // 그리드 상수 버퍼 업데이트
   void UpdateGridConstants(const FGridConstants &Constants);
+
 
 private:
   Microsoft::WRL::ComPtr<ID3D11Device> Device;
@@ -115,4 +121,5 @@ private:
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
 
   EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
+  FLineBatcher LineBatcher;
 };

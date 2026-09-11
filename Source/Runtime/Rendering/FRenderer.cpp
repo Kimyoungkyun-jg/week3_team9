@@ -19,6 +19,8 @@ bool FRenderer::Initialize(HWND Window) {
     return false;
   }
 
+  LineBatcher.Initialize(Device.Get()); //batch line
+
   return true;
 }
 
@@ -27,6 +29,8 @@ void FRenderer::Shutdown() {
     Context->ClearState();
     Context->Flush();
   }
+
+  LineBatcher.Shutdown();
 
   AllPipelineMap.clear();
   ObjectConstantBuffer.Reset();
@@ -132,6 +136,11 @@ void FRenderer::OnWindowSize(UINT Width, UINT Height) {
   Viewport.Height = static_cast<float>(Height);
 
   InitializeBackBufferAndDepthStencil();
+}
+
+void FRenderer::FlushLineBatch(const FMatrix& ViewProjection)
+{
+    LineBatcher.Flush(*Context.Get(), *this, ViewProjection);
 }
 
 TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {

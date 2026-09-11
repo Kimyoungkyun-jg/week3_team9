@@ -39,5 +39,5 @@ void FRenderView::RenderGizmo(const FTransform &Transform,
 void FRenderView::RenderGrid(const FCamera &Camera, FVector2 TopLeftUV,
                              FVector2 LengthUV, FGrid &Grid) {
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
-  Grid.Draw(Renderer, Camera);
+  Grid.DrawLine(Renderer, Camera);
 }

@@ -112,12 +112,17 @@ void FEditorApplication::Render() {
       }
     }
 
+    RenderView->GetRenderer().FlushLineBatch(
+        EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
+    ); //line batch 일괄 flush
+
     if (Editor.ObjectSelected()) // 기즈모 그리기
     {
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
     }
+
     // 선택 객체 하이라이트 렌더
   }
   ImguiManager.RenderUI();
