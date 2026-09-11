@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FRenderPipeline.h"
+#include "FTexture.h"
 #include "Runtime/Core/FString.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Vertices.h"
@@ -19,11 +20,16 @@ public:
 
   [[nodiscard]] TSharedPtr<FRenderPipeline> GetPipeline() const { return Pipeline; }
 
+  void SetTexture(const TSharedPtr<FTexture>& InTexture);
+  [[nodiscard]] TSharedPtr<FTexture> GetTexture() const { return Texture; }
+
 private:
   void BindResources(ID3D11DeviceContext &Context) const;
 
   TSharedPtr<FRenderPipeline> Pipeline;
   TSharedPtr<FRenderPipeline> WireframePipeline;
+  // TODO: 텍스처를 여러 개 쓰게 되면 TArray로 바꾸고 슬롯 단위로 바인딩
+  TSharedPtr<FTexture> Texture;
 };
 
 struct FMaterialDesc {

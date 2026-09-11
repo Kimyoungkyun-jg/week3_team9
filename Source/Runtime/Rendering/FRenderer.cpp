@@ -10,6 +10,7 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
+#include "Runtime/Rendering/FTexture.h"
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
@@ -287,7 +288,59 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
+  D3D11_SAMPLER_DESC SamplerDesc{
+      .Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+      .AddressU = D3D11_TEXTURE_ADDRESS_WRAP,
+      .AddressV = D3D11_TEXTURE_ADDRESS_WRAP,
+      .AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
+      .ComparisonFunc = D3D11_COMPARISON_NEVER,
+      .MaxLOD = D3D11_FLOAT32_MAX,
+  };
+
+  Result = Device->CreateSamplerState(&SamplerDesc, &Pipeline->SamplerState);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
   return Pipeline;
+}
+
+TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc& desc)
+{
+    auto Texture = TSharedPtr<FTexture>{ new FTexture() };
+
+    D3D11_TEXTURE2D_DESC TextureDesc = {
+        .Width = desc.Width,
+        .Height = desc.Height,
+        .MipLevels = 1u,
+        .ArraySize = 1u,
+        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+        .SampleDesc = {.Count = 1u },
+        .Usage = D3D11_USAGE_DEFAULT,
+        .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+    };
+
+    D3D11_SUBRESOURCE_DATA InitialData = {
+        .pSysMem = desc.PixelData,
+        .SysMemPitch = desc.RowPitch,
+    };
+
+    HRESULT Result = Device->CreateTexture2D(&TextureDesc, &InitialData, &Texture->Texture2D);
+    if (FAILED(Result))
+    {
+        return nullptr;
+    }
+
+    Result = Device->CreateShaderResourceView(Texture->Texture2D.Get(), nullptr, &Texture->TextureSRV);
+    if (FAILED(Result))
+    {
+        return nullptr;
+    }
+
+    Texture->Width = desc.Width;
+    Texture->Height = desc.Height;
+
+    return Texture;
 }
 
 TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {

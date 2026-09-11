@@ -8,6 +8,11 @@
 #include "Runtime/Rendering/FRenderer.h"
 #include <cmath>
 #include <numbers>
+#include "FTexture.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+
+#include "ThirdParty/stb/stb_image.h"
 
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
@@ -19,7 +24,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
       !CreatePlaneMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
-      !CreateRotationGizmoMaterial(Renderer)) {
+      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
+      !CreateTexturedMaterial(Renderer)) {
     return false;
   }
 
@@ -606,6 +612,34 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   }
 }
 
+bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
+
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/TexturedPS.cso",
+  };
+
+  TSharedPtr<FMaterial> Material =
+      RegisterMaterial("Textured", Renderer.CreateMaterial(Desc));
+  if (!Material) {
+    return false;
+  }
+
+  TSharedPtr<FRenderPipeline> Pipeline =
+      Renderer.GetPipeline(EBuiltinPipeline::Textured);
+  if (!Pipeline) {
+    // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+    return false;
+  }
+  Material->SetPipeLine(Pipeline);
+
+  // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+  Material->SetTexture(GetTexture("sandclock"));
+
+  return true;
+}
+
 bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
   FWString Path = GetExecutableDirectory();
 
@@ -641,6 +675,57 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
   } else {
     return false;
   }
+}
+
+bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
+{
+    const std::filesystem::path Root = std::filesystem::path(GetExecutableDirectory()) / L"Textures";
+    if (!std::filesystem::exists(Root))
+    {
+        return true;   // 폴더가 없는 건 실패가 아님
+    }
+
+    for (const auto& Entry : std::filesystem::recursive_directory_iterator(Root))
+    {
+        if (!Entry.is_regular_file()) continue;
+
+        FWString Ext = Entry.path().extension().wstring();
+        std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+        if (Ext != L".png" && Ext != L".jpg") continue;
+
+        // 확장자 제거는 stem()이 해줌
+        FString KeyWide = Entry.path().stem().string();          // "icon"
+        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::towlower);
+
+        int W = 0, H = 0, ChannelsInFile = 0;
+        unsigned char* Pixels = stbi_load(
+            Entry.path().string().c_str(),   
+            &W, &H, &ChannelsInFile, 4);   
+        if (!Pixels) continue;
+
+        FTextureDesc Desc{
+            .PixelData = Pixels,
+            .Width = static_cast<uint32>(W),
+            .Height = static_cast<uint32>(H),
+            .RowPitch = static_cast<uint32>(W) * 4u,
+        };
+
+        TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
+        stbi_image_free(Pixels);
+
+        if (!Texture) continue;   // 실패한 텍스처는 맵에 넣지 않는다
+
+        RegisterTexture(KeyWide, Texture);
+    }
+
+    return true;
+}
+
+bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& textureName)
+{
+
+
+    return false;
 }
 
 

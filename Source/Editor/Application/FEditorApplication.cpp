@@ -3,6 +3,7 @@
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
+#include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/FRayCastingManager.h"
@@ -38,6 +39,20 @@ void FEditorApplication::Initialize_Runtime(
       );
 
   Cube->SetRootComponent(CubeComp);
+
+  UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
+  FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
+  BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+  BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+  BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+
+  AActor* BillBoard =
+      curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
+          FVector(0.5f, 0.5f, 0.5f)   // Scale
+      );
+
+  BillBoard->SetRootComponent(BillBoardComp);
+
 
   Editor.SelectActor(Cube);
 
