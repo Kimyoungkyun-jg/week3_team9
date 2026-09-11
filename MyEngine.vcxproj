@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Analysis|Win32">
@@ -280,6 +280,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCylinderComp.cpp" />
+        <ClCompile Include="Source\Runtime\Actors\AActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UPlaneComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UPrimitiveComponent.cpp" />
@@ -374,6 +375,7 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCubeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCylinderComp.h" />
+        <ClInclude Include="Source\Runtime\Actors\AActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObjectGlobals.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h" />

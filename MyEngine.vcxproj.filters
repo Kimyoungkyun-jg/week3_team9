@@ -23,6 +23,9 @@
     <Filter Include="Source\Runtime\Engine">
       <UniqueIdentifier>{99c01897-05bf-43cd-9f9f-ea8a04872d62}</UniqueIdentifier>
     </Filter>
+        <Filter Include="Source\Runtime\Actors">
+      <UniqueIdentifier>{6d84f881-2c9b-4b2a-89a1-05d8f6d89342}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\CoreUObject">
       <UniqueIdentifier>{f5b1c9d1-7d03-44dc-8d17-8975a56853fa}</UniqueIdentifier>
     </Filter>
@@ -157,6 +160,9 @@
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.cpp">
       <Filter>Source\Editor\UI\Imgui</Filter>
     </ClCompile>
+        <ClCompile Include="Source\Runtime\Actors\AActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
@@ -221,6 +227,9 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\TMap.h">
       <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+        <ClInclude Include="Source\Runtime\Actors\AActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h">
       <Filter>Source\Runtime\CoreUObject</Filter>

@@ -273,3 +273,4 @@ FVector2 FGizmo::WorldToViewport(const FVector& WorldPosition, const FCamera& Ca
 		(1.0f - Projected.Z) * 0.5f * ViewportSize.Y
 	};
 }
+

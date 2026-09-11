@@ -1,9 +1,12 @@
-﻿#pragma once
+#pragma once
 
 #include "FMesh.h"
 #include "FMaterial.h"
+#include "Vertices.h"
 #include "Runtime/Core/PointerTypes.h"
-#include "../Core/TMap.h"
+#include "Runtime/Core/TMap.h"
+#include "Runtime/Core/FString.h"
+#include "Runtime/Core/TArray.h"
 
 class FRenderer;
 
@@ -12,13 +15,51 @@ class FRenderResourceLibrary final
 public:
 	bool Initialize(FRenderer& Renderer);
 
-	// TODO: 필요할 시 Enum 기반 switch-case로 처리
-	//  GetConstCubeMesh() -> const FMesh를 반환, GetCubeMesh() -> FMesh를 생성해서 반환으로 나눌 수 있음
-	//  지금은 어차피 FMesh로 반환해도 Getter만 있어서 수정 못 함
-	//  UPrimitive가 비const FMesh를 소유하도록 되어 있어서 이렇게 둠
+	// 메쉬 보관 맵
+	TMap<FString, TSharedPtr<FMesh>> AllMeshMap;
+	// 머티리얼 보관 맵
+	TMap<FString, TSharedPtr<FMaterial>> AllMaterialMap;
 
-	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial(const FString& InName) { return MaterialTable.at(InName); }
-	[[nodiscard]] TSharedPtr<FMesh> GetMesh(const FString& InName) { return MeshTable.at(InName); }
+	// 메쉬 조회
+	TSharedPtr<FMesh> GetMesh(const FString& name) const
+	{
+		auto it = AllMeshMap.find(name);
+		if (it != AllMeshMap.end())
+			return it->second;
+		return nullptr;
+	}
+
+	// 메쉬 등록
+	TSharedPtr<FMesh> RegisterMesh(const FString& name, TSharedPtr<FMesh> inMesh)
+	{
+		AllMeshMap[name] = inMesh;
+		return inMesh;
+	}
+
+	// 머티리얼 조회
+	TSharedPtr<FMaterial> GetMaterial(const FString& name) const
+	{
+		auto it = AllMaterialMap.find(name);
+		if (it != AllMaterialMap.end())
+			return it->second;
+		return nullptr;
+	}
+
+	// 머티리얼 등록
+	TSharedPtr<FMaterial> RegisterMaterial(const FString& name, TSharedPtr<FMaterial> inMaterial)
+	{
+		AllMaterialMap[name] = inMaterial;
+		return inMaterial;
+	}
+
+	// 메쉬 전체 해제
+	void DestroyAllMeshes()
+	{
+		AllMeshMap.clear();
+	}
+
+	// 정점 배열 메쉬 캐싱 생성
+	TSharedPtr<FMesh> GetOrCreateMesh(const FString& name, const TArray<FVertexData>& vertices);
 
 private:
 	bool CreateCubeMesh(FRenderer& Renderer);
@@ -36,9 +77,27 @@ private:
 	bool CreateGridMaterial(FRenderer& Renderer);
 	bool CreateRotationGizmoMaterial(FRenderer& Renderer);
 
-private:
-
-	// TODO: FName 으로 빠른 compare 가능하도록 수정 필요
-	TMap<FString, TSharedPtr<FMesh>> MeshTable;
-	TMap<FString, TSharedPtr<FMaterial>> MaterialTable;
+	FRenderer* RendererRef = nullptr;
 };
+
+#include "FRenderer.h"
+
+inline TSharedPtr<FMesh> FRenderResourceLibrary::GetOrCreateMesh(const FString& name, const TArray<FVertexData>& vertices)
+{
+	auto it = AllMeshMap.find(name);
+	if (it != AllMeshMap.end())
+		return it->second;
+
+	FMeshDesc Desc{
+		.VertexData = vertices.data(),
+		.VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * vertices.size()),
+		.VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+		.VertexCount = static_cast<uint32>(vertices.size())
+	};
+	TSharedPtr<FMesh> newMesh = RendererRef ? RendererRef->CreateMesh(Desc) : nullptr;
+	if (newMesh)
+	{
+		AllMeshMap[name] = newMesh;
+	}
+	return newMesh;
+}

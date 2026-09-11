@@ -13,6 +13,8 @@ class FEditorApplication final {
 	FEditor Editor;
 
 	USceneManager* SceneManager = nullptr;
+	UScene* curScene = nullptr;
+
 
 	FImguiManager ImguiManager;
 

@@ -1,4 +1,4 @@
-﻿#include "FRenderer.h"
+#include "FRenderer.h"
 
 #include "ShaderConstants.h"
 #include "FMesh.h"
@@ -120,7 +120,6 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 	}
 
 	TSharedPtr<FMesh> Mesh = MakeShared<FMesh>();
-	Mesh->VertexLayout = Desc.VertexLayout;
 
 	D3D11_BUFFER_DESC VertexBufferDesc = {
 		.ByteWidth = Desc.VertexDataSize,
@@ -163,12 +162,12 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc& Desc)
 	Mesh->IndexCount = Desc.IndexCount;
 
 	const auto* vertices =
-		static_cast<const FVertexPositionColor*>(Desc.VertexData);
+		static_cast<const FVertexData*>(Desc.VertexData);
 
 	Mesh->Positions.reserve(Desc.VertexCount);
 	for (uint32 i = 0; i < Desc.VertexCount; ++i)
 	{
-		Mesh->Positions.push_back(vertices[i].Position);
+		Mesh->Positions.push_back(FVector{ vertices[i].x, vertices[i].y, vertices[i].z });
 	}
 
 	if (Desc.IndexCount > 0)
@@ -338,8 +337,6 @@ TSharedPtr<FRenderPipeline> FRenderer::FindOrCreateRenderPipeline(const FMateria
 	// TODO: 이미 만들었던 파이프라인 있는지 찾아서 쓰기
 
 	TSharedPtr<FRenderPipeline> Pipeline{ MakeShared<FRenderPipeline>() };
-	Pipeline->VertexLayout = Desc.VertexLayout;
-
 	Microsoft::WRL::ComPtr<ID3DBlob> Blob;	
 	HRESULT Result = D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
 	if (FAILED(Result))
@@ -357,8 +354,8 @@ TSharedPtr<FRenderPipeline> FRenderer::FindOrCreateRenderPipeline(const FMateria
 		return nullptr;
 	}
 
-	FVertexLayoutDesc LayoutDesc = GetVertexLayoutDesc(Desc.VertexLayout);
-	Result = Device->CreateInputLayout(LayoutDesc.InputElements, LayoutDesc.InputElementCount, Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+	
+	Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements, Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout); //Layout과 NumElents 는 고정
 	if (FAILED(Result))
 	{
 		return nullptr;
