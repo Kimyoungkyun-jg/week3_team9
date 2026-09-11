@@ -15,10 +15,9 @@ public:
   FMaterial() = default;
   
   void SetPipeLine(const TSharedPtr<FRenderPipeline>& InPipeline);
-  void SetWireframePipeLine(const TSharedPtr<FRenderPipeline>& InPipeline);
+  //void SetWireframePipeLine(const TSharedPtr<FRenderPipeline>& InPipeline);
 
   [[nodiscard]] TSharedPtr<FRenderPipeline> GetPipeline() const { return Pipeline; }
-  [[nodiscard]] TSharedPtr<FRenderPipeline> GetWireframePipeline() const { return WireframePipeline; }
 
 private:
   void BindResources(ID3D11DeviceContext &Context) const;

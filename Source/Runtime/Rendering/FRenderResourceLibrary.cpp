@@ -17,7 +17,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
       !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
       !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
-      !CreatePlaneMesh(Renderer) || !InitializePipeLines(Renderer) ||
+      !CreatePlaneMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer)) {
     return false;
@@ -599,9 +599,7 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
 
   if (SimpleMaterial) {
     SimpleMaterial->SetPipeLine(
-        GetPipeline(EBuiltinPipeline::Simple_Solid));
-    SimpleMaterial->SetWireframePipeLine(
-        GetPipeline(EBuiltinPipeline::Simple_Wireframe));
+        Renderer.GetPipeline(EBuiltinPipeline::Simple_Solid));
     return true;
   } else {
     return false;
@@ -619,7 +617,7 @@ bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
   GridMaterial = RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
 
   if (GridMaterial) {
-    GridMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Grid));
+    GridMaterial->SetPipeLine(Renderer.GetPipeline(EBuiltinPipeline::Grid));
     return true;
   } else {
     return false;
@@ -638,81 +636,12 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
 
   if (RotationGizmoMaterial) {
     RotationGizmoMaterial->SetPipeLine(
-        GetPipeline(EBuiltinPipeline::RotationGizmo));
+        Renderer.GetPipeline(EBuiltinPipeline::RotationGizmo));
     return true;
   } else {
     return false;
   }
 }
 
-bool FRenderResourceLibrary::CreateSolidWireframePipeline(
-    FRenderer &Renderer) {
-  const FWString Path = GetExecutableDirectory();
-  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
-  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
-
-  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-    return false;
-  }
-
-  FRenderPipelineDesc Desc = {
-      .VertexShaderFileName = VsPath,
-      .PixelShaderFileName = PsPath,
-      .bEnableDepthTest = true,
-  };
-
-  // 솔리드 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> SolidPipeline =
-      Renderer.CreateRenderPipeline(Desc, ERenderMode::Solid);
-  if (SolidPipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
-  }
-
-  // 와이어프레임 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> WireframePipeline =
-      Renderer.CreateRenderPipeline(Desc, ERenderMode::Wireframe);
-  if (WireframePipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
-  }
-
-  return SolidPipeline != nullptr && WireframePipeline != nullptr;
-}
-
-bool FRenderResourceLibrary::InitializePipeLines(FRenderer &Renderer) {
-  // 솔리드 및 와이어프레임 파이프라인 개별 생성
-  CreateSolidWireframePipeline(Renderer);
-
-  const FWString Path = GetExecutableDirectory();
-
-  for (const FPipelineEntry &Entry : pipelineTable) {
-    // 이미 등록된 경우 건너뜀
-    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
-      continue;
-    }
-
-    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
-    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
-
-    // 셰이더 파일 미존재 시 건너뜀
-    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-      continue;
-    }
-
-    FRenderPipelineDesc PipelineDesc = {
-        .VertexShaderFileName = VsPath,
-        .PixelShaderFileName = PsPath,
-        .bEnableDepthTest = true,
-    };
-
-    TSharedPtr<FRenderPipeline> Pipeline =
-        Renderer.CreateRenderPipeline(PipelineDesc);
-    if (!Pipeline) {
-      return false;
-    }
-
-    AllPipelineMap[Entry.Id] = Pipeline;
-  }
-  return true;
-}
 
 

@@ -9,31 +9,6 @@
 #include "Runtime/Core/TMap.h"
 #include "Vertices.h"
 
-// 내장 파이프라인 종류
-enum class EBuiltinPipeline : uint8 {
-  Simple_Solid,
-  Simple_Wireframe,
-  Textured,
-  Grid,
-  RotationGizmo,
-  Count
-};
-
-// 파이프라인 정보 엔트리
-struct FPipelineEntry {
-  EBuiltinPipeline Id;
-  const wchar_t *VertexShader;
-  const wchar_t *PixelShader;
-};
-
-// 기본 파이프라인 테이블
-constexpr FPipelineEntry pipelineTable[] = {
-    {EBuiltinPipeline::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
-    {EBuiltinPipeline::Textured, L"TexturedVS.cso", L"TexturedPS.cso"},
-    {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
-    {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso",
-     L"RotationGizmoPS.cso"},
-};
 
 class FRenderer;
 
@@ -41,20 +16,10 @@ class FRenderResourceLibrary final {
 public:
   bool Initialize(FRenderer &Renderer);
 
-  // 파이프라인 보관 맵
-  TMap<EBuiltinPipeline, TSharedPtr<FRenderPipeline>> AllPipelineMap;
   // 메쉬 보관 맵
   TMap<FString, TSharedPtr<FMesh>> AllMeshMap;
   // 머티리얼 보관 맵
   TMap<FString, TSharedPtr<FMaterial>> AllMaterialMap;
-
-  // 파이프라인 조회
-  TSharedPtr<FRenderPipeline> GetPipeline(EBuiltinPipeline Id) const {
-    auto it = AllPipelineMap.find(Id);
-    if (it != AllPipelineMap.end())
-      return it->second;
-    return nullptr;
-  }
 
   // 메쉬 조회
   TSharedPtr<FMesh> GetMesh(const FString &name) const {
@@ -173,9 +138,6 @@ private:
   bool CreateGridMaterial(FRenderer &Renderer);
   bool CreateRotationGizmoMaterial(FRenderer &Renderer);
 
-  // 파이프라인 초기화
-  bool InitializePipeLines(FRenderer &Renderer);
-  bool CreateSolidWireframePipeline(FRenderer &Renderer);
 
   // 개별 리소스 멤버 변수
   TSharedPtr<FMesh> CubeMesh;
