@@ -42,6 +42,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer& Renderer)
 	return true;
 }
 
+
 bool FRenderResourceLibrary::CreateCubeMesh(FRenderer& Renderer)
 {
 	TArray<FVertexPositionColor> Vertices = {
@@ -75,9 +76,9 @@ bool FRenderResourceLibrary::CreateCubeMesh(FRenderer& Renderer)
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	CubeMesh = Renderer.CreateMesh(MeshDesc);
-
-	return CubeMesh != nullptr;
+	//CubeMesh = Renderer.CreateMesh(MeshDesc);
+	MeshTable["Cube"] = Renderer.CreateMesh(MeshDesc);
+	return MeshTable["Cube"] != nullptr;
 }
 
 // TODO: 컬러는 테스트용
@@ -174,8 +175,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer& Renderer, float Heigh
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	CylinderMesh = Renderer.CreateMesh(MeshDesc);
-	return CylinderMesh != nullptr;
+	MeshTable["Cylinder"] = Renderer.CreateMesh(MeshDesc);
+	return MeshTable["Cylinder"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateConeMesh(FRenderer& Renderer)
@@ -264,8 +265,8 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer& Renderer)
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	ConeMesh = Renderer.CreateMesh(MeshDesc);
-	return ConeMesh != nullptr;
+	MeshTable["Cone"] = Renderer.CreateMesh(MeshDesc);
+	return MeshTable["Cone"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateArrowMesh(FRenderer& Renderer)
@@ -361,8 +362,8 @@ bool FRenderResourceLibrary::CreateArrowMesh(FRenderer& Renderer)
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	ArrowMesh = Renderer.CreateMesh(MeshDesc);
-	return ArrowMesh != nullptr;
+	MeshTable["Arrow"] = Renderer.CreateMesh(MeshDesc);
+	return MeshTable["Arrow"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCircleMesh(FRenderer& Renderer)
@@ -424,8 +425,8 @@ bool FRenderResourceLibrary::CreateCircleMesh(FRenderer& Renderer)
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	CircleMesh = Renderer.CreateMesh(Desc);
-	return CircleMesh != nullptr;
+	MeshTable["Circle"] = Renderer.CreateMesh(Desc);
+	return MeshTable["Circle"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer& Renderer)
@@ -483,9 +484,9 @@ bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer& Renderer)
 		.IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
-
-	RotationGizmoMesh = Renderer.CreateMesh(Desc);
-	return RotationGizmoMesh != nullptr;
+	FString name{ "RotationGizmo" };
+	MeshTable[name] = Renderer.CreateMesh(Desc);
+	return MeshTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer& Renderer)
@@ -559,8 +560,9 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer& Renderer)
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	SquareArrowMesh = Renderer.CreateMesh(Desc);
-	return SquareArrowMesh != nullptr;
+	FString name{ "SquareArrow" };
+	MeshTable[name] = Renderer.CreateMesh(Desc);
+	return MeshTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateGridMesh(FRenderer& Renderer)
@@ -588,8 +590,9 @@ bool FRenderResourceLibrary::CreateGridMesh(FRenderer& Renderer)
 		.IndexCount = static_cast<uint32>(Indices.size()),
 	};
 
-	GridMesh = Renderer.CreateMesh(MeshDesc);
-	return GridMesh != nullptr;
+	FString name{ "Grid" };
+	MeshTable[name] = Renderer.CreateMesh(MeshDesc);
+	return MeshTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSphereMesh(FRenderer& Renderer)
@@ -608,12 +611,9 @@ bool FRenderResourceLibrary::CreateSphereMesh(FRenderer& Renderer)
 	.VertexCount = static_cast<uint32>(Vertices.size()),
 	};
 
-
-
-
-
-	SphereMesh = Renderer.CreateMesh(MeshDesc);
-	return SphereMesh != nullptr;
+	FString name{ "Sphere" };
+	MeshTable[name] = Renderer.CreateMesh(MeshDesc);
+	return MeshTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateLineMesh(FRenderer& Renderer)
@@ -632,8 +632,9 @@ bool FRenderResourceLibrary::CreateLineMesh(FRenderer& Renderer)
 		.bIsLine = true
 	};
 
-	LineMesh = Renderer.CreateMesh(Desc);
-	return LineMesh != nullptr;
+	FString name{ "Line" };
+	MeshTable[name] = Renderer.CreateMesh(Desc);
+	return MeshTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer& Renderer)
@@ -652,8 +653,9 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer& Renderer)
 		.VertexCount = static_cast<uint32>(Vertices.size()),
 	};
 
-	PlaneMesh = Renderer.CreateMesh(Desc);
-	return PlaneMesh != nullptr;
+	FString name{ "Plane" };
+	MeshTable[name] = Renderer.CreateMesh(Desc);
+	return MeshTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer& Renderer)
@@ -666,9 +668,9 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer& Renderer)
 		.VertexLayout = EVertexLayout::PositionColor,
 	};
 	
-	SimpleMaterial = Renderer.CreateMaterial(Desc);
-
-	return SimpleMaterial != nullptr;
+	FString name{ "Simple" };
+	MaterialTable[name] = Renderer.CreateMaterial(Desc);
+	return MaterialTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateGridMaterial(FRenderer& Renderer)
@@ -681,9 +683,9 @@ bool FRenderResourceLibrary::CreateGridMaterial(FRenderer& Renderer)
 		.VertexLayout = EVertexLayout::PositionColor,
 	};
 
-	GridMaterial = Renderer.CreateMaterial(Desc);
-
-	return GridMaterial != nullptr;
+	FString name{ "Grid" };
+	MaterialTable[name] = Renderer.CreateMaterial(Desc);
+	return MaterialTable[name] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer& Renderer)
@@ -696,7 +698,7 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer& Renderer)
 		.VertexLayout = EVertexLayout::PositionColor,
 	};
 
-	RotationGizmoMaterial = Renderer.CreateMaterial(Desc);
-
-	return RotationGizmoMaterial != nullptr;
+	FString name{ "RotationGizmo" };
+	MaterialTable[name] = Renderer.CreateMaterial(Desc);
+	return MaterialTable[name] != nullptr;
 }

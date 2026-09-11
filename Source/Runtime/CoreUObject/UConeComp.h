@@ -18,6 +18,6 @@ inline void UConeComp::OnRegister(UScene& Scene)
 {
 	UPrimitiveComponent::OnRegister(Scene);
 
-	SetMesh(Scene.GetRenderResourceLibrary().GetConeMesh());
-	SetMaterial(Scene.GetRenderResourceLibrary().GetSimpleMaterial());
+	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Cone"));
+	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
 }
