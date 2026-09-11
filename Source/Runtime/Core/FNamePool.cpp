@@ -1,0 +1,108 @@
+#include "FNamePool.h"
+
+
+// 해시 함수
+// 어쩌면 그냥 이미 있는 해시 함수 라이브러리를 쓰는게 편하고 더 좋을지도..
+
+// 참고: https://mikrkosmos97.tistory.com/130
+
+namespace
+{
+	uint64 Hash(FStringView Str)
+	{
+		// 이론적으로 문자열은 무한히 늘어날 수 있으므로,
+		// 문자열을 숫자로 표현할 수 있는 가짓수도 무한히 늘어날 수 있음
+
+		// 우리의 메모리는 무한하지 않으므로.. MOD를 사용하여 해시의 범위를 제한
+		constexpr uint64 MOD_NUM = 1'000'000'007;
+		constexpr uint64 BASE = 257;
+
+		// 반환될 해시 값
+		uint64 Result = 0;
+
+		const char* RawPtr = Str.data();
+		for (size_t i = 0; i < Str.size(); ++i)
+		{
+			uint64 byte = static_cast<uint64>(RawPtr[i]);
+			// uint64로 1'000'000'007 * 257 정도는 문제 없음
+
+			//   a * 257^3 + b * 257^2 + c * 257^1 + d * 257^0
+			// = (((a * 257 + b) * 257 + c) * 257) + d	
+			Result = (Result * BASE + byte) % MOD_NUM;
+		}
+
+		return Result;
+	}
+}
+
+FNameEntry FNamePool::AddEntry(const FString& Item)
+{
+	FString LowerItem{ Item };
+
+	for (int i = 0; i < LowerItem.size(); ++i)
+	{
+		if (LowerItem[i] >= 65 && LowerItem[i] <= 90)
+		{
+			LowerItem[i] += 32;
+		}
+	}
+
+	uint64 ComparisonHash = Hash(LowerItem);
+	uint64 DisplayHash = Hash(Item);
+
+	FNameEntry Entry;
+
+	// 메르센 홀수로 빠른 나머지 연산
+	Entry.ComparisonBucketIndex = ComparisonHash & (BUCKET_COUNT - 1);
+	Entry.DisplayBucketIndex = DisplayHash & (BUCKET_COUNT - 1);
+
+	TArray<FString>& ComparisonBucket = ComparisonTable[Entry.ComparisonBucketIndex];
+	TArray<FString>& DisplayBucket = DisplayTable[Entry.DisplayBucketIndex];
+
+	bool bFound = false;
+	for (int i = 0; i < ComparisonBucket.size(); ++i)
+	{
+		if (LowerItem == ComparisonBucket[i])
+		{
+			bFound = true;
+			Entry.ComparisonIndex = i;
+			break;
+		}
+	}
+
+	if (!bFound)
+	{
+		Entry.ComparisonIndex = ComparisonBucket.size();
+		ComparisonBucket.push_back(LowerItem);
+	}
+
+
+	bFound = false;
+	for (int i = 0; i < DisplayBucket.size(); ++i)
+	{
+		if (Item == DisplayBucket[i])
+		{
+			bFound = true;
+			Entry.DisplayIndex = i;
+			break;
+		}
+	}
+
+	if (!bFound)
+	{
+		Entry.DisplayIndex = DisplayBucket.size();
+		DisplayBucket.push_back(Item);
+	}
+
+	return Entry;
+}
+
+const FString& FNamePool::GetComparisonString(const FNameEntry& Entry)
+{
+	return ComparisonTable[Entry.ComparisonBucketIndex][Entry.ComparisonIndex];
+}
+
+const FString& FNamePool::GetDisplayString(const FNameEntry& Entry)
+{
+	return DisplayTable[Entry.DisplayBucketIndex][Entry.DisplayIndex];
+}
