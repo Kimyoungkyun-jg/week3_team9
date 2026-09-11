@@ -1,10 +1,9 @@
-#include "FEditor.h"
+﻿#include "FEditor.h"
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
-#include "Runtime/Engine/FTimeManager.h"
 #include <numbers>
 
 void FEditor::Initialize(FRenderResourceLibrary* RendererLibrary, USceneManager* SceneManager)
@@ -17,20 +16,6 @@ void FEditor::Initialize(FRenderResourceLibrary* RendererLibrary, USceneManager*
 
 void FEditor::Process()
 {
-	//// 씬의 액터 및 컴포넌트 업데이트
-	if (SceneManager && SceneManager->CurrentScene)
-	{
-		for (AActor* Actor : SceneManager->CurrentScene->GetActors())
-		{
-			if (Actor)
-			{
-				Actor->Update(FTimeManager::Get().GetDeltaTime());
-			}
-		}
-	}
-
-
-
 	if (SelectedObject)
 	{
 		USceneComponent* SceneComp = SelectedObject->Cast<USceneComponent>();
@@ -39,9 +24,6 @@ void FEditor::Process()
 			SceneComp->GetRelativeTransform() = SelectedTransform;
 		}
 	}
-
-
-
 }
 
 void FEditor::NewScene()
@@ -136,7 +118,7 @@ TArray<UPrimitiveComponent*> FEditor::GetPrimitiveComponents() const
 	{
 		return {};
 	}
-	return SceneManager->CurrentScene->GetRenderComponents();
+	return SceneManager->CurrentScene->GetPrimitiveComponents();
 }
 
 void FEditor::ClearSelectionForGC()
@@ -179,7 +161,8 @@ UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type)
 	Transform.Location = FVector{ Offset, 0.0f, 0.0f };
 	Transform.Rotation = FQuaternion::Identity();
 	Transform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-	Component->RegisterComponentWithScene(*SceneManager->CurrentScene);
+
+	SceneManager->CurrentScene->RegisterComponent(*Component);
 	SelectObject(Component);
 	return Component;
 }

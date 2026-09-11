@@ -7,10 +7,31 @@
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
 
-
-TArray<UPrimitiveComponent*> UScene::GetRenderComponents() const
+void UScene::RegisterComponent(USceneComponent& Component)
 {
-	return RenderComponents;
+	Component.OnRegister(*this);
+	Components.push_back(&Component);
+}
+
+void UScene::UnregisterComponent(USceneComponent& Component)
+{
+	Component.OnUnregister(*this);
+	// TODO: std 말고 TArray erase 사용
+	std::erase(Components, &Component);
+}
+
+TArray<UPrimitiveComponent*> UScene::GetPrimitiveComponents() const
+{
+	// TODO: 매우 비효율적인 방식...
+	TArray<UPrimitiveComponent*> PrimitiveComponents{};
+	for (const auto* Component : Components)
+	{
+		if (const auto* PrimitiveComponent = Component->Cast<UPrimitiveComponent>())
+		{
+			PrimitiveComponents.push_back(const_cast<UPrimitiveComponent*>(PrimitiveComponent));
+		}
+	}
+	return PrimitiveComponents;
 }
 
 json::JSON UScene::Serialize() const
@@ -19,7 +40,7 @@ json::JSON UScene::Serialize() const
 	result["Version"] = 1;
 	result["NextUUID"] = NextUUID;
 
-	for(UObject* object : RenderComponents)
+	for(UObject* object : Components)
 	{
 		if (object == nullptr)
 			continue;
@@ -47,25 +68,8 @@ void UScene::AddReferencedObjects(FReferenceCollector& Collector)
 {
 	UObject::AddReferencedObjects(Collector);
 
-	// 액터들이 GC에 의해 삭제되지 않도록 보호
-	for (AActor* Actor : Actors)
-	{
-		Collector.AddReferencedObject(Actor);
-	}
-
-
-	for (USceneComponent* Component : RenderComponents)
+	for (USceneComponent* Component : Components)
 		Collector.AddReferencedObject(Component);
-}
-
-void UScene::AddRenderComponent(UPrimitiveComponent* prim)
-{
-	RenderComponents.push_back(prim);
-}
-
-void UScene::RemoveRenderComponent(UPrimitiveComponent* prim)
-{
-	std::erase(RenderComponents, prim);
 }
 
 bool UScene::Deserialize(const json::JSON& data)
@@ -73,7 +77,7 @@ bool UScene::Deserialize(const json::JSON& data)
 	if (data.hasKey("NextUUID"))
 		NextUUID = data.at("NextUUID").ToInt();
 
-	RenderComponents.clear();
+	Components.clear();
 
 	if (!data.hasKey("Primitives"))   // 빈 씬이면 여기서 정상 종료
 		return true;
@@ -96,8 +100,7 @@ bool UScene::Deserialize(const json::JSON& data)
 
 		component->Deserialize(usceneComponentData);
 		component->SetUUID(uuid);
-		component->RegisterComponentWithScene(*this);
+		RegisterComponent(*component);
 	}
 	return true;
 }
-

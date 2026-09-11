@@ -1,4 +1,4 @@
-#include "FEditorApplication.h"
+﻿#include "FEditorApplication.h"
 
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
@@ -10,7 +10,6 @@
 
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
-#include "Runtime/Actors/AActor.h"
 
 void FEditorApplication::Initialize_ImguiWin32DX11(HWND& Window, ID3D11Device* Device, ID3D11DeviceContext* Context)
 {
@@ -21,7 +20,6 @@ void FEditorApplication::Initialize_Runtime(FRenderResourceLibrary* RendererLibr
 {
 	this->RenderView = RenderView;
 	this->SceneManager = SceneManager;
-	this->curScene = SceneManager->CurrentScene;
 
 	Editor.Initialize(RendererLibrary, SceneManager);
 
@@ -30,15 +28,27 @@ void FEditorApplication::Initialize_Runtime(FRenderResourceLibrary* RendererLibr
 	CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
 	CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
 	CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+	SceneManager->CurrentScene->RegisterComponent(*CubeComp);
 
-		
-	AActor* Cube = curScene->SpawnActor<AActor>(
-		FVector(1.0f, 1.0f, 0.25f), // Location
-		FVector(0.5f, 0.5f, 0.5f)   // Scale
-	);
+	UCylinderComp* CylinderCompX = NewObject<UCylinderComp>();
+	FTransform& CylinderCompXTransform = CylinderCompX->GetRelativeTransform();
+	CylinderCompXTransform.Location = FVector{ -0.7f, -0.5f, 0.35f };
+	CylinderCompXTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ -90.0f, 0.0f, 0.0f });
+	CylinderCompXTransform.Scale3D = FVector{ 0.3f, 0.7f, 0.3f };
+	SceneManager->CurrentScene->RegisterComponent(*CylinderCompX);
 
-	Cube->SetRootComponent(CubeComp);
+	USphereComp* SphereComp = NewObject<USphereComp>();
+	FTransform& SphereTransform = SphereComp->GetRelativeTransform();
+	SphereTransform.Location = FVector{ -2.3f, 1.6f, 0.4f };
+	SphereTransform.Scale3D = FVector{ 0.4f, 0.4f, 0.4f };
+	SceneManager->CurrentScene->RegisterComponent(*SphereComp);
 
+	UPlaneComp* PlaneComp = NewObject<UPlaneComp>();
+	FTransform& PlaneTransform = PlaneComp->GetRelativeTransform();
+	PlaneTransform.Location = FVector{ 0.7f, -0.3f, 1.0f };
+	PlaneTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.0f, 0.0f, -45.0f });
+	PlaneTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+	SceneManager->CurrentScene->RegisterComponent(*PlaneComp);
 
 	Editor.SelectObject(CubeComp);
 
@@ -101,7 +111,7 @@ void FEditorApplication::Render()
 	{
 		RenderView->RenderGrid(EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
 			EditorViewport.LengthUV, Editor.GetGrid());
-		for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
+		for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetPrimitiveComponents())
 		{
 			RenderView->Render(EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
 				EditorViewport.LengthUV, PrimitiveComponent, PrimitiveComponent == Editor.GetSelectedObject());
@@ -139,5 +149,3 @@ void FEditorApplication::CollectGarbage()
 		}
 	);
 }
-
-

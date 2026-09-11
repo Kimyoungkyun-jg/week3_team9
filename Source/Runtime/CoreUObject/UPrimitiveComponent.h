@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "USceneComponent.h"
 #include "Runtime/Core/PointerTypes.h"
@@ -18,12 +18,11 @@ public:
 
 	virtual void SetRelativeTransform(FTransform& RelativeTransform) override;
 
-	// 메쉬 및 재질 설정
-	void SetMesh(TSharedPtr<FMesh> Mesh) { PrimitiveMesh = std::move(Mesh); }
-	void SetMaterial(TSharedPtr<FMaterial> Material) { PrimitiveMaterial = std::move(Material); }
-
 protected:
 	UPrimitiveComponent() = default;
+
+	void SetMesh(TSharedPtr<FMesh> Mesh) { PrimitiveMesh = std::move(Mesh); }
+	void SetMaterial(TSharedPtr<FMaterial> Material) { PrimitiveMaterial = std::move(Material); }
 
 private:
 	TSharedPtr<FMesh> PrimitiveMesh;

@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Vertices.h"
-#include "Runtime/Math/FVector.h"
 #include "Runtime/Core/IntTypes.h"
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -16,6 +15,7 @@ class FMesh final
 
 public:
 	[[nodiscard]] bool HasIndices() const { return IndexCount > 0; }
+	[[nodiscard]] EVertexLayout GetVertexLayout() const { return VertexLayout; }
 	[[nodiscard]] uint32 GetVertexCount() const { return VertexCount; }
 	[[nodiscard]] uint32 GetIndexCount() const { return IndexCount; }
 	[[nodiscard]] const TArray<FVector>& GetPositions() const { return Positions; }
@@ -24,6 +24,8 @@ public:
 
 private:
 	void BindResources(ID3D11DeviceContext& Context) const;
+
+	EVertexLayout VertexLayout = EVertexLayout::None;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer;
 	uint32 VertexCount = 0u;
@@ -41,9 +43,11 @@ private:
 
 struct FMeshDesc
 {
+	EVertexLayout VertexLayout = EVertexLayout::None;
+
 	const void* VertexData = nullptr;
 	uint32 VertexDataSize = 0u;
-	uint32 VertexStride = sizeof(FVertexData);
+	uint32 VertexStride = 0u;
 	uint32 VertexCount = 0u;
 
 	const void* IndexData = nullptr;
@@ -51,4 +55,5 @@ struct FMeshDesc
 	uint32 IndexCount = 0u;
 
 	bool bIsLine = false;
+	// Topology, Index Format 등 추가 가능
 };

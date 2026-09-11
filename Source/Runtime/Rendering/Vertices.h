@@ -1,74 +1,52 @@
 ﻿#pragma once
 
-#include <d3d11.h>
+#include "Runtime/Core/IntTypes.h"
 #include "Runtime/Math/FVector.h"
+#include <d3d11.h>
 #include <iterator>
 
-// 공용 정점 구조체
-struct FVertexData
+enum class EVertexLayout : uint8
 {
-	float x = 0.0f, y = 0.0f, z = 0.0f;          // Position
-	float r = 1.0f, g = 1.0f, b = 1.0f, a = 1.0f; // Color
-	float u = 0.0f, v = 0.0f;                      // UV
-	float nx = 0.0f, ny = 0.0f, nz = 0.0f;         // Normal
+	None,
+	PositionColor,
 };
 
-// 공용 Direct3D 입력 레이아웃 메타데이터
-struct FVertexLayouts
-{
-	static inline const D3D11_INPUT_ELEMENT_DESC Layout[] =
+inline constexpr D3D11_INPUT_ELEMENT_DESC PositionColorElements[] = {
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-	static constexpr UINT NumElements = 4;
+		"POSITION", 0,
+		DXGI_FORMAT_R32G32B32_FLOAT,
+		0, 0,
+		D3D11_INPUT_PER_VERTEX_DATA, 0
+	},
+	{
+		"COLOR", 0,
+		DXGI_FORMAT_R32G32B32_FLOAT,
+		0, D3D11_APPEND_ALIGNED_ELEMENT,
+		D3D11_INPUT_PER_VERTEX_DATA, 0
+	},
 };
 
-// 큐브 정점 배열
-inline const FVertexData CubeVertices[] = {
-	{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f },
-	{  0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f },
-	{  0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f },
-	{ -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f },
-	{ -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f },
-	{  0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,  1.0f },
-	{  0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,  1.0f },
-	{ -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,  1.0f },
+struct FVertexLayoutDesc
+{
+	const D3D11_INPUT_ELEMENT_DESC* InputElements;
+	uint32 InputElementCount;
 };
 
-// 큐브 인덱스 배열
-inline const unsigned int CubeIndices[] = {
-	0, 2, 1, 0, 3, 2,
-	4, 5, 6, 4, 6, 7,
-	0, 1, 5, 0, 5, 4,
-	3, 7, 6, 3, 6, 2,
-	0, 4, 7, 0, 7, 3,
-	1, 2, 6, 1, 6, 5,
+inline FVertexLayoutDesc GetVertexLayoutDesc(EVertexLayout Layout)
+{
+	switch (Layout)
+	{
+	case EVertexLayout::None:
+		return { {}, 0 };
+	case EVertexLayout::PositionColor:
+		return { PositionColorElements, std::size(PositionColorElements) };
+	}
+
+	return { nullptr, 0 };
 };
 
-// 색상 큐브 정점 배열
-inline const FVertexData ColoredCubeVertices[] = {
-	{ -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f },
-	{  0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f },
-	{  0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f },
-	{ -0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f },
-	{ -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  1.0f },
-	{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,  1.0f },
-	{  0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,  1.0f },
-	{ -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,  1.0f },
-};
-
-// 선 정점 배열
-inline const FVertexData LineVertices[] = {
-	{ 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
-	{ 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f },
-};
-
-// 평면 정점 배열
-inline const FVertexData PlaneVertices[] = {
-	{ 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f },
-	{ 0.0f, 0.866f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f },
-	{ 0.0f, -0.866f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f }
+struct FVertexPositionColor
+{
+	FVector Position;
+	FVector Color;
 };

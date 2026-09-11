@@ -2,8 +2,6 @@
 #include "USceneComponent.h"
 #include "ThirdParty/Json/json.hpp"
 #include "UObjectGlobals.h" 
-#include "UPrimitiveComponent.h"
-#include "../Engine/UScene.h"
 
 
 IMPLEMENT_UCLASS(USceneComponent, UObject)
@@ -42,25 +40,4 @@ bool USceneComponent::Deserialize(const json::JSON& data)
 
 
     return true;
-}
-
-
-void USceneComponent::RegisterComponentWithScene(UScene& Scene)
-{
-    //가상함수 호출 (자식 컴포넌트가 메시/머티리얼 바인딩)
-    OnRegister(Scene);
-    //자신이 그릴 수 있는 프리미티브라면 씬의 렌더 큐에 자신을 등록
-    if (auto* Prim = this->Cast<UPrimitiveComponent>())
-    {
-        Scene.AddRenderComponent(Prim);
-    }
-}
-
-void USceneComponent::UnregisterComponentFromScene(UScene& Scene)
-{
-    if (auto* Prim = this->Cast<UPrimitiveComponent>())
-    {
-        Scene.RemoveRenderComponent(Prim);
-    }
-    OnUnregister(Scene);
 }
