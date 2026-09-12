@@ -1,16 +1,16 @@
 #pragma once
 
-#include "UPrimitiveComponent.h"
+#include "UBillBoardComp.h"
 #include "Runtime/Rendering/FFont.h"
 #include "Runtime/Rendering/FMesh.h"
 
 
 
 class UTextComponent :
-    public UPrimitiveComponent
+    public UBillBoardComp
 {
     GENERATED_BODY()
-    DECLARE_UCLASS(UTextComponent, UPrimitiveComponent)
+    DECLARE_UCLASS(UTextComponent, UBillBoardComp)
 
 public:
     void SetText(const FString& InText) { Text = InText; RebuildTextMesh(); }

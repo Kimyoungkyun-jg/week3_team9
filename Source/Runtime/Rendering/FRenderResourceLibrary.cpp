@@ -773,14 +773,14 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
     // TODO: PlaneGenerator 만들어야 함.
     FTextVertex plane[4] =
     {
-        { { -0.5f, 0.5f, 0.0f }, 0.0f, 0.0f },
-        { { 0.5f, 0.5f, 0.0f }, 0.0f, 0.0f },
-        { { -0.5f, -0.5f, 0.0f }, 0.0f, 0.0f },
-        { { 0.5f, -0.5f, 0.0f }, 0.0f, 0.0f }
+        { { 0.0f, -0.5f, 0.5f }, 0.0f, 0.0f },
+        { { 0.0f, 0.5f, 0.5f }, 0.0f, 0.0f },
+        { { 0.0f, -0.5f, -0.5f }, 0.0f, 0.0f },
+        { { 0.0f, 0.5f, -0.5f }, 0.0f, 0.0f }
     };
     TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
 
-    const float size = 0.5f;
+    const float size = 1.0f;
     for (uint16 i = 0; i < Text.length(); ++i)
     {
         const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
@@ -788,8 +788,8 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
         {	// ranged-for 로 수정?
             FVertexData tv;
             float sizeAmount = size * i;
-            tv.x = plane[j].Pos.X + sizeAmount;
-            tv.y = plane[j].Pos.Y;
+            tv.x = plane[j].Pos.X;
+            tv.y = plane[j].Pos.Y + sizeAmount;
             tv.z = plane[j].Pos.Z;
 
             bool bIsRight = (j == 1) || (j == 3);
