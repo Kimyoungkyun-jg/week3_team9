@@ -23,7 +23,7 @@ namespace
         std::filesystem::path Path = UserPath;
         CoTaskMemFree(UserPath);
 
-        Path /= "GameTechLabWeek2";
+        Path /= "week3_team9";
         Path /= "SceneData";
         Path /= FString(SceneName) + ".Scene";
 
@@ -115,25 +115,6 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         ImGui::Text("Show Flags");
     }
 
-    //씬 저장, 로드
-    static char sceneName[128] = "Default";
-    ImGui::SetNextItemWidth(180.0f);
-    ImGui::InputText("##SceneName", sceneName, IM_ARRAYSIZE(sceneName));
-    ImGui::SameLine();
-    ImGui::Text("Scene Name");
-
-    if (ImGui::Button("New scene"))
-    {
-        Editor.NewScene();
-    }
-    if (ImGui::Button("Save scene"))
-    {
-        Editor.SaveScene(MakeScenePath(sceneName));
-    }
-    if (ImGui::Button("Load scene"))
-    {
-        Editor.LoadScene(MakeScenePath(sceneName));
-    }
 
     ImGui::Separator();
 

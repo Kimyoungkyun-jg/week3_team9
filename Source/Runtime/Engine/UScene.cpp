@@ -94,6 +94,9 @@ bool UScene::Deserialize(const json::JSON& data)
 		component->Deserialize(usceneComponentData);
 		component->SetUUID(uuid);
 		component->RegisterComponentWithScene(*this);
+
+		AActor* Actor = SpawnActor<AActor>();
+		Actor->SetRootComponent(component);
 	}
 	return true;
 }

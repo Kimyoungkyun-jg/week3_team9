@@ -73,7 +73,7 @@ public:
   TSharedPtr<FMesh> CreateMesh(const FMeshDesc &Desc);
   [[nodiscard]]
   TSharedPtr<FMaterial> CreateMaterial(const FMaterialDesc &Desc);
-
+  
   void GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,
                                     ID3D11DeviceContext *&ContextOut);
 

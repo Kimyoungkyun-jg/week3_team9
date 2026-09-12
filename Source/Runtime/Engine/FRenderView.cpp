@@ -7,6 +7,8 @@
 #include "Runtime/Rendering/FRenderer.h"
 #include "Runtime/Rendering/ShaderConstants.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UClass.h"
+#include <fstream>
 
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
@@ -18,14 +20,23 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 Len
   const FMatrix VP = Camera.CreateViewProjectionMatrix();
 
   FObjectConstants Constants;
+  Constants.MVP = Rendered->GetRenderMatrix(Camera) * VP;
     if (auto* BBcomp = Rendered->Cast<UBillBoardComp>()) 
     {
         BBcomp->CalculateRotate(Camera, Constants);//빌보드일때 바라보는 계산
         BBcomp->UpdateUVinfo(Constants);
     }
+
+    if (bHighlighted) {
+        Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
+        Constants.ColorOverrideAmount = 0.5f;
+    }
     
+
     Renderer.Draw(*Rendered->GetMesh(), *Rendered->GetMaterial(), Constants);
 }
+
+
 
 void FRenderView::RenderGizmo(const FTransform &Transform,
                               const FCamera &Camera, FVector2 TopLeftUV,

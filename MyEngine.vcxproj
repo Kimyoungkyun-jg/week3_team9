@@ -373,6 +373,7 @@
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiManager.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiToolBar.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FClassIdSet.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
@@ -464,6 +465,10 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\TextPS.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\TexturedPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>

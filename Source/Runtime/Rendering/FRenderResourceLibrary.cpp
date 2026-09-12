@@ -14,23 +14,68 @@
 
 #include "ThirdParty/stb/stb_image.h"
 
+// [임시 진단] 어느 단계가 실패하는지 파일로 기록한다. 확인 후 제거.
+#include <fstream>
+namespace {
+  std::ofstream& DiagLog() {
+    static std::ofstream Log("init_diag.txt", std::ios::trunc);
+    return Log;
+  }
+  bool DiagStep(const char* Name, bool bOk) {
+    DiagLog() << (bOk ? "[ OK ] " : "[FAIL] ") << Name << std::endl;
+    return bOk;
+  }
+}
+
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
-  if (!CreateCubeMesh(Renderer) ||
-      !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
-      !CreateConeMesh(Renderer) || !CreateArrowMesh(Renderer) ||
-      !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
-      !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
-      !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
-      !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
-      !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
-      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
-      !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer) ||
-      !CreateTextMaterial(Renderer)) {
-    return false;
-  }
 
-  return true;
+  const bool bAllOk =
+      DiagStep("CubeMesh", CreateCubeMesh(Renderer)) &&
+      DiagStep("CylinderMesh", CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f)) &&
+      DiagStep("ConeMesh", CreateConeMesh(Renderer)) &&
+      DiagStep("ArrowMesh", CreateArrowMesh(Renderer)) &&
+      DiagStep("CircleMesh", CreateCircleMesh(Renderer)) &&
+      DiagStep("RotationGizmoMesh", CreateRotationGizmoMesh(Renderer)) &&
+      DiagStep("SquareArrowMesh", CreateSquareArrowMesh(Renderer)) &&
+      DiagStep("GridMesh", CreateGridMesh(Renderer)) &&
+      DiagStep("SphereMesh", CreateSphereMesh(Renderer)) &&
+      DiagStep("LineMesh", CreateLineMesh(Renderer)) &&
+      DiagStep("PlaneMesh", CreatePlaneMesh(Renderer)) &&
+      DiagStep("RectMesh", CreateRectMesh(Renderer)) &&
+      DiagStep("SimpleMaterial", CreateSimpleMaterial(Renderer)) &&
+      DiagStep("GridMaterial", CreateGridMaterial(Renderer)) &&
+      DiagStep("RotationGizmoMaterial", CreateRotationGizmoMaterial(Renderer)) &&
+      DiagStep("Textures", CreateTextures(Renderer)) &&
+      DiagStep("TexturedMaterial", CreateTexturedMaterial(Renderer)) &&
+      DiagStep("TextMesh", CreateTextMesh(Renderer)) &&
+      DiagStep("TextMaterial", CreateTextMaterial(Renderer));
+
+  // 등록 결과 덤프
+  DiagLog() << "--- Pipelines ---" << std::endl;
+  for (int i = 0; i < static_cast<int>(EBuiltinPipeline::Count); ++i) {
+    DiagLog() << "  id " << i << " : "
+              << (Renderer.GetPipeline(static_cast<EBuiltinPipeline>(i)) ? "OK" : "NULL")
+              << std::endl;
+  }
+  DiagLog() << "--- Materials ---" << std::endl;
+  for (const auto& Pair : AllMaterialMap) {
+    DiagLog() << "  " << Pair.first << " : " << (Pair.second ? "OK" : "NULL")
+              << "  pipeline=" << (Pair.second && Pair.second->GetPipeline() ? "OK" : "NULL")
+              << std::endl;
+  }
+  DiagLog() << "--- Textures ---" << std::endl;
+  for (const auto& Pair : AllTextureMap) {
+    DiagLog() << "  " << Pair.first << " : " << (Pair.second ? "OK" : "NULL") << std::endl;
+  }
+  DiagLog() << "--- Meshes ---" << std::endl;
+  for (const auto& Pair : AllMeshMap) {
+    DiagLog() << "  " << Pair.first << " : " << (Pair.second ? "OK" : "NULL") << std::endl;
+  }
+  DiagLog() << "Initialize result = " << (bAllOk ? "true" : "false") << std::endl;
+  DiagLog().flush();
+
+  return bAllOk;
 }
 
 bool FRenderResourceLibrary::CreateCubeMesh(FRenderer &Renderer) {
@@ -831,7 +876,7 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
 
     FMaterialDesc Desc = {
         .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-        .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
+        .PixelShaderFileName = Path + L"/Shader/TexturedPS.cso",
     };
 
     TSharedPtr<FMaterial> Material =

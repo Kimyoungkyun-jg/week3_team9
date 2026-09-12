@@ -39,7 +39,9 @@ void FEditor::NewScene() {
 
 void FEditor::SaveScene(const FString &Path) { SceneManager->SaveScene(Path); }
 
-void FEditor::LoadScene(const FString &Path) {
+void FEditor::LoadScene(const FString &Path) 
+{
+
   // 씬 로드
   SceneManager->LoadScene(Path);
   SelectedActor = nullptr;

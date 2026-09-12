@@ -19,10 +19,9 @@ void UBillBoardComp::CalculateRotate(const FCamera& Camera, FObjectConstants& In
     const FTransform G = GetGlobalTransform();
     const FVector ToCamera = Camera.Position - G.Location;
 
-
-    if (ToCamera.SizeSquared() < 1e-8f) {
-        InputConstant.MVP = FMatrix::GetIdentity();
-    }
+    //if (ToCamera.SizeSquared() < 1e-8f) {
+    //    InputConstant.MVP = FMatrix::GetIdentity();
+    //}
     const FVector Forward = ToCamera / ToCamera.Size();
     const FMatrix CamRot = Camera.GetRotationMatrix();
     const FVector CameraUp{ CamRot.M[2][0], CamRot.M[2][1], CamRot.M[2][2] };

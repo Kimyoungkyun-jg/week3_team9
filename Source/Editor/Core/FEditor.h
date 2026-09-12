@@ -12,7 +12,7 @@
 enum class EEditorPrimitiveType : uint8 {
   Cube,
   Cylinder,
-  Sphere, // TODO: USphereComp / 스피어 메시 미구현 - 현재 스폰 불가
+  Sphere, 
 };
 
 class FEditor final {
