@@ -211,6 +211,18 @@
     <ClCompile Include="Source\Runtime\Core\FName.cpp">
       <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UBillBoardComp.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Rendering\FFont.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Rendering\FLineBatcher.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
@@ -411,6 +423,11 @@
     <ClInclude Include="Source\Runtime\Core\FName.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UBillBoardComp.h" />
+    <ClInclude Include="Source\Runtime\Engine\ShowFlags.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FFont.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FLineBatcher.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
@@ -431,6 +448,9 @@
     <FxCompile Include="Shader\RotationGizmoPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Shader\TextPS.hlsl" />
+    <FxCompile Include="Shader\TexturedPS.hlsl" />
+    <FxCompile Include="Shader\MsdfTextPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Constants.hlsli">

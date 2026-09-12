@@ -26,7 +26,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
       !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer) ||
-      !CreateTextMaterial(Renderer) || !CreateKorTextMesh(Renderer)) {
+      !CreateTextMaterial(Renderer) || !CreateKorTextMesh(Renderer) ||
+      !CreateKorTextMaterial(Renderer)) {
     return false;
   }
 
@@ -870,32 +871,40 @@ bool FRenderResourceLibrary::CreateKorTextMesh(FRenderer& Renderer)
     for (uint16 i = 0; i < Text.length(); ++i)
     {
         const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
+        if (Text.at(i) == L' ')
+        {
+            prevAdvance += CharInfo.advance;
+            continue;
+        }
         FVertexData tv[4]{};
+
+        float Top = -CharInfo.planeTop;
+        float Bot= -CharInfo.planeBottom;
 
         tv[0].x = 0.0f;
         tv[0].y = CharInfo.planeLeft + prevAdvance;
-        tv[0].z = CharInfo.planeTop;
+        tv[0].z = -CharInfo.planeTop;
         tv[0].u = CharInfo.u;
         tv[0].v = CharInfo.v;
         Vertices.push_back(tv[0]);
 
         tv[1].x = 0.0f;
         tv[1].y = CharInfo.planeRight + prevAdvance;
-        tv[1].z = CharInfo.planeTop;
+        tv[1].z = -CharInfo.planeTop;
         tv[1].u = CharInfo.u + CharInfo.width;
         tv[1].v = CharInfo.v;
         Vertices.push_back(tv[1]);
 
         tv[2].x = 0.0f;
         tv[2].y = CharInfo.planeLeft + prevAdvance;
-        tv[2].z = CharInfo.planeBottom;
+        tv[2].z = -CharInfo.planeBottom;
         tv[2].u = CharInfo.u;
         tv[2].v = CharInfo.v + CharInfo.height;
         Vertices.push_back(tv[2]);
 
         tv[3].x = 0.0f;
         tv[3].y = CharInfo.planeRight + prevAdvance;
-        tv[3].z = CharInfo.planeBottom;
+        tv[3].z = -CharInfo.planeBottom;
         tv[3].u = CharInfo.u + CharInfo.width;
         tv[3].v = CharInfo.v + CharInfo.height;
         Vertices.push_back(tv[3]);
@@ -923,5 +932,32 @@ bool FRenderResourceLibrary::CreateKorTextMesh(FRenderer& Renderer)
     return KorTextMesh != nullptr;
 }
 
+bool FRenderResourceLibrary::CreateKorTextMaterial(FRenderer& Renderer)
+{
+    FWString Path = GetExecutableDirectory();
 
+    FMaterialDesc Desc = {
+        .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+        .PixelShaderFileName = Path + L"/Shader/MsdfTextPS.cso",
+    };
+
+    TSharedPtr<FMaterial> Material =
+        RegisterMaterial("KorText", Renderer.CreateMaterial(Desc));
+    if (!Material) {
+        return false;
+    }
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        Renderer.GetPipeline(EBuiltinPipeline::KorText);
+    if (!Pipeline) {
+        // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+        return false;
+    }
+    Material->SetPipeLine(Pipeline);
+
+    // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+    Material->SetTexture(GetTexture("maplestorybold"));
+
+    return true;
+}
 

@@ -87,7 +87,7 @@ void FFont::Deserialize(const FWString& path)
 	}
 }
 
-const FCharacterInfo& FFont::GetCharInfo(char InCharacter) const
+const FCharacterInfo& FFont::GetCharInfo(char32_t InCharacter) const
 {
 	auto it = CharInfoMap.find(InCharacter);
 	if (it != CharInfoMap.end())
