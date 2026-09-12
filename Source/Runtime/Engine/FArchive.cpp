@@ -75,6 +75,24 @@ void FArchive::SetString(const FString& Key, const FString& Value)
 	Object[Key] = Value;
 }
 
+bool FArchive::IsNull(const FString& Key) const
+{
+	// 주어진 키 자체가 존재하지 않음
+	if (!Object.contains(Key)) { return true; }
+
+	// 주어진 키의 value가 null 값임
+	if (Object.at(Key).is_null()) { return true; }
+
+	// 값이 있음
+	return false;
+}
+
+void FArchive::SetNull(const FString& Key)
+{
+	// 참고: IsNull과는 다르게, SetNull은 반드시 명시적인 null을 지정함
+	Object[Key] = nullptr;
+}
+
 TArray<const FArchive> FArchive::GetObjectArray(const FString& Key) const
 {
 	TArray<const FArchive> Array;

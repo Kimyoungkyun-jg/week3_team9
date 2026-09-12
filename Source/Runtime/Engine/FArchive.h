@@ -42,6 +42,9 @@ public:
 
 	FString GetString(const FString& Key) const;
 	void SetString(const FString& Key, const FString& Value);
+
+	bool IsNull(const FString& Key) const;
+	void SetNull(const FString& Key);
 	
 	template <typename T>
 	TArray<T> GetArray(const FString& Key) const
