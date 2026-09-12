@@ -209,6 +209,74 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   return Mesh;
 }
 
+TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) {
+    if (!Desc.VertexData || Desc.VertexCount == 0 || Desc.VertexDataSize == 0 ||
+        Desc.VertexStride == 0) {
+        return nullptr;
+    }
+    if (Desc.IndexCount > 0 && (!Desc.IndexData || Desc.IndexDataSize == 0)) {
+        return nullptr;
+    }
+
+    auto Mesh = TSharedPtr<FMesh>{ new FMesh() };
+    D3D11_BUFFER_DESC VertexBufferDesc = {
+        .ByteWidth = Desc.VertexDataSize,
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+    };
+
+    D3D11_SUBRESOURCE_DATA VertexData = {
+        .pSysMem = Desc.VertexData,
+    };
+
+    HRESULT Result =
+        Device->CreateBuffer(&VertexBufferDesc, &VertexData, &Mesh->VertexBuffer);
+    if (FAILED(Result)) {
+        return nullptr;
+    }
+    Mesh->VertexCount = Desc.VertexCount;
+    Mesh->VertexStride = Desc.VertexStride;
+
+    if (Desc.IndexCount > 0 && Desc.IndexData) {
+        D3D11_BUFFER_DESC IndexBufferDesc = {
+            .ByteWidth = Desc.IndexDataSize,
+            .Usage = D3D11_USAGE_DEFAULT,
+            .BindFlags = D3D11_BIND_INDEX_BUFFER,
+        };
+
+        D3D11_SUBRESOURCE_DATA IndexData = {
+            .pSysMem = Desc.IndexData,
+        };
+
+        Result =
+            Device->CreateBuffer(&IndexBufferDesc, &IndexData, &Mesh->IndexBuffer);
+        if (FAILED(Result)) {
+            return nullptr;
+        }
+    }
+    Mesh->IndexCount = Desc.IndexCount;
+
+    const auto* vertices = static_cast<const FVertexData*>(Desc.VertexData);
+
+    Mesh->Positions.reserve(Desc.VertexCount);
+    for (uint32 i = 0; i < Desc.VertexCount; ++i) {
+        Mesh->Positions.push_back(
+            FVector{ vertices[i].x, vertices[i].y, vertices[i].z });
+    }
+
+    if (Desc.IndexCount > 0) {
+        const auto* indices = static_cast<const uint32*>(Desc.IndexData);
+        Mesh->Indices.assign(indices, indices + Desc.IndexCount);
+    }
+
+    Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST
+        : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+    Mesh->LocalBounds = FAxisAlignedBoundingBox{ *Mesh.get() };
+    return Mesh;
+}
+
 TSharedPtr<FMaterial> FRenderer::CreateMaterial(const FMaterialDesc &Desc) {
   TSharedPtr<FMaterial> Material{new FMaterial()};
   return Material;

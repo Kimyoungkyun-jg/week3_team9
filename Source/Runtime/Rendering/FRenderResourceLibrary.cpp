@@ -769,7 +769,7 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
     TArray<uint32> Indices;
     FFont Font;
     Font.Initialize(16);
-    FString Text{ "Welcome To Jungle" };
+    FString Text{ "Welcome To Jungle" };    // 메시 임의 초기값
 
     // TODO: PlaneGenerator 만들어야 함.
     FTextVertex plane[4] =
@@ -821,7 +821,7 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
         .IndexCount = static_cast<uint32>(Indices.size())
     };
     
-    TextMesh = RegisterMesh("Text", Renderer.CreateMesh(MeshData));
+    TextMesh = RegisterMesh("Text", Renderer.CreateDynamicMesh(MeshData));
     return TextMesh != nullptr;
 }
 
