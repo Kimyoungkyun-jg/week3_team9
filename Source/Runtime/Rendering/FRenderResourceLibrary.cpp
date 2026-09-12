@@ -22,9 +22,11 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
       !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
       !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
-      !CreatePlaneMesh(Renderer) ||
+      !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
-      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer)) {
+      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
+      !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer) ||
+      !CreateTextMaterial(Renderer)) {
     return false;
   }
 
@@ -524,8 +526,8 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
 }
 
 bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
-  constexpr float HalfW = 50.0f;
-  constexpr float HalfH = 50.0f;
+  constexpr float HalfW = 10.0f;
+  constexpr float HalfH = 10.0f;
 
   const TArray<FVertexData> Vertices = {
       {-HalfW, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -592,6 +594,40 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
   return PlaneMesh != nullptr;
 }
 
+bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
+  // 사각형 정점 배열
+  const TArray<FVertexData> Vertices = {
+      {0.0f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+  };
+
+  // 양면 인덱스 배열
+  const TArray<uint32> Indices = {
+      0, 1, 2, 0, 2, 3,
+      0, 2, 1, 0, 3, 2
+  };
+
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = sizeof(FVertexData),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
+
+  // 사각형 메쉬 생성 및 등록
+  RectMesh = RegisterMesh("Rect", Renderer.CreateMesh(MeshDesc));
+  if (RectMesh) {
+    AllMeshMap["Rectangle"] = RectMesh;
+  }
+  return RectMesh != nullptr;
+}
+
 bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   FWString Path = GetExecutableDirectory();
 
@@ -609,6 +645,34 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   } else {
     return false;
   }
+}
+
+bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
+
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/TexturedPS.cso",
+  };
+
+  TSharedPtr<FMaterial> Material =
+      RegisterMaterial("Textured", Renderer.CreateMaterial(Desc));
+  if (!Material) {
+    return false;
+  }
+
+  TSharedPtr<FRenderPipeline> Pipeline =
+      Renderer.GetPipeline(EBuiltinPipeline::Textured);
+  if (!Pipeline) {
+    // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+    return false;
+  }
+  Material->SetPipeLine(Pipeline);
+
+  // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+  Material->SetTexture(GetTexture("sandclock"));
+
+  return true;
 }
 
 bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
@@ -666,7 +730,7 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
 
         // 확장자 제거는 stem()이 해줌
         FString KeyWide = Entry.path().stem().string();          // "icon"
-        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::towlower);
+        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
 
         int W = 0, H = 0, ChannelsInFile = 0;
         unsigned char* Pixels = stbi_load(
@@ -684,11 +748,108 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
         TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
         stbi_image_free(Pixels);
 
+        if (!Texture) continue;   // 실패한 텍스처는 맵에 넣지 않는다
 
         RegisterTexture(KeyWide, Texture);
-        if (!Texture) continue;
-        //RegisterTexture(ToNarrow(KeyWide), Texture);
     }
+
+    return true;
+}
+
+bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& textureName)
+{
+
+
+    return false;
+}
+
+bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
+{
+    TArray<FVertexData> Vertices;
+    TArray<uint32> Indices;
+    FFont Font;
+    Font.Initialize(16);
+    FString Text{ "Welcome To Jungle" };
+
+    // TODO: PlaneGenerator 만들어야 함.
+    FTextVertex plane[4] =
+    {
+        { { 0.0f, -0.5f, 0.5f }, 0.0f, 0.0f },
+        { { 0.0f, 0.5f, 0.5f }, 0.0f, 0.0f },
+        { { 0.0f, -0.5f, -0.5f }, 0.0f, 0.0f },
+        { { 0.0f, 0.5f, -0.5f }, 0.0f, 0.0f }
+    };
+    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
+
+    const float size = 1.0f;
+    for (uint16 i = 0; i < Text.length(); ++i)
+    {
+        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
+        for (uint16 j = 0; j < 4; ++j)
+        {	// ranged-for 로 수정?
+            FVertexData tv;
+            float sizeAmount = size * i;
+            tv.x = plane[j].Pos.X;
+            tv.y = plane[j].Pos.Y + sizeAmount;
+            tv.z = plane[j].Pos.Z;
+
+            bool bIsRight = (j == 1) || (j == 3);
+            bool bIsBottom = (j == 2) || (j == 3);
+
+            float width = (bIsRight) ? CharInfo.width : 0.0f;
+            float height = (bIsBottom) ? CharInfo.height : 0.0f;
+            tv.u = CharInfo.u + width;
+            tv.v = CharInfo.v + height;
+            Vertices.push_back(tv);
+        }
+
+        uint32 VertexOffset = i * 4;
+        for (uint32 index : IndexSet)
+        {
+            Indices.push_back(index + VertexOffset);
+        }
+    }
+
+    // 메시 빌드 추가하기
+    FMeshDesc MeshData{
+        .VertexData = Vertices.data(),
+        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+        .VertexStride = sizeof(FVertexData),
+        .VertexCount = static_cast<uint32>(Vertices.size()),
+        .IndexData = Indices.data(),
+        .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+        .IndexCount = static_cast<uint32>(Indices.size())
+    };
+    
+    TextMesh = RegisterMesh("Text", Renderer.CreateMesh(MeshData));
+    return TextMesh != nullptr;
+}
+
+bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
+{
+    FWString Path = GetExecutableDirectory();
+
+    FMaterialDesc Desc = {
+        .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+        .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
+    };
+
+    TSharedPtr<FMaterial> Material =
+        RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
+    if (!Material) {
+        return false;
+    }
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        Renderer.GetPipeline(EBuiltinPipeline::Text);
+    if (!Pipeline) {
+        // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+        return false;
+    }
+    Material->SetPipeLine(Pipeline);
+
+    // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+    Material->SetTexture(GetTexture("dejavusansmono"));
 
     return true;
 }

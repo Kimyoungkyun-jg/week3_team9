@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Runtime/Core/IntTypes.h"
 #include <cassert>
@@ -17,6 +17,7 @@ struct FVector4
 	static const FVector4 OneVector;
 
 	[[nodiscard]] constexpr FVector4(float InX = 0.0f, float InY = 0.0f, float InZ = 0.0f, float InW = 0.0f);
+	[[nodiscard]] constexpr FVector4(const FVector& V, float InW = 1.0f);
 
 	[[nodiscard]] FVector4 operator+(const FVector4& V) const;
 
@@ -86,6 +87,14 @@ inline const FVector4 FVector4::OneVector{ 1.0f, 1.0f, 1.0f, 1.0f };
 
 constexpr FVector4::FVector4(float InX, float InY, float InZ, float InW)
 	: X(InX), Y(InY), Z(InZ), W(InW)
+{}
+
+constexpr FVector4::FVector4(const FVector& V, float InW)
+	: X(V.X), Y(V.Y), Z(V.Z), W(InW)
+{}
+
+inline FVector::FVector(const FVector4& V)
+	: X(V.X), Y(V.Y), Z(V.Z)
 {}
 
 inline FVector4 FVector4::operator+(const FVector4& V) const

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Analysis|Win32">
@@ -276,6 +276,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FUObjectArray.cpp" />
+    <ClCompile Include="Source\Runtime\CoreUObject\UBillBoardComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
@@ -297,11 +298,13 @@
     <ClCompile Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.cpp" />
     <ClCompile Include="Source\Runtime\Input\FCameraInputController.cpp" />
     <ClCompile Include="Source\Runtime\Input\FInputManager.cpp" />
+    <ClCompile Include="Source\Runtime\Rendering\FFont.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderer.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FMaterial.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FMesh.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderResourceLibrary.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Rendering\FLineBatcher.cpp" />
     <ClCompile Include="Source\ThirdParty\Imgui\imgui.cpp">
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">TurnOffAllWarnings</WarningLevel>
@@ -358,6 +361,7 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">TurnOffAllWarnings</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\Application\FEditorApplication.h" />
@@ -373,6 +377,7 @@
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FUObjectArray.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\UBillBoardComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UClass.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCubeComp.h" />
@@ -399,6 +404,7 @@
     <ClInclude Include="Source\Runtime\Core\TMap.h" />
     <ClInclude Include="Source\Runtime\Engine\FCamera.h" />
     <ClInclude Include="Source\Runtime\Engine\FRayCastingManager.h" />
+    <ClInclude Include="Source\Runtime\Engine\ShowFlags.h" />
     <ClInclude Include="Source\Runtime\Engine\UScene.h" />
     <ClInclude Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.h" />
     <ClInclude Include="Source\Runtime\Geometry\FTransform.h" />
@@ -410,10 +416,12 @@
     <ClInclude Include="Source\Runtime\Math\FVector.h" />
     <ClInclude Include="Source\Runtime\Math\FVector2.h" />
     <ClInclude Include="Source\Runtime\Math\FVector4.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FFont.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderResourceLibrary.h" />
     <ClInclude Include="Source\Runtime\Rendering\FTexture.h" />
     <ClInclude Include="Source\Runtime\Rendering\ShaderConstants.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderPipeline.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FLineBatcher.h" />
     <ClInclude Include="Source\Runtime\Rendering\Vertices.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h" />
     <ClInclude Include="Source\Runtime\Rendering\FMaterial.h" />
@@ -428,6 +436,7 @@
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_textedit.h" />
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_truetype.h" />
     <ClInclude Include="Source\ThirdParty\Json\json.hpp" />
+    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
@@ -443,6 +452,24 @@
       </ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainPS</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainPS</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">MainPS</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\TextPS.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\TexturedPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainPS</EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainPS</EntryPointName>
@@ -506,4 +533,10 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
+  <ItemDefinitionGroup>
+    <PostBuildEvent>
+      <Command>if exist "$(SolutionDir)Textures" xcopy /Y /D /I /E "$(SolutionDir)Textures" "$(OutDir)Textures\"</Command>
+      <Message>Copying textures to output directory...</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
 </Project>

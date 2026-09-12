@@ -15,6 +15,7 @@ struct FRenderPipelineDesc {
 
 class FRenderPipeline final {
   friend class FRenderer;
+  friend class FLineBatcher;
 
 public:
   [[nodiscard]] FRenderPipelineDesc GetPipelineDesc() const { return desc; }
@@ -30,4 +31,5 @@ private:
 
   Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState;
   Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState;
+  Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState;
 };

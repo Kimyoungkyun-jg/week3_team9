@@ -8,10 +8,17 @@
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Core/TMap.h"
 #include "Vertices.h"
+#include "FFont.h"
 
 
 class FRenderer;
 class FTexture;
+struct FTextVertex
+{
+    FVector Pos;
+    float u, v;
+};
+
 
 class FRenderResourceLibrary final {
 public:
@@ -51,6 +58,7 @@ public:
   [[nodiscard]] TSharedPtr<FMesh> GetSphereMesh() const { return SphereMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetLineMesh() const { return LineMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetPlaneMesh() const { return PlaneMesh; }
+  [[nodiscard]] TSharedPtr<FMesh> GetRectMesh() const { return RectMesh; }
 
   // 머티리얼 조회
   TSharedPtr<FMaterial> GetMaterial(const FString &name) const {
@@ -72,6 +80,15 @@ public:
       AllTextureMap[name] = texture;
   }
 
+  // 텍스처 조회. 없으면 nullptr
+  [[nodiscard]] TSharedPtr<FTexture> GetTexture(const FString& name) const
+  {
+      auto it = AllTextureMap.find(name);
+      if (it != AllTextureMap.end())
+          return it->second;
+      return nullptr;
+  }
+
   // 개별 머티리얼 접근자
   [[nodiscard]] TSharedPtr<FMaterial> GetSimpleMaterial() const { return SimpleMaterial; }
   [[nodiscard]] TSharedPtr<FMaterial> GetGridMaterial() const { return GridMaterial; }
@@ -91,6 +108,7 @@ public:
     SphereMesh.reset();
     LineMesh.reset();
     PlaneMesh.reset();
+    RectMesh.reset();
   }
 
   // 머티리얼 전체 해제
@@ -140,13 +158,21 @@ private:
   bool CreateSphereMesh(FRenderer &Renderer);
   bool CreateLineMesh(FRenderer &Renderer);
   bool CreatePlaneMesh(FRenderer &Renderer);
+  bool CreateRectMesh(FRenderer &Renderer);
 
 
   bool CreateSimpleMaterial(FRenderer &Renderer);
   bool CreateGridMaterial(FRenderer &Renderer);
   bool CreateRotationGizmoMaterial(FRenderer &Renderer);
+  //시작시 1번만 호출
   bool CreateTextures(FRenderer& Renderer);
+  // 텍스처를 샘플링하는 머티리얼. CreateTextures 이후에 호출해야 함
+  bool CreateTexturedMaterial(FRenderer& Renderer);
+  bool CreateCommonMaterial(FRenderer& Renderer, FString& textureName);
 
+  // Text
+  bool CreateTextMesh(FRenderer& Renderer);
+  bool CreateTextMaterial(FRenderer& Renderer);
 
   // 개별 리소스 멤버 변수
   TSharedPtr<FMesh> CubeMesh;
@@ -160,6 +186,8 @@ private:
   TSharedPtr<FMesh> SphereMesh;
   TSharedPtr<FMesh> LineMesh;
   TSharedPtr<FMesh> PlaneMesh;
+  TSharedPtr<FMesh> RectMesh;
+  TSharedPtr<FMesh> TextMesh;
 
   TSharedPtr<FMaterial> SimpleMaterial;
   TSharedPtr<FMaterial> GridMaterial;
