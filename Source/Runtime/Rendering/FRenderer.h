@@ -45,6 +45,8 @@ public:
   [[nodiscard]]
   TSharedPtr<FMesh> CreateMesh(const FMeshDesc &Desc);
   [[nodiscard]]
+  TSharedPtr<FMesh> CreateDynamicMesh(const FMeshDesc& Desc);   // 텍스트 렌더링용
+  [[nodiscard]]
   TSharedPtr<FMaterial> CreateMaterial(const FMaterialDesc &Desc);
   
   void GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,ID3D11DeviceContext *&ContextOut);
