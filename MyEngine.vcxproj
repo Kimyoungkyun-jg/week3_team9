@@ -277,6 +277,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FUObjectArray.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UBillBoardComp.cpp" />
+    <ClCompile Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
@@ -376,6 +377,7 @@
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FUObjectArray.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UBillBoardComp.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UClass.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCubeComp.h" />

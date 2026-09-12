@@ -2,13 +2,14 @@
 #include "Vertices.h"
 
 #include "FRenderer.h"
+#include "FTexture.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Geometry/Sphere.h"
 #include "Runtime/Math/FVector.h"
 #include "Runtime/Rendering/FRenderer.h"
 #include <cmath>
 #include <numbers>
-#include "FTexture.h"
+
 
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -596,17 +597,15 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
 bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
   // 사각형 정점 배열
   const TArray<FVertexData> Vertices = {
-      {0.0f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+       0.0f},
   };
 
   // 양면 인덱스 배열
-  const TArray<uint32> Indices = {
-      0, 1, 2, 0, 2, 3,
-      0, 2, 1, 0, 3, 2
-  };
+  const TArray<uint32> Indices = {0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2};
 
   FMeshDesc MeshDesc{
       .VertexData = Vertices.data(),
@@ -700,7 +699,8 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
       .PixelShaderFileName = Path + L"/Shader/RotationGizmoPS.cso",
   };
 
-  RotationGizmoMaterial = RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
+  RotationGizmoMaterial =
+      RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
 
   if (RotationGizmoMaterial) {
     RotationGizmoMaterial->SetPipeLine(
@@ -711,56 +711,54 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
   }
 }
 
-bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
-{
-    const std::filesystem::path Root = std::filesystem::path(GetExecutableDirectory()) / L"Textures";
-    if (!std::filesystem::exists(Root))
-    {
-        return true;   // 폴더가 없는 건 실패가 아님
-    }
+bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
+  const std::filesystem::path Root =
+      std::filesystem::path(GetExecutableDirectory()) / L"Textures";
+  if (!std::filesystem::exists(Root)) {
+    return true; // 폴더가 없는 건 실패가 아님
+  }
 
-    for (const auto& Entry : std::filesystem::recursive_directory_iterator(Root))
-    {
-        if (!Entry.is_regular_file()) continue;
+  for (const auto &Entry :
+       std::filesystem::recursive_directory_iterator(Root)) {
+    if (!Entry.is_regular_file())
+      continue;
 
-        FWString Ext = Entry.path().extension().wstring();
-        std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
-        if (Ext != L".png" && Ext != L".jpg") continue;
+    FWString Ext = Entry.path().extension().wstring();
+    std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+    if (Ext != L".png" && Ext != L".jpg")
+      continue;
 
-        // 확장자 제거는 stem()이 해줌
-        FString KeyWide = Entry.path().stem().string();          // "icon"
-        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
+    // 확장자 제거는 stem()이 해줌
+    FString KeyWide = Entry.path().stem().string(); // "icon"
+    std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
 
-        int W = 0, H = 0, ChannelsInFile = 0;
-        unsigned char* Pixels = stbi_load(
-            Entry.path().string().c_str(),   
-            &W, &H, &ChannelsInFile, 4);   
-        if (!Pixels) continue;
+    int W = 0, H = 0, ChannelsInFile = 0;
+    unsigned char *Pixels =
+        stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
+    if (!Pixels)
+      continue;
 
-        FTextureDesc Desc{
-            .PixelData = Pixels,
-            .Width = static_cast<uint32>(W),
-            .Height = static_cast<uint32>(H),
-            .RowPitch = static_cast<uint32>(W) * 4u,
-        };
+    FTextureDesc Desc{
+        .PixelData = Pixels,
+        .Width = static_cast<uint32>(W),
+        .Height = static_cast<uint32>(H),
+        .RowPitch = static_cast<uint32>(W) * 4u,
+    };
 
-        TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
-        stbi_image_free(Pixels);
+    TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
+    stbi_image_free(Pixels);
 
-        if (!Texture) continue;   // 실패한 텍스처는 맵에 넣지 않는다
+    if (!Texture)
+      continue; // 실패한 텍스처는 맵에 넣지 않는다
 
-        RegisterTexture(KeyWide, Texture);
-    }
+    RegisterTexture(KeyWide, Texture);
+  }
 
-    return true;
+  return true;
 }
 
-bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& textureName)
-{
+bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer &Renderer,
+                                                  FString &textureName) {
 
-
-    return false;
+  return false;
 }
-
-
-

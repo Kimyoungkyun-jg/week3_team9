@@ -21,7 +21,7 @@ PS_INPUT MainVS(VS_INPUT Input)
 
     Output.Position = mul(float4(Input.Position, 1.0f), MVP);
     Output.Color = Input.Color;
-    Output.UV = Input.UV;
+    Output.UV = Input.UV * UVScale + UVOffset;
 
     return Output;
 }
