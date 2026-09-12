@@ -272,11 +272,13 @@
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiManager.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiToolBar.cpp" />
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FUObjectArray.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UBillBoardComp.cpp" />
+    <ClCompile Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
@@ -374,11 +376,13 @@
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiToolBar.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FClassIdSet.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FUObjectArray.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UBillBoardComp.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UClass.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCubeComp.h" />
@@ -539,5 +543,8 @@
       <Command>if exist "$(SolutionDir)Textures" xcopy /Y /D /I /E "$(SolutionDir)Textures" "$(OutDir)Textures\"</Command>
       <Message>Copying textures to output directory...</Message>
     </PostBuildEvent>
+    <ClCompile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Runtime/Core/Log.h</ForcedIncludeFiles>
+    </ClCompile>
   </ItemDefinitionGroup>
 </Project>

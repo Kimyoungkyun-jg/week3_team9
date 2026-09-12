@@ -1,6 +1,7 @@
-﻿#include "UPlaneComp.h"
+#include "UPlaneComp.h"
 
 #include "Runtime/CoreUObject/UObjectGlobals.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "UClass.h"
 #include "Runtime/Engine/UScene.h"
 
@@ -12,7 +13,8 @@ void UPlaneComp::OnRegister(UScene& Scene)
 {
 	UPrimitiveComponent::OnRegister(Scene);
 
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Plane"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
+	auto& ResLib = FRenderResourceLibrary::Get();
+	SetMesh(ResLib.GetMesh("Plane"));
+	SetMaterial(ResLib.GetMaterial("Simple"));
 }
 

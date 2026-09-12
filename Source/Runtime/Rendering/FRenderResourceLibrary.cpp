@@ -2,80 +2,124 @@
 #include "Vertices.h"
 
 #include "FRenderer.h"
+#include "FTexture.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Geometry/Sphere.h"
 #include "Runtime/Math/FVector.h"
 #include "Runtime/Rendering/FRenderer.h"
 #include <cmath>
 #include <numbers>
-#include "FTexture.h"
+
 
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "ThirdParty/stb/stb_image.h"
 
-// [임시 진단] 어느 단계가 실패하는지 파일로 기록한다. 확인 후 제거.
-#include <fstream>
-namespace {
-  std::ofstream& DiagLog() {
-    static std::ofstream Log("init_diag.txt", std::ios::trunc);
-    return Log;
+FRenderResourceLibrary& FRenderResourceLibrary::Get() {
+  static FRenderResourceLibrary Instance;
+  return Instance;
+}
+
+// 파이프라인 정보 엔트리
+struct FPipelineEntry {
+  EBuiltinPipeline Id;
+  const wchar_t *VertexShader;
+  const wchar_t *PixelShader;
+};
+
+// 기본 파이프라인 테이블
+constexpr FPipelineEntry pipelineTable[] = {
+    {EBuiltinPipeline::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
+    {EBuiltinPipeline::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
+    {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
+    {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
+};
+
+bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
+  const FWString Path = GetExecutableDirectory();
+  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
+  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
+
+  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+    return false;
   }
-  bool DiagStep(const char* Name, bool bOk) {
-    DiagLog() << (bOk ? "[ OK ] " : "[FAIL] ") << Name << std::endl;
-    return bOk;
+
+  FRenderPipelineDesc Desc = {
+      .VertexShaderFileName = VsPath,
+      .PixelShaderFileName = PsPath,
+      .bEnableDepthTest = true,
+  };
+
+  // 솔리드 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> SolidPipeline =
+      Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
+  if (SolidPipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
   }
+
+  // 와이어프레임 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> WireframePipeline =
+      Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
+  if (WireframePipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
+  }
+
+  return SolidPipeline != nullptr && WireframePipeline != nullptr;
+}
+
+bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
+  // 솔리드 및 와이어프레임 파이프라인 개별 생성
+  CreateSolidWireframePipeline(Renderer);
+
+  const FWString Path = GetExecutableDirectory();
+
+  for (const FPipelineEntry &Entry : pipelineTable) {
+    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
+      continue;
+    }
+
+    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
+    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
+
+    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+      continue;
+    }
+
+    FRenderPipelineDesc PipelineDesc = {
+        .VertexShaderFileName = VsPath,
+        .PixelShaderFileName = PsPath,
+        .bEnableDepthTest = true,
+    };
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        Renderer.CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
+    if (!Pipeline) {
+      return false;
+    }
+
+    AllPipelineMap[Entry.Id] = Pipeline;
+  }
+  return true;
 }
 
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
+  if (!InitializePipelines(Renderer) ||
+      !CreateCubeMesh(Renderer) ||
+      !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
+      !CreateConeMesh(Renderer) || !CreateArrowMesh(Renderer) ||
+      !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
+      !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
+      !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
+      !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
+      !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
+      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
+      !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer) ||
+      !CreateTextMaterial(Renderer)) {
+    return false;
+  }
 
-  const bool bAllOk =
-      DiagStep("CubeMesh", CreateCubeMesh(Renderer)) &&
-      DiagStep("CylinderMesh", CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f)) &&
-      DiagStep("ConeMesh", CreateConeMesh(Renderer)) &&
-      DiagStep("ArrowMesh", CreateArrowMesh(Renderer)) &&
-      DiagStep("CircleMesh", CreateCircleMesh(Renderer)) &&
-      DiagStep("RotationGizmoMesh", CreateRotationGizmoMesh(Renderer)) &&
-      DiagStep("SquareArrowMesh", CreateSquareArrowMesh(Renderer)) &&
-      DiagStep("GridMesh", CreateGridMesh(Renderer)) &&
-      DiagStep("SphereMesh", CreateSphereMesh(Renderer)) &&
-      DiagStep("LineMesh", CreateLineMesh(Renderer)) &&
-      DiagStep("PlaneMesh", CreatePlaneMesh(Renderer)) &&
-      DiagStep("RectMesh", CreateRectMesh(Renderer)) &&
-      DiagStep("SimpleMaterial", CreateSimpleMaterial(Renderer)) &&
-      DiagStep("GridMaterial", CreateGridMaterial(Renderer)) &&
-      DiagStep("RotationGizmoMaterial", CreateRotationGizmoMaterial(Renderer)) &&
-      DiagStep("Textures", CreateTextures(Renderer)) &&
-      DiagStep("TexturedMaterial", CreateTexturedMaterial(Renderer)) &&
-      DiagStep("TextMesh", CreateTextMesh(Renderer)) &&
-      DiagStep("TextMaterial", CreateTextMaterial(Renderer));
-
-  // 등록 결과 덤프
-  DiagLog() << "--- Pipelines ---" << std::endl;
-  for (int i = 0; i < static_cast<int>(EBuiltinPipeline::Count); ++i) {
-    DiagLog() << "  id " << i << " : "
-              << (Renderer.GetPipeline(static_cast<EBuiltinPipeline>(i)) ? "OK" : "NULL")
-              << std::endl;
-  }
-  DiagLog() << "--- Materials ---" << std::endl;
-  for (const auto& Pair : AllMaterialMap) {
-    DiagLog() << "  " << Pair.first << " : " << (Pair.second ? "OK" : "NULL")
-              << "  pipeline=" << (Pair.second && Pair.second->GetPipeline() ? "OK" : "NULL")
-              << std::endl;
-  }
-  DiagLog() << "--- Textures ---" << std::endl;
-  for (const auto& Pair : AllTextureMap) {
-    DiagLog() << "  " << Pair.first << " : " << (Pair.second ? "OK" : "NULL") << std::endl;
-  }
-  DiagLog() << "--- Meshes ---" << std::endl;
-  for (const auto& Pair : AllMeshMap) {
-    DiagLog() << "  " << Pair.first << " : " << (Pair.second ? "OK" : "NULL") << std::endl;
-  }
-  DiagLog() << "Initialize result = " << (bAllOk ? "true" : "false") << std::endl;
-  DiagLog().flush();
-
-  return bAllOk;
+  return true;
 }
 
 bool FRenderResourceLibrary::CreateCubeMesh(FRenderer &Renderer) {
@@ -642,17 +686,15 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
 bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
   // 사각형 정점 배열
   const TArray<FVertexData> Vertices = {
-      {0.0f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+       0.0f},
   };
 
   // 양면 인덱스 배열
-  const TArray<uint32> Indices = {
-      0, 1, 2, 0, 2, 3,
-      0, 2, 1, 0, 3, 2
-  };
+  const TArray<uint32> Indices = {0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2};
 
   FMeshDesc MeshDesc{
       .VertexData = Vertices.data(),
@@ -685,7 +727,7 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
 
   if (SimpleMaterial) {
     SimpleMaterial->SetPipeLine(
-        Renderer.GetPipeline(EBuiltinPipeline::Simple_Solid));
+        GetPipeline(EBuiltinPipeline::Simple_Solid));
     return true;
   } else {
     return false;
@@ -707,7 +749,7 @@ bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
   }
 
   TSharedPtr<FRenderPipeline> Pipeline =
-      Renderer.GetPipeline(EBuiltinPipeline::Textured);
+      GetPipeline(EBuiltinPipeline::Textured);
   if (!Pipeline) {
     // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
     return false;
@@ -731,7 +773,7 @@ bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
   GridMaterial = RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
 
   if (GridMaterial) {
-    GridMaterial->SetPipeLine(Renderer.GetPipeline(EBuiltinPipeline::Grid));
+    GridMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Grid));
     return true;
   } else {
     return false;
@@ -746,66 +788,84 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
       .PixelShaderFileName = Path + L"/Shader/RotationGizmoPS.cso",
   };
 
-  RotationGizmoMaterial = RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
+  RotationGizmoMaterial =
+      RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
 
   if (RotationGizmoMaterial) {
     RotationGizmoMaterial->SetPipeLine(
-        Renderer.GetPipeline(EBuiltinPipeline::RotationGizmo));
+        GetPipeline(EBuiltinPipeline::RotationGizmo));
     return true;
   } else {
     return false;
   }
 }
 
-bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
-{
-    const std::filesystem::path Root = std::filesystem::path(GetExecutableDirectory()) / L"Textures";
-    if (!std::filesystem::exists(Root))
-    {
-        return true;   // 폴더가 없는 건 실패가 아님
+bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
+  const std::filesystem::path ExeDir(GetExecutableDirectory());
+  const std::filesystem::path ProjectRoot =
+      ExeDir.parent_path().parent_path().parent_path();
+
+  TArray<std::filesystem::path> SearchRoots = {
+      ProjectRoot / L"Textures",
+      std::filesystem::current_path() / L"Textures",
+      ExeDir / L"Textures",
+  };
+
+  for (const auto &Root : SearchRoots) {
+    std::error_code Ec;
+    if (!std::filesystem::exists(Root, Ec)) {
+      continue;
     }
 
-    for (const auto& Entry : std::filesystem::recursive_directory_iterator(Root))
-    {
-        if (!Entry.is_regular_file()) continue;
+    for (const auto &Entry :
+         std::filesystem::recursive_directory_iterator(Root, Ec)) {
+      if (!Entry.is_regular_file(Ec))
+        continue;
 
-        FWString Ext = Entry.path().extension().wstring();
-        std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
-        if (Ext != L".png" && Ext != L".jpg") continue;
+      FWString Ext = Entry.path().extension().wstring();
+      std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+      if (Ext != L".png" && Ext != L".jpg" && Ext != L".jpeg")
+        continue;
 
-        // 확장자 제거는 stem()이 해줌
-        FString KeyWide = Entry.path().stem().string();          // "icon"
-        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
+      // 확장자 제거
+      FString KeyWide = Entry.path().stem().string();
+      std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
 
-        int W = 0, H = 0, ChannelsInFile = 0;
-        unsigned char* Pixels = stbi_load(
-            Entry.path().string().c_str(),   
-            &W, &H, &ChannelsInFile, 4);   
-        if (!Pixels) continue;
+      // 이미 로드된 텍스처 건너뜀
+      if (AllTextureMap.find(KeyWide) != AllTextureMap.end()) {
+        continue;
+      }
 
-        FTextureDesc Desc{
-            .PixelData = Pixels,
-            .Width = static_cast<uint32>(W),
-            .Height = static_cast<uint32>(H),
-            .RowPitch = static_cast<uint32>(W) * 4u,
-        };
+      int W = 0, H = 0, ChannelsInFile = 0;
+      unsigned char *Pixels =
+          stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
+      if (!Pixels)
+        continue;
 
-        TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
-        stbi_image_free(Pixels);
+      FTextureDesc Desc{
+          .PixelData = Pixels,
+          .Width = static_cast<uint32>(W),
+          .Height = static_cast<uint32>(H),
+          .RowPitch = static_cast<uint32>(W) * 4u,
+      };
 
-        if (!Texture) continue;   // 실패한 텍스처는 맵에 넣지 않는다
+      TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
+      stbi_image_free(Pixels);
 
-        RegisterTexture(KeyWide, Texture);
+      if (!Texture)
+        continue;
+
+      RegisterTexture(KeyWide, Texture);
     }
+  }
 
-    return true;
+  return true;
 }
 
-bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& textureName)
-{
+bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer &Renderer,
+                                                  FString &textureName) {
 
-
-    return false;
+  return false;
 }
 
 bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)

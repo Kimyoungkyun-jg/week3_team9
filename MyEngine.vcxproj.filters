@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source">
@@ -80,6 +80,12 @@
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UBillBoardComp.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp">
@@ -250,6 +256,12 @@
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UClass.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UBillBoardComp.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\PointerTypes.h">
@@ -436,5 +448,47 @@
     <None Include="Shader\Constants.hlsli">
       <Filter>Shader</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h">
+      <Filter>Source\Editor\UI\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\FFont.h">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\FLineBatcher.h">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiToolBar.h">
+      <Filter>Source\Editor\UI\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Engine\ShowFlags.h">
+      <Filter>Source\Runtime\Engine</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shader\TexturedPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\TextPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp">
+      <Filter>Source\Editor\UI\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Rendering\FFont.cpp">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Rendering\FLineBatcher.cpp">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

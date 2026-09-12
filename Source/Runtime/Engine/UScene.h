@@ -21,7 +21,7 @@ public:
   // 렌더링 컴포넌트 목록 반환
   [[nodiscard]] TArray<UPrimitiveComponent *> GetRenderComponents() const;
   [[nodiscard]] FRenderResourceLibrary &GetRenderResourceLibrary() const {
-    return RenderResourceLibrary;
+    return FRenderResourceLibrary::Get();
   }
 
   // 액터 목록 반환
@@ -83,13 +83,11 @@ public:
   void DestroyActor(AActor* Actor);
 
 private:
-  explicit UScene(FRenderResourceLibrary &RenderResources)
-      : RenderResourceLibrary(RenderResources) {}
+  explicit UScene() = default;
+  explicit UScene(FRenderResourceLibrary &) {}
 
   uint32 Version = 1u;
   uint32 NextUUID = 1u;
   TArray<AActor *> Actors;                        // 액터 목록 (Update용)
   TArray<UPrimitiveComponent *> RenderComponents; // 렌더링큐 (Draw용)
-
-  FRenderResourceLibrary &RenderResourceLibrary;
 };

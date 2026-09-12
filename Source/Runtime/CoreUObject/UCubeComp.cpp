@@ -1,5 +1,6 @@
 #include "UCubeComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "UClass.h"
 
 IMPLEMENT_UCLASS(UCubeComp, UPrimitiveComponent)
@@ -10,6 +11,13 @@ void UCubeComp::OnRegister(UScene& Scene)
 {
 	UPrimitiveComponent::OnRegister(Scene);
 
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Cube"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Textured"));
+	auto& ResLib = FRenderResourceLibrary::Get();
+	if (!GetMesh())
+	{
+		SetMesh(ResLib.GetMesh("Cube"));
+	}
+	if (!GetMaterial())
+	{
+		SetMaterial(ResLib.GetMaterial("Simple"));
+	}
 }

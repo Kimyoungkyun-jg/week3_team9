@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
@@ -20,6 +20,7 @@ protected:
 
 public:
 	USceneComponent* GetRootComponent() const { return RootComponent; }
+	const TArray<USceneComponent*>& GetAttachedComponents() const { return AttachedComp; }
 	void SetRootComponent(USceneComponent* InRootComponent); //root 입력받으면서 동시에 AttachedComp에 제일 먼저 넣기
 
 
@@ -33,6 +34,7 @@ public:
 
 
 	void SetScene(UScene* InScene) { OwningScene = InScene; }
+	[[nodiscard]] UScene* GetScene() const { return OwningScene; }
 	void Destroy();
 
 	void RegisterAllComponents(UScene& Scene);

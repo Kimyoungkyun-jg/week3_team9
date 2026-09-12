@@ -14,11 +14,13 @@ float4 MainPS(PS_INPUT Input) : SV_Target
 {
     float4 Sampled = DiffuseTexture.Sample(DiffuseSampler, Input.UV);
 
-    // 투명 배경 날리기 (텍스트 여백 / 빌보드 여백 제거)
+    // 알파가 없거나 검은색인 영역 제거
     clip(Sampled.a - 0.1f);
-    // 정점 색상 반영 (글자 색상 틴트)
+    clip(max(Sampled.r, max(Sampled.g, Sampled.b)) - 0.05f);
+
+    // 정점 색상 반영
     float3 TintedColor = Sampled.rgb * Input.Color.rgb;
     
-    float3 FinalColor = lerp(Sampled.rgb, ColorOverride, ColorOverrideAmount);
+    float3 FinalColor = lerp(TintedColor, ColorOverride, ColorOverrideAmount);
     return float4(FinalColor, Sampled.a);
 }

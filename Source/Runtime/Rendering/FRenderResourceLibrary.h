@@ -10,7 +10,6 @@
 #include "Vertices.h"
 #include "FFont.h"
 
-
 class FRenderer;
 class FTexture;
 struct FTextVertex
@@ -22,14 +21,27 @@ struct FTextVertex
 
 class FRenderResourceLibrary final {
 public:
+  // 전역 싱글톤 접근자
+  static FRenderResourceLibrary& Get();
+
   bool Initialize(FRenderer &Renderer);
 
+  // 파이프라인 보관 맵
+  TMap<EBuiltinPipeline, TSharedPtr<FRenderPipeline>> AllPipelineMap;
   // 메쉬 보관 맵
   TMap<FString, TSharedPtr<FMesh>> AllMeshMap;
   // 머티리얼 보관 맵
   TMap<FString, TSharedPtr<FMaterial>> AllMaterialMap;
-  //텍스쳐 보관 맵
+  // 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
+
+  // 파이프라인 조회
+  [[nodiscard]] TSharedPtr<FRenderPipeline> GetPipeline(EBuiltinPipeline Id) const {
+    auto it = AllPipelineMap.find(Id);
+    if (it != AllPipelineMap.end())
+      return it->second;
+    return nullptr;
+  }
 
   // 메쉬 조회
   TSharedPtr<FMesh> GetMesh(const FString &name) const {
@@ -75,24 +87,28 @@ public:
     return inMaterial;
   }
 
-  void RegisterTexture(const FString& name, TSharedPtr<FTexture> texture)
-  {
-      AllTextureMap[name] = texture;
+  void RegisterTexture(const FString &name, TSharedPtr<FTexture> texture) {
+    AllTextureMap[name] = texture;
   }
 
   // 텍스처 조회. 없으면 nullptr
-  [[nodiscard]] TSharedPtr<FTexture> GetTexture(const FString& name) const
-  {
-      auto it = AllTextureMap.find(name);
-      if (it != AllTextureMap.end())
-          return it->second;
-      return nullptr;
+  [[nodiscard]] TSharedPtr<FTexture> GetTexture(const FString &name) const {
+    auto it = AllTextureMap.find(name);
+    if (it != AllTextureMap.end())
+      return it->second;
+    return nullptr;
   }
 
   // 개별 머티리얼 접근자
-  [[nodiscard]] TSharedPtr<FMaterial> GetSimpleMaterial() const { return SimpleMaterial; }
-  [[nodiscard]] TSharedPtr<FMaterial> GetGridMaterial() const { return GridMaterial; }
-  [[nodiscard]] TSharedPtr<FMaterial> GetRotationGizmoMaterial() const { return RotationGizmoMaterial; }
+  [[nodiscard]] TSharedPtr<FMaterial> GetSimpleMaterial() const {
+    return SimpleMaterial;
+  }
+  [[nodiscard]] TSharedPtr<FMaterial> GetGridMaterial() const {
+    return GridMaterial;
+  }
+  [[nodiscard]] TSharedPtr<FMaterial> GetRotationGizmoMaterial() const {
+    return RotationGizmoMaterial;
+  }
 
   // 메쉬 전체 해제
   void DestroyAllMeshes() {
@@ -117,6 +133,11 @@ public:
     SimpleMaterial.reset();
     GridMaterial.reset();
     RotationGizmoMaterial.reset();
+  }
+
+  // 파이프라인 전체 해제
+  void DestroyAllPipelines() {
+    AllPipelineMap.clear();
   }
 
   // 전체 머티리얼 맵 조회
@@ -146,6 +167,9 @@ public:
                                     const TArray<FVertexData> &vertices);
 
 private:
+  bool InitializePipelines(FRenderer &Renderer);
+  bool CreateSolidWireframePipeline(FRenderer &Renderer);
+
   bool CreateCubeMesh(FRenderer &Renderer);
   bool CreateCylinderMesh(FRenderer &Renderer, float Height, uint32 SliceCount,
                           float TopRadius, float BottomRadius);
@@ -160,12 +184,11 @@ private:
   bool CreatePlaneMesh(FRenderer &Renderer);
   bool CreateRectMesh(FRenderer &Renderer);
 
-
   bool CreateSimpleMaterial(FRenderer &Renderer);
   bool CreateGridMaterial(FRenderer &Renderer);
   bool CreateRotationGizmoMaterial(FRenderer &Renderer);
-  //시작시 1번만 호출
-  bool CreateTextures(FRenderer& Renderer);
+  // 시작시 1번만 호출
+  bool CreateTextures(FRenderer &Renderer);
   // 텍스처를 샘플링하는 머티리얼. CreateTextures 이후에 호출해야 함
   bool CreateTexturedMaterial(FRenderer& Renderer);
   bool CreateCommonMaterial(FRenderer& Renderer, FString& textureName);

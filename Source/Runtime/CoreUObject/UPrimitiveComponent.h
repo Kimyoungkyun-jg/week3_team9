@@ -23,6 +23,9 @@ public:
 	void SetMesh(TSharedPtr<FMesh> Mesh) { PrimitiveMesh = std::move(Mesh); }
 	void SetMaterial(TSharedPtr<FMaterial> Material) { PrimitiveMaterial = std::move(Material); }
 
+	// 텍스처 이름으로 머티리얼 텍스처 교체
+	bool SetTextureByName(const FString& InTextureName);
+
 protected:
 	UPrimitiveComponent() = default;
 

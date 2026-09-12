@@ -1,4 +1,4 @@
-﻿#include "FRayCastingManager.h"
+#include "FRayCastingManager.h"
 #include "Runtime/Input/FInputManager.h"
 #include "Runtime/Math/FMatrix.h"
 #include "Runtime/Rendering/FMesh.h"
@@ -98,7 +98,7 @@ bool FRayCastingManager::RayIntersectsAABB(const FRay& Ray, const FAxisAlignedBo
 	{
 		if (std::abs(Ray.Direction[i]) < Epsilon)
 		{
-			if (Ray.Origin[i] < AABB.Min[i] && Ray.Origin[i] > AABB.Max[i])
+			if (Ray.Origin[i] < AABB.Min[i] || Ray.Origin[i] > AABB.Max[i])
 			{
 				return false;
 			}

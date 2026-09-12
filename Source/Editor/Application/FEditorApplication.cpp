@@ -2,11 +2,16 @@
 
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/FRayCastingManager.h"
+#include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Math/FMatrix.h"
+#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 #include <Windows.h>
 
 #include "Runtime/Actors/AActor.h"
@@ -20,14 +25,14 @@ void FEditorApplication::Initialize_ImguiWin32DX11(
 }
 
 void FEditorApplication::Initialize_Runtime(
-    FRenderResourceLibrary *RendererLibrary, USceneManager *SceneManager,
+    USceneManager *SceneManager,
     FRenderView *RenderView) {
   this->RenderView = RenderView;
   this->SceneManager = SceneManager;
-  this->curScene = SceneManager->CurrentScene;
+  this->CurrentScene = SceneManager->CurrentScene;
 
 
-  Editor.Initialize(RendererLibrary, SceneManager);
+  Editor.Initialize(SceneManager);
 
 	//UCubeComp* CubeComp = NewObject<UCubeComp>();
 	//FTransform& CubeTransform = CubeComp->GetRelativeTransform();
@@ -36,7 +41,7 @@ void FEditorApplication::Initialize_Runtime(
 	//CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
  // AActor *Cube =
- //     curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
+ //     CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
  //                                  FVector(0.5f, 0.5f, 0.5f)   // Scale
  //     );
 
@@ -44,17 +49,17 @@ void FEditorApplication::Initialize_Runtime(
   
 
 
-  UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
-  FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
-  BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-  BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-  BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-
-  AActor* BillBoard =
-      curScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
-          FVector(0.5f, 0.5f, 0.5f)   // Scale
+  UAnimatedBillboardComp* AnimatedBBComp = NewObject<UAnimatedBillboardComp>();
+  
+  AActor* Explosion =
+      CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f),
+          FVector(10.0f, 10.0f, 10.0f)
       );
 
+  Explosion->SetRootComponent(AnimatedBBComp);
+  AnimatedBBComp->SetTexture("Explosion");
+  AnimatedBBComp->SetSpriteSheet(6,6,20,36);
+  AnimatedBBComp->SetLooping(true);
   UTextComponent* TextComp = NewObject<UTextComponent>();
   FTransform& TextTransform = TextComp->GetRelativeTransform();
   TextTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
@@ -62,12 +67,10 @@ void FEditorApplication::Initialize_Runtime(
   TextTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
   
   AActor* TextActor =
-      curScene->SpawnActor<AActor>(FVector(0.0f, 10.0f, 0.25f), // Location
+      CurrentScene->SpawnActor<AActor>(FVector(0.0f, 10.0f, 0.25f), // Location
           FVector(0.5f, 0.5f, 0.5f)   // Scale
       );
 
-
-  BillBoard->SetRootComponent(BillBoardComp);
   TextActor->SetRootComponent(TextComp);
 
 
@@ -112,6 +115,7 @@ void FEditorApplication::BeginFrame() { ImguiManager.NewFrame(); }
 void FEditorApplication::Tick(float DeltaTime) {
   ToolBar.Process(Editor, ConsoleWindow, ControlPanelWindow, PropertyWindow);
   EditorViewportWindow.Process(Editor, DeltaTime);
+  WorldOutliner.Process(Editor);
   ControlPanelWindow.Process(Editor);
   PropertyWindow.Process(Editor);
   ConsoleWindow.Process(Editor);
@@ -144,16 +148,35 @@ void FEditorApplication::Render() {
       }
     }
 
+
+
+    if (Editor.ObjectSelected())
+    {
+        // AABB 그리기
+        USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
+        UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+        if (PrimComp)
+        {
+            const FMesh& Mesh = *PrimComp->GetMesh();
+            const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+            FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+            RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+        }
+    }
+
     RenderView->GetRenderer().FlushLineBatch(
         EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
     ); //line batch 일괄 flush
 
-    if (Editor.ObjectSelected()) // 기즈모 그리기
+    if (Editor.ObjectSelected())
     {
+      // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
     }
+
+
 
     // 선택 객체 하이라이트 렌더
   }

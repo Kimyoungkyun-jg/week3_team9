@@ -1,5 +1,6 @@
 #include "UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "UClass.h"
 
 IMPLEMENT_UCLASS(UCylinderComp, UPrimitiveComponent)
@@ -10,6 +11,7 @@ void UCylinderComp::OnRegister(UScene& Scene)
 {
 	UPrimitiveComponent::OnRegister(Scene);
 
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Cylinder"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
+	auto& ResLib = FRenderResourceLibrary::Get();
+	SetMesh(ResLib.GetMesh("Cylinder"));
+	SetMaterial(ResLib.GetMaterial("Simple"));
 }
