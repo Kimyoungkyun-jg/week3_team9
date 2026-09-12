@@ -3,6 +3,7 @@
 #include "Runtime/Actors/ACubeActor.h"
 #include "Runtime/Actors/ASphereActor.h"
 #include "Runtime/Actors/ACylinderActor.h"
+#include "Runtime/Actors/ABillboardActor.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObject.h"
@@ -129,6 +130,9 @@ UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
     break;
   case EEditorPrimitiveType::Sphere:
     NewActor = SceneManager->CurrentScene->SpawnActor<ASphereActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Billboard:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ABillboardActor>(SpawnLoc, SpawnScale);
     break;
   }
 
