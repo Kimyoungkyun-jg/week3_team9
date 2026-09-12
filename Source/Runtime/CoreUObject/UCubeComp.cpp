@@ -6,10 +6,11 @@ IMPLEMENT_UCLASS(UCubeComp, UPrimitiveComponent)
 UCLASS_META(UCubeComp, DisplayName, "Cube")
 UCLASS_META(UCubeComp, MeshName, "Cube")
 
-void UCubeComp::OnRegister(UScene& Scene)
+void UCubeComp::Initialize(UObject* Context)
 {
-	UPrimitiveComponent::OnRegister(Scene);
+	Super::Initialize(Context);
 
-	SetMesh(Scene.GetRenderResourceLibrary()->GetMesh("Cube"));
-	SetMaterial(Scene.GetRenderResourceLibrary()->GetMaterial("Textured"));
+	if (!Scene) { return; }
+	SetMesh(Scene->GetRenderResourceLibrary()->GetMesh("Cube"));
+	SetMaterial(Scene->GetRenderResourceLibrary()->GetMaterial("Textured"));
 }

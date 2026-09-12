@@ -47,19 +47,19 @@ void FEditorApplication::Initialize_Runtime(
   
 
 
-  UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
-  FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
-  BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-  BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-  BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+  //UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
+  //FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
+  //BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+  //BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+  //BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
-  AActor* BillBoard =
-      CurrentScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
-          FVector(0.5f, 0.5f, 0.5f)   // Scale
-      );
+  //AActor* BillBoard =
+  //    CurrentScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
+  //        FVector(0.5f, 0.5f, 0.5f)   // Scale
+  //    );
 
 
-  BillBoard->SetRootComponent(BillBoardComp);
+  //BillBoard->SetRootComponent(BillBoardComp);
 
 
   //Editor.SelectActor(Cube);

@@ -16,14 +16,12 @@ class USceneComponent : public UObject
 
 public:
     virtual void Initialize(UObject* Context = nullptr) override;
+    virtual void Release() override;
     
     AActor* GetActorOwner() const { return ActorOwner; }
     USceneComponent* GetSceneOwner() const { return SceneOwner; }
 
     virtual void Update(float DeltaTime) {}
-
-	virtual void OnRegister(UScene& Scene) {}
-	virtual void OnUnregister(UScene& Scene) {}
 
 	virtual void Serialize(FArchive& Archive) const override;
 	virtual void Deserialize(const FArchive& Archive) override;

@@ -35,6 +35,20 @@ void USceneComponent::Initialize(UObject* Context)
     }
 }
 
+void USceneComponent::Release()
+{
+    if (Scene)
+    {
+        UnregisterComponentFromScene(*Scene);
+    }
+
+    ActorOwner = nullptr;
+    SceneOwner = nullptr;
+    Scene = nullptr;
+
+    Super::Release();
+}
+
 void USceneComponent::Serialize(FArchive& Archive) const
 {
     Super::Serialize(Archive);
@@ -91,8 +105,6 @@ void USceneComponent::RegisterComponentWithScene(UScene& Scene)
 {
 	this->Scene = &Scene;
 
-    //가상함수 호출 (자식 컴포넌트가 메시/머티리얼 바인딩)
-    OnRegister(Scene);
     //자신이 그릴 수 있는 프리미티브라면 씬의 렌더 큐에 자신을 등록
     if (auto* Prim = this->Cast<UPrimitiveComponent>())
     {
@@ -106,8 +118,6 @@ void USceneComponent::UnregisterComponentFromScene(UScene& Scene)
     {
         Scene.RemoveRenderComponent(Prim);
     }
-    OnUnregister(Scene);
-
 	if (this->Scene == &Scene)
 	{
 		this->Scene = nullptr;

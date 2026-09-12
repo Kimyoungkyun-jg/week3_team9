@@ -7,10 +7,11 @@ UCLASS_META(USphereComp, DisplayName, "Sphere")
 UCLASS_META(USphereComp, MeshName, "Sphere")
 
 
-void USphereComp::OnRegister(UScene& Scene)
+void USphereComp::Initialize(UObject* Context)
 {
-	UPrimitiveComponent::OnRegister(Scene);
+	Super::Initialize(Context);
 
-	SetMesh(Scene.GetRenderResourceLibrary()->GetMesh("Sphere"));
-	SetMaterial(Scene.GetRenderResourceLibrary()->GetMaterial("Simple"));
+	if (!Scene) { return; }
+	SetMesh(Scene->GetRenderResourceLibrary()->GetMesh("Sphere"));
+	SetMaterial(Scene->GetRenderResourceLibrary()->GetMaterial("Simple"));
 }

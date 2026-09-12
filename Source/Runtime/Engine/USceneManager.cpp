@@ -82,17 +82,23 @@ void USceneManager::LoadScene(const FString& path)
 
 void USceneManager::SetScene(UScene* scene)
 {
-	if (CurrentScene == scene) return;
+	if (scene == nullptr) { return; }
+	if (scene == CurrentScene) { return; }
+	scene->SetRenderResourceLibrary(ResourceLibrary);
 
-	if (scene != nullptr) scene->SetRenderResourceLibrary(ResourceLibrary);
-
-	UScene* OldScene = CurrentScene;
-
-	FGarbageCollector& GarbageCollector = FGarbageCollector::Get();
-
-	if (scene != nullptr) GarbageCollector.AddRoot(scene);
-
+	if (CurrentScene) { DestroyObject(CurrentScene); }
 	CurrentScene = scene;
 
-	if (OldScene != nullptr) GarbageCollector.RemoveRoot(OldScene);
+	//FGarbageCollector& GarbageCollector = FGarbageCollector::Get();
+	//if (scene != nullptr) GarbageCollector.AddRoot(scene);
+	//if (OldScene != nullptr) GarbageCollector.RemoveRoot(OldScene);
+}
+
+void USceneManager::Release()
+{
+	if (CurrentScene)
+	{
+		DestroyObject(CurrentScene);
+		CurrentScene = nullptr;
+	}
 }

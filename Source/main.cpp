@@ -108,7 +108,7 @@ int WINAPI wWinMain(
 		//EditorApp.CollectGarbage();
 	}
 
-	SceneManager.SetScene(nullptr); // root객체 해제 - 코드 참조
+	SceneManager.Release();
 	//EditorApp.CollectGarbage();
 	Renderer.Shutdown();
 

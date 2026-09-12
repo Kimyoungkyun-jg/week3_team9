@@ -8,11 +8,12 @@ IMPLEMENT_UCLASS(UBillBoardComp, UPrimitiveComponent)
 UCLASS_META(UBillBoardComp, DisplayName, "BillBoard")
 UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 
-void UBillBoardComp::OnRegister(UScene &Scene) {
-  UPrimitiveComponent::OnRegister(Scene);
+void UBillBoardComp::Initialize(UObject* Context) {
+  Super::Initialize(Context);
 
-  SetMesh(Scene.GetRenderResourceLibrary()->GetMesh("Rect"));
-  SetMaterial(Scene.GetRenderResourceLibrary()->GetMaterial("Textured"));
+  if (!Scene) { return; }
+  SetMesh(Scene->GetRenderResourceLibrary()->GetMesh("Rect"));
+  SetMaterial(Scene->GetRenderResourceLibrary()->GetMaterial("Textured"));
 }
 
 void UBillBoardComp::Serialize(FArchive& Archive) const

@@ -105,26 +105,24 @@ void FEditor::SetCameraSensitivity(float Value)
     CameraSensitivity = Value;
 }
 
-UPrimitiveComponent *FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
+UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
   if (!SceneManager || !SceneManager->CurrentScene) {
     return nullptr;
   }
 
-  UPrimitiveComponent *Component = nullptr;
+  // 액터를 스폰하고 컴포넌트를 루트로 장착
+  AActor *NewActor = SceneManager->CurrentScene->SpawnActor<AActor>();
+
   switch (Type) {
   case EEditorPrimitiveType::Cube:
-    Component = NewObject<UCubeComp>();
-    break;
+      NewActor->CreateRootComponent(UCubeComp::StaticClass());
+      break;
   case EEditorPrimitiveType::Cylinder:
-    Component = NewObject<UCylinderComp>();
-    break;
+      NewActor->CreateRootComponent(UCylinderComp::StaticClass());
+      break;
   case EEditorPrimitiveType::Sphere:
-    Component = NewObject<USphereComp>();
-    break;
-  }
-
-  if (!Component) {
-    return nullptr;
+      NewActor->CreateRootComponent(USphereComp::StaticClass());
+      break;
   }
 
   // 오프셋 적용
@@ -132,17 +130,13 @@ UPrimitiveComponent *FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
   const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
   FTransform Transform
   {
-      FVector{Offset, 0.0f, 0.0f},
+      FVector{ Offset, 0.0f, 0.0f },
       FQuaternion::Identity(),
-      FVector{0.5f, 0.5f, 0.5f},
+      FVector{ 0.5f, 0.5f, 0.5f },
   };
 
-  Component->SetRelativeTransform(Transform);
-
-  // 액터를 스폰하고 컴포넌트를 루트로 장착
-  AActor *NewActor = SceneManager->CurrentScene->SpawnActor<AActor>();
-  NewActor->SetRootComponent(Component);
+  NewActor->GetRootComponent()->SetRelativeTransform(Transform);
 
   SelectActor(NewActor);
-  return Component;
+  return NewActor->GetRootComponent()->Cast<UPrimitiveComponent>();
 }

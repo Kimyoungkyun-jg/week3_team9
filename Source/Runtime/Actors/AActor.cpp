@@ -14,6 +14,37 @@ void AActor::Initialize(UObject* Context)
     Owner = Context ? Context->Cast<UScene>() : nullptr;
 }
 
+void AActor::Release()
+{
+    if (Owner)
+    {
+        Owner->RemoveActor(this);
+        Owner = nullptr;
+    }
+
+    while (!AttachedComp.empty())
+    {
+        USceneComponent* Component = AttachedComp.back();
+        std::erase(AttachedComp, Component);
+
+        if (RootComponent == Component)
+        {
+            RootComponent = nullptr;
+        }
+
+        DestroyObject(Component);
+    }
+
+    if (RootComponent)
+    {
+        USceneComponent* RemainingRoot = RootComponent;
+        RootComponent = nullptr;
+        DestroyObject(RemainingRoot);
+    }
+
+    Super::Release();
+}
+
 void AActor::Serialize(FArchive& Archive) const
 {
     Super::Serialize(Archive);
@@ -42,6 +73,9 @@ void AActor::Deserialize(const FArchive& Archive)
     {
         FArchive RootComponentArchive = Archive.GetArchive("RootComponent");
         UClass* ClassType = UClass::FindByName(RootComponentArchive.GetString("Type"));
+
+        if (ClassType == nullptr) { RootComponent = nullptr; return; }
+
         CreateRootComponent(ClassType);
         RootComponent->Deserialize(RootComponentArchive);
     }
@@ -49,13 +83,12 @@ void AActor::Deserialize(const FArchive& Archive)
 
 void AActor::CreateRootComponent(UClass* ClassType)
 {
-    if (RootComponent)
-    {
-        DestroyObject(RootComponent);
-    }
+    if (RootComponent) { return; }
 
     UObject* Object = NewObject(ClassType);
     RootComponent = Object->Cast<USceneComponent>();
+    RootComponent->Initialize(this);
+    AttachedComp.push_back(RootComponent);
 }
 
 void AActor::SetRootComponent(USceneComponent *InRootComponent) {

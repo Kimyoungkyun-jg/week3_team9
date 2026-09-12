@@ -22,8 +22,6 @@ TObject* NewObject(TArgs&&... Args)
 inline UObject* NewObject(UClass* ClassType)
 {
 	UObject* Object = ClassType->CreateDefaultObject();
-	FUObjectArray::Get().AddObject(Object);
-
 	return Object;
 }
 

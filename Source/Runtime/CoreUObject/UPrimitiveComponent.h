@@ -14,7 +14,6 @@ class UPrimitiveComponent : public USceneComponent
 
 public:
 	virtual void Initialize(UObject* Context = nullptr) override;
-	virtual void Release() override;
 
 	[[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
 	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }

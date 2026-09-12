@@ -19,6 +19,8 @@ class UScene final : public UObject {
 
 public:
 
+  void Release() override;
+
   // 렌더링 컴포넌트 목록 반환
   [[nodiscard]] TArray<UPrimitiveComponent*> GetRenderComponents() const;
   [[nodiscard]] FRenderResourceLibrary* GetRenderResourceLibrary() const {
@@ -36,18 +38,6 @@ public:
                      TArgs &&...Args) {
     TActor *Actor = NewObject<TActor>(std::forward<TArgs>(Args)...);
     Actor->Initialize(this); // 스폰할 때 Scene 컨텍스트를 먼저 설정해야 component 등록 가능
-    Actor->SetRootComponent(NewObject<UPrimitiveComponent>());
-
-    if (Actor->GetRootComponent()) {
-      FTransform Transform{};
-      Transform.Location = Location;
-      Transform.Scale3D = Scale;
-      Actor->GetRootComponent()->SetRelativeTransform(Transform);
-    }
-
-    Actor->RegisterAllComponents(
-        *this); // 스폰될때 attached 에 들어가 있는애들 바로 다 등록
-
     Actors.push_back(Actor);
     return Actor;
   }
@@ -77,7 +67,7 @@ public:
 
   void AddRenderComponent(UPrimitiveComponent *prim);
   void RemoveRenderComponent(UPrimitiveComponent *prim);
-
+  void RemoveActor(AActor* Actor);
 
   void DestroyActor(AActor* Actor);
 
@@ -87,6 +77,7 @@ protected:
 private:
   TArray<AActor*> Actors;                        // 액터 목록 (Update용)
   TArray<UPrimitiveComponent*> RenderComponents; // 렌더링큐 (Draw용)
+  TMap<UPrimitiveComponent*, size_t> RenderIndices;
 
   FRenderResourceLibrary* RenderResourceLibrary = nullptr;
 };

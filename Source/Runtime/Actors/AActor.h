@@ -24,14 +24,16 @@ protected:
 	virtual void Serialize(FArchive& Archive) const override;
 	virtual void Deserialize(const FArchive& Archive) override;
 
-	void CreateRootComponent(UClass* ClassType);
+	void SetRootComponent(USceneComponent* InRootComponent); //root 입력받으면서 동시에 AttachedComp에 제일 먼저 넣기
 
 public:
 	void Initialize(UObject* Context = nullptr) override;
+	void Release() override;
 	UScene* GetOwner() const { return Owner; }
 
+	void CreateRootComponent(UClass* ClassType);
 	USceneComponent* GetRootComponent() const { return RootComponent; }
-	void SetRootComponent(USceneComponent* InRootComponent); //root 입력받으면서 동시에 AttachedComp에 제일 먼저 넣기
+
 
 	FTransform GetTransform() const { return RootComponent ? RootComponent->GetRelativeTransform() : FTransform{}; }
 	void SetTransform(const FTransform& NewTransform) { if (RootComponent) RootComponent->SetRelativeTransform(NewTransform); }

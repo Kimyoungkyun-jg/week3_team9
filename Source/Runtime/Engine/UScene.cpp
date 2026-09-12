@@ -17,6 +17,21 @@ TArray<UPrimitiveComponent*> UScene::GetRenderComponents() const
 	return RenderComponents;
 }
 
+void UScene::Release()
+{
+	while (!Actors.empty())
+	{
+		AActor* Actor = Actors.back();
+		Actors.pop_back();
+		DestroyObject(Actor);
+	}
+
+	RenderComponents.clear();
+	RenderResourceLibrary = nullptr;
+
+	Super::Release();
+}
+
 void UScene::SetRenderResourceLibrary(FRenderResourceLibrary* InRenderResourceLibrary)
 {
 	RenderResourceLibrary = InRenderResourceLibrary;
@@ -55,6 +70,8 @@ void UScene::Deserialize(const FArchive& Archive)
 	for (const auto& Item : ActorArchives)
 	{
 		UClass* ClassType = UClass::FindByName(Item.GetString("Type"));
+		if (ClassType == nullptr) { continue; }
+
 		AActor* Actor = SpawnActor(ClassType);
 		Actor->Deserialize(Item);
 	}
@@ -87,12 +104,23 @@ void UScene::RemoveRenderComponent(UPrimitiveComponent* prim)
 	std::erase(RenderComponents, prim);
 }
 
+void UScene::RemoveActor(AActor* Actor)
+{
+	std::erase(Actors, Actor);
+}
+
+void UScene::DestroyActor(AActor* Actor)
+{
+	if (Actor == nullptr) return;
+
+	RemoveActor(Actor);
+	DestroyObject(Actor);
+}
+
 AActor* UScene::SpawnActor(UClass* ClassType)
 {
 	AActor* Actor = NewObject(ClassType)->Cast<AActor>();
-
 	Actor->Initialize(this);
-	Actor->RegisterAllComponents(*this); // 스폰될때 attached 에 들어가 있는애들 바로 다 등록
 
 	Actors.push_back(Actor);
 	return Actor;

@@ -12,5 +12,5 @@ protected:
 	explicit UConeComp() = default;
 
 public:
-	void OnRegister(UScene& Scene) override;
+	void Initialize(UObject* Context = nullptr) override;
 };
