@@ -57,17 +57,6 @@ void AActor::AddComponent(USceneComponent *Addcomp) {
   }
 }
 
-void AActor::AddReferencedObjects(FReferenceCollector &Collector) {
-  UObject::AddReferencedObjects(Collector);
-
-  if (RootComponent) {
-    Collector.AddReferencedObject(RootComponent);
-  }
-
-  for (USceneComponent *Component : AttachedComp) {
-    Collector.AddReferencedObject(Component);
-  }
-}
 
 void AActor::RegisterAllComponents(UScene &Scene) {
   for (USceneComponent *Comp : AttachedComp) {
@@ -123,4 +112,12 @@ FVector AActor::GetColor() const {
     return PrimComp->GetColor();
   }
   return FVector{1.0f, 1.0f, 1.0f};
+}
+
+void AActor::SetScene(UScene* InScene) {
+  OwningScene = InScene;
+}
+
+UScene* AActor::GetScene() const {
+  return OwningScene.Get();
 }

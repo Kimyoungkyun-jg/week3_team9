@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "UClass.h"
 #include "Runtime/Core/IntTypes.h"
 #include "ThirdParty/Json/json.hpp"
@@ -7,9 +7,10 @@
 #include <concepts>
 //#include "Runtime/CoreUObject/UObjectGlobals.h"
 
+#include "FReferenceCollector.h"
+
 class UObjectGlobals;
 class UClass;
-class FReferenceCollector;
 
 /*
  * UObject를 상속받는 클래스는 반드시 GENERATED_BODY() 매크로를 사용해야 한다.
@@ -53,16 +54,23 @@ UClass* ClassName::StaticClass()		{ return ClassInfo; }													\
 UClass* ClassName::GetClass() const		{ return StaticClass(); }												\
 
 
+// 참조만 하는 경우 매크로에 넣지 말고 TWeakObjectPtr 사용
+#define DECLARE_UCLASS(ClassName, ParentClass, ...)                     \
+public:                                                                 \
+	UClass* GetClass() const override;                                  \
+    static UClass* StaticClass();                                       \
+    using Super = ParentClass;                                          \
+                                                                        \
+    void AddReferencedObjects(FReferenceCollector& Collector) override  \
+    {                                                                   \
+        Super::AddReferencedObjects(Collector);                         \
+        Collector.AddAll(__VA_ARGS__);                                  \
+    }                                                                   \
+                                                                        \
+private:                                                                \
+    static UObject* CreateObject();                                     \
+	static UClass* ClassInfo;
 
-#define DECLARE_UCLASS(ClassName, ParentClass)	\
-public:											\
-	UClass* GetClass() const override;			\
-    static UClass* StaticClass();				\
-    using Super = ParentClass;					\
-												\
-private:										\
-    static UObject* CreateObject();				\
-	static UClass* ClassInfo;					\
 
 #define IMPLEMENT_UCLASS(ClassName, ParentClass)																\
 UObject* ClassName::CreateObject() { return NewObject<ClassName>(); }											\

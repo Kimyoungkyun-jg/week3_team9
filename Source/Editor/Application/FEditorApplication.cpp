@@ -192,11 +192,5 @@ void FEditorApplication::OnWindowSize(UINT Width, UINT Height) {
 }
 
 void FEditorApplication::CollectGarbage() {
-  FGarbageCollector::Get().CollectGarbage(
-      [this](const FReferenceCollector &Collector) {
-        AActor *SelectedActor = Editor.GetSelectedActor();
-
-        if (SelectedActor != nullptr && !Collector.bIsReferenced(SelectedActor))
-          Editor.ClearSelectionForGC();
-      });
+  FGarbageCollector::Get().CollectGarbage();
 }

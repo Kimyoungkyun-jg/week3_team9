@@ -2,12 +2,13 @@
 
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
+#include "Runtime/CoreUObject/TWeakObjectPtr.h"
 
 class UScene;
 
 class AActor : public UObject
 {
-	DECLARE_UCLASS(AActor, UObject)
+	DECLARE_UCLASS(AActor, UObject, RootComponent, AttachedComp)
 	GENERATED_BODY()
 
 	friend class UScene;
@@ -34,17 +35,15 @@ public:
 	virtual void SetColor(const FVector& InColor);
 	virtual FVector GetColor() const;
 
-	void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-
-	void SetScene(UScene* InScene) { OwningScene = InScene; }
-	[[nodiscard]] UScene* GetScene() const { return OwningScene; }
+	void SetScene(UScene* InScene);
+	[[nodiscard]] UScene* GetScene() const;
 	void Destroy();
 
 	void RegisterAllComponents(UScene& Scene);
 	void UnregisterAllComponents(UScene& Scene);
 	void UnregisterComponentFromScene(UScene& Scene);
 private:
-	UScene* OwningScene = nullptr; // SpawnActor될 때 설정됨
+	TWeakObjectPtr<UScene> OwningScene; // SpawnActor될 때 설정됨
 };
 

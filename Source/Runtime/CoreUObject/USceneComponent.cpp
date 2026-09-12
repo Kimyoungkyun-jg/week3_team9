@@ -3,10 +3,21 @@
 #include "ThirdParty/Json/json.hpp"
 #include "UObjectGlobals.h" 
 #include "UPrimitiveComponent.h"
+#include "Runtime/Actors/AActor.h"
 #include "../Engine/UScene.h"
 
 
 IMPLEMENT_UCLASS(USceneComponent, UObject)
+
+AActor* USceneComponent::GetOwner() const
+{
+    return Owner.Get();
+}
+
+void USceneComponent::SetOwner(AActor* InOwner)
+{
+    Owner = InOwner;
+}
 
 void USceneComponent::SetRelativeTransform(const FTransform& RelativeTransform)
 {

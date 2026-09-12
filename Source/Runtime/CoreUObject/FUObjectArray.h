@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "UObject.h"
 #include "Runtime/Core/TArray.h"
@@ -18,6 +18,7 @@ public:
 	[[nodiscard]] uint32 GetNextUUID() const { return NextUUID; }
 	[[nodiscard]] uint32 GetNumObjects() const { return static_cast<uint32>(Objects.size()); }
 	[[nodiscard]] UObject* GetObjectByIndex(uint32 Index) const { return Objects[Index]; }
+	[[nodiscard]] bool IsValid(const UObject* Object, uint32 UUID) const;
 
 	FUObjectArray(const FUObjectArray&) = delete;
 	FUObjectArray& operator=(const FUObjectArray&) = delete;

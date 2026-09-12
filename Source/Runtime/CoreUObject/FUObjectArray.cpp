@@ -1,4 +1,4 @@
-﻿#include "FUObjectArray.h"
+#include "FUObjectArray.h"
 
 #include <cassert>
 
@@ -27,4 +27,12 @@ void FUObjectArray::DestroyObject(UObject* Object) {
 
 	RemoveObject(Object);
 	delete Object; // 오버라이드해서 통계 구현 필요
+}
+
+bool FUObjectArray::IsValid(const UObject* Object, uint32 UUID) const
+{
+	if (Object == nullptr || UUID == 0) return false;
+
+	const uint32 Index = Object->InternalIndex;
+	return (Index < Objects.size() && Objects[Index] == Object && Object->UUID == UUID);
 }

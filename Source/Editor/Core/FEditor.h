@@ -6,6 +6,8 @@
 #include "Runtime/Core/IntTypes.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/CoreUObject/UObject.h"
+#include "Runtime/CoreUObject/TWeakObjectPtr.h"
+#include "Runtime/Actors/AActor.h"
 #include "Runtime/Engine/USceneManager.h"
 
 
@@ -34,13 +36,13 @@ public:
 
   void AddViewport(FEditorViewport Viewport);
   void DeleteViewport(int32 IndexOfViewport);
-  FEditorViewport *GetActiveViewport(); // TODO: 임시로 0번 반환
+  FEditorViewport *GetActiveViewport(); // 임시로 0번 반환
 
   bool SelectActor(AActor *Actor);
   void UnSelectActor();
-  AActor *GetSelectedActor() const { return SelectedActor; }
-  [[nodiscard]] bool ActorSelected() const { return SelectedActor != nullptr; }
-  [[nodiscard]] bool ObjectSelected() const { return SelectedActor != nullptr; }
+  AActor *GetSelectedActor() const { return SelectedActor.Get(); }
+  [[nodiscard]] bool ActorSelected() const { return SelectedActor.IsValid(); }
+  [[nodiscard]] bool ObjectSelected() const { return SelectedActor.IsValid(); }
 
   [[nodiscard]] TArray<FEditorViewport> &GetViewports() {
     return EditorViewports;
@@ -71,5 +73,5 @@ private:
 
   FGizmo Gizmo;
   FGrid Grid;
-  AActor *SelectedActor = nullptr;
+  TWeakObjectPtr<AActor> SelectedActor;
 };

@@ -3,6 +3,7 @@
 #include "Runtime/Geometry/FTransform.h"
 #include "ThirdParty/Json/json.hpp"
 #include "UObject.h"
+#include "TWeakObjectPtr.h"
 
 
 class UScene;
@@ -14,8 +15,8 @@ class USceneComponent : public UObject
 	DECLARE_UCLASS(USceneComponent, UObject)
 
 public:
-  AActor* GetOwner() const { return Owner; }
-  void SetOwner(AActor* InOwner) { Owner = InOwner; }
+  AActor* GetOwner() const;
+  void SetOwner(AActor* InOwner);
 
   json::JSON Serialize() const override;
   bool Deserialize(const json::JSON &data) override;
@@ -39,5 +40,5 @@ public:
   void UnregisterComponentFromScene(UScene &Scene);
 
 protected:
-  AActor* Owner = nullptr; // 소유 액터
+  TWeakObjectPtr<AActor> Owner;
 };
