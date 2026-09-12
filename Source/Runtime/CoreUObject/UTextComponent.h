@@ -4,11 +4,6 @@
 #include "Runtime/Rendering/FFont.h"
 #include "Runtime/Rendering/FMesh.h"
 
-struct FTextVertex
-{
-    FVector Pos;
-    float u, v;
-};
 
 
 class UTextComponent :
@@ -20,6 +15,8 @@ class UTextComponent :
 public:
     void SetText(const FString& InText) { Text = InText; RebuildTextMesh(); }
     void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
+
+    void OnRegister(UScene& Scene) override;
 
     void RebuildTextMesh();
 private:

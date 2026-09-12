@@ -25,7 +25,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
-      !CreateTexturedMaterial(Renderer)) {
+      !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer)) {
     return false;
   }
 
@@ -760,6 +760,68 @@ bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& 
 
 
     return false;
+}
+
+bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
+{
+    TArray<FVertexData> Vertices;
+    TArray<uint32> Indices;
+    FFont Font;
+    Font.Initialize(16);
+    FString Text{ "Welcome To Jungle" };
+
+    // TODO: PlaneGenerator 만들어야 함.
+    FTextVertex plane[4] =
+    {
+        { { -0.5f, 0.5f, 0.0f }, 0.0f, 0.0f },
+        { { 0.5f, 0.5f, 0.0f }, 0.0f, 0.0f },
+        { { -0.5f, -0.5f, 0.0f }, 0.0f, 0.0f },
+        { { 0.5f, -0.5f, 0.0f }, 0.0f, 0.0f }
+    };
+    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
+
+    const float size = 0.5f;
+    for (uint16 i = 0; i < Text.length(); ++i)
+    {
+        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
+        for (uint16 j = 0; j < 4; ++j)
+        {	// ranged-for 로 수정?
+            FVertexData tv;
+            float sizeAmount = size * i;
+            tv.x = plane[j].Pos.X + sizeAmount;
+            tv.y = plane[j].Pos.Y;
+            tv.z = plane[j].Pos.Z;
+
+            bool bIsRight = (j == 1) || (j == 3);
+            bool bIsBottom = (j == 2) || (j == 3);
+
+            float width = (bIsRight) ? CharInfo.width : 0.0f;
+            float height = (bIsBottom) ? CharInfo.height : 0.0f;
+            tv.u = CharInfo.u + width;
+            tv.v = CharInfo.v + height;
+            Vertices.push_back(tv);
+        }
+
+        uint32 VertexOffset = i * 4;
+        for (uint32 index : IndexSet)
+        {
+            Indices.push_back(index + VertexOffset);
+        }
+    }
+
+    // 메시 빌드 추가하기
+    FMeshDesc MeshData{
+        .VertexData = Vertices.data(),
+        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+        .VertexStride = sizeof(FVertexData),
+        .VertexCount = static_cast<uint32>(Vertices.size()),
+        .IndexData = Indices.data(),
+        .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+        .IndexCount = static_cast<uint32>(Indices.size())
+    };
+    
+    TextMesh = RegisterMesh("Text", Renderer.CreateMesh(MeshData));
+    return TextMesh != nullptr;
 }
 
 
