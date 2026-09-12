@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source">
@@ -169,6 +169,15 @@
     <ClCompile Include="Source\Runtime\Actors\AActor.cpp">
       <Filter>Source\Runtime\Actors</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ACubeActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ACylinderActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ASphereActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
@@ -244,6 +253,15 @@
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Actors\AActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ACubeActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ACylinderActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ASphereActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h">

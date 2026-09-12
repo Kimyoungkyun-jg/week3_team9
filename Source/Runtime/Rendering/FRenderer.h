@@ -47,20 +47,21 @@ public:
   [[nodiscard]]
   TSharedPtr<FMaterial> CreateMaterial(const FMaterialDesc &Desc);
   
-  void GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,
-                                    ID3D11DeviceContext *&ContextOut);
+  void GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,ID3D11DeviceContext *&ContextOut);
 
   [[nodiscard]]
-  TSharedPtr<FRenderPipeline> CreateRenderPipeline(const FRenderPipelineDesc &Desc,
-                                                  EViewModeIndex RenderMode = EViewModeIndex::VMI_Lit);
+  TSharedPtr<FRenderPipeline> CreateRenderPipeline(const FRenderPipelineDesc &Desc,EViewModeIndex RenderMode = EViewModeIndex::VMI_Lit);
   [[nodiscard]]
   TSharedPtr<FTexture> CreateTexture(FTextureDesc& desc);
-
   // 파이프라인 조회
   [[nodiscard]]
   TSharedPtr<FRenderPipeline> GetPipeline(EBuiltinPipeline Id) const;
 
   FLineBatcher& GetLineBatcher() { return LineBatcher; }
+
+
+  void UpdateLightConstants(const FLightConstants& Constants);
+
 private:
   bool InitializeDeviceAndSwapChain(HWND Window);
   bool InitializeBackBufferAndDepthStencil();
@@ -85,7 +86,7 @@ private:
   Microsoft::WRL::ComPtr<ID3D11Buffer> FrameConstantBuffer;
 
   // b2에 할당되는 lightbuffer
-  Microsoft::WRL::ComPtr<ID3D11Buffer> LightBuffer;
+  Microsoft::WRL::ComPtr<ID3D11Buffer> LightConstantBuffer;
 
 
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> EditorViewPortRTV;
@@ -101,6 +102,8 @@ public:
       const TConstants& Constants, bool bApplyViewMode = true)
   {
       UpdateBuffer(Constants);
+
+
 
       TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
       if (bApplyViewMode && CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {

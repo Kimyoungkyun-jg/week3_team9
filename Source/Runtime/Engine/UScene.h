@@ -33,7 +33,10 @@ public:
   TActor *SpawnActor(const FVector &Location, const FVector &Scale,
                      TArgs &&...Args) {
     TActor *Actor = NewObject<TActor>(std::forward<TArgs>(Args)...);
-    Actor->SetRootComponent(NewObject<UPrimitiveComponent>());
+    // 루트 컴포넌트 부재시 기본 생성
+    if (!Actor->GetRootComponent()) {
+      Actor->SetRootComponent(NewObject<UPrimitiveComponent>());
+    }
     Actor->SetScene(this); // 스폰할때 바론 Scene 등록 이래야 component등록할때
                            // 바로 scene에 등록가능
 

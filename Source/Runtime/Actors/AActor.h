@@ -30,6 +30,10 @@ public:
 	void AddComponent(USceneComponent* Addcomp);
 	virtual void Update(float DeltaTime);
 
+	// 액터 색상 제어
+	virtual void SetColor(const FVector& InColor);
+	virtual FVector GetColor() const;
+
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
 
 

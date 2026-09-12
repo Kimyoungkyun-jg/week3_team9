@@ -3,6 +3,7 @@
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/Engine/UScene.h"
 
 IMPLEMENT_UCLASS(AActor, UObject)
@@ -107,4 +108,19 @@ void AActor::Destroy() {
   // 컴포넌트 목록 비우기
   AttachedComp.clear();
   RootComponent = nullptr;
+}
+
+void AActor::SetColor(const FVector &InColor) {
+  // 루트 프리미티브 컴포넌트 색상 지정
+  if (auto *PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
+    PrimComp->SetColor(InColor);
+  }
+}
+
+FVector AActor::GetColor() const {
+  // 루트 프리미티브 컴포넌트 색상 반환
+  if (auto *PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
+    return PrimComp->GetColor();
+  }
+  return FVector{1.0f, 1.0f, 1.0f};
 }

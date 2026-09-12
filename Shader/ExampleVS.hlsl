@@ -13,7 +13,7 @@ struct PS_INPUT
     float4 Position : SV_Position;
     float4 Color : COLOR;
     float2 UV : TEXCOORD0;
-    float3 ClipNormal : NORMAL;
+    float3 Normal : NORMAL;
 };
 
 PS_INPUT MainVS(VS_INPUT Input)
@@ -24,8 +24,8 @@ PS_INPUT MainVS(VS_INPUT Input)
     Output.Color = Input.Color;
     Output.UV = Input.UV * UVScale + UVOffset;
 
-    // 시선 공간 법선 변환
-    Output.ClipNormal = mul(float4(Input.Normal, 0.0f), MVP).xyz;
+    // 월드 공간 법선 변환
+    Output.Normal = mul(float4(Input.Normal, 0.0f), World).xyz;
 
     return Output;
 }

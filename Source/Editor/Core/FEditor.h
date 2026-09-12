@@ -20,6 +20,8 @@ public:
   FTransform SelectedTransform;
   FVector SelectedEulerDegDisplay;
 
+  FLightConstants GlobalLight;
+
 public:
   void Initialize(USceneManager *SceneManager);
 

@@ -482,64 +482,35 @@ bool FRenderer::InitializeConstantBuffers()
 
   Result = Device->CreateBuffer(&FrameConstantBufferDesc, nullptr,
                                 &FrameConstantBuffer);
+
+
   if (FAILED(Result)) {
-    return false;
+      return false;
   }
+
+  D3D11_BUFFER_DESC lightbufferDesc = {
+      .ByteWidth = sizeof(FLightConstants),
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+  };
+
+
+
+  Result = Device->CreateBuffer(&lightbufferDesc, nullptr, &LightConstantBuffer);
+
+  if (FAILED(Result)) {
+      return false;
+  }
+
+
+
+
 
   return true;
 }
 
-//bool FRenderer::InitializeGridConstantBuffers() {
-//  D3D11_BUFFER_DESC GridConstantBufferDesc = {
-//      .ByteWidth = sizeof(FGridConstants),
-//      .Usage = D3D11_USAGE_DYNAMIC,
-//      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-//      .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-//  };
-//
-//  HRESULT Result = Device->CreateBuffer(&GridConstantBufferDesc, nullptr,
-//                                        &GridConstantBuffer);
-//  if (FAILED(Result)) {
-//    return false;
-//  }
-//
-//  return true;
-//}
-//
-//void FRenderer::UpdateObjectConstants(const FObjectConstants &Constants) {
-//  static const FMatrix UnrealClipToD3DClip{
-//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-//
-//  // 언리얼 Clip -> D3D Clip 좌표 변환
-//  FObjectConstants ShaderConstants = Constants;
-//  ShaderConstants.MVP *= UnrealClipToD3DClip;
-//
-//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-//  Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-//               &MappedResource);
-//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-//  Context->Unmap(ObjectConstantBuffer.Get(), 0);
-//
-//  Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-//  Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-//}
-//
-//void FRenderer::UpdateGridConstants(const FGridConstants &Constants) {
-//  static const FMatrix UnrealClipToD3DClip{
-//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-//
-//  // 언리얼 Clip -> D3D Clip 좌표 변환
-//  FGridConstants ShaderConstants = Constants;
-//  ShaderConstants.MVP *= UnrealClipToD3DClip;
-//
-//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-//  Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-//               &MappedResource);
-//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-//  Context->Unmap(GridConstantBuffer.Get(), 0);
-//
-//  Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-//  Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-//}
+void FRenderer::UpdateLightConstants(const FLightConstants& Constants)
+{
+    Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
+    Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
+}

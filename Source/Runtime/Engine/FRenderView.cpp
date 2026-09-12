@@ -21,18 +21,29 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 Len
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
 
   const FMatrix VP = Camera.CreateViewProjectionMatrix();
+  const FMatrix World = Rendered->GetRenderMatrix(Camera);
 
   FObjectConstants Constants;
-  Constants.MVP = Rendered->GetRenderMatrix(Camera) * VP;
+  Constants.MVP = World * VP;
+  Constants.World = World;
     if (auto* BBcomp = Rendered->Cast<UBillBoardComp>()) 
     {
         BBcomp->CalculateRotate(Camera, Constants);//빌보드일때 바라보는 계산
         BBcomp->UpdateUVinfo(Constants);
     }
 
+    // 컴포넌트 자체 색상 반영
+    Constants.ColorOverride = Rendered->GetColor();
+    Constants.ColorOverrideAmount = Rendered->GetColorAmount();
+
     if (bHighlighted) {
-        Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
-        Constants.ColorOverrideAmount = 0.5f;
+        // 선택 하이라이트 반영
+        if (Constants.ColorOverrideAmount > 0.0f) {
+            Constants.ColorOverride = Constants.ColorOverride * 0.7f + FVector{ 0.3f, 0.3f, 0.3f };
+        } else {
+            Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
+            Constants.ColorOverrideAmount = 0.5f;
+        }
     }
     
 

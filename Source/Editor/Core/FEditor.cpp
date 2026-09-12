@@ -1,5 +1,8 @@
 #include "FEditor.h"
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/ACubeActor.h"
+#include "Runtime/Actors/ASphereActor.h"
+#include "Runtime/Actors/ACylinderActor.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObject.h"
@@ -114,39 +117,29 @@ UPrimitiveComponent *FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
     return nullptr;
   }
 
-  UPrimitiveComponent *Component = nullptr;
-  switch (Type) {
-  case EEditorPrimitiveType::Cube:
-    Component = NewObject<UCubeComp>();
-    break;
-  case EEditorPrimitiveType::Cylinder:
-    Component = NewObject<UCylinderComp>();
-    break;
-  case EEditorPrimitiveType::Sphere:
-    Component = NewObject<USphereComp>();
-    break;
-  }
-
-  if (!Component) {
-    return nullptr;
-  }
-
   // 오프셋 적용
   static int SpawnSerial = 0;
   const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
-  FTransform Transform
-  {
-      FVector{Offset, 0.0f, 0.0f},
-      FQuaternion::Identity(),
-      FVector{0.5f, 0.5f, 0.5f},
-  };
+  const FVector SpawnLoc{ Offset, 0.0f, 0.0f };
+  const FVector SpawnScale{ 0.5f, 0.5f, 0.5f };
 
-  Component->SetRelativeTransform(Transform);
+  AActor* NewActor = nullptr;
+  switch (Type) {
+  case EEditorPrimitiveType::Cube:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ACubeActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Cylinder:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ACylinderActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Sphere:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ASphereActor>(SpawnLoc, SpawnScale);
+    break;
+  }
 
-  // 액터를 스폰하고 컴포넌트를 루트로 장착
-  AActor *NewActor = SceneManager->CurrentScene->SpawnActor<AActor>();
-  NewActor->SetRootComponent(Component);
+  if (!NewActor) {
+    return nullptr;
+  }
 
   SelectActor(NewActor);
-  return Component;
+  return NewActor->GetRootComponent() ? NewActor->GetRootComponent()->Cast<UPrimitiveComponent>() : nullptr;
 }

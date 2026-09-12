@@ -101,6 +101,7 @@ void FEditorApplication::Render() {
   for (auto &EditorViewport : EditorViewports) {
     if (RenderView) {
       RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
+      RenderView->GetRenderer().UpdateLightConstants(Editor.GlobalLight); //globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,

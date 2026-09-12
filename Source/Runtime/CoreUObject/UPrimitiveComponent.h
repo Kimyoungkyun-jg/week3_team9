@@ -15,8 +15,8 @@ class UPrimitiveComponent : public USceneComponent
 public:
 	[[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
 	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
-	[[nodiscard]] FMatrix GetModelMatrix() const { return RelativeTransform.ToMatrix(); }
-	virtual FMatrix GetRenderMatrix(const FCamera& Camera) { return RelativeTransform.ToMatrix(); }
+	[[nodiscard]] FMatrix GetModelMatrix() const { return GetGlobalTransform().ToMatrix(); }
+	virtual FMatrix GetRenderMatrix(const FCamera& Camera) { return GetGlobalTransform().ToMatrix(); }
 	virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
 
 	// 메쉬 및 재질 설정
@@ -26,6 +26,12 @@ public:
 	// 텍스처 이름으로 머티리얼 텍스처 교체
 	bool SetTextureByName(const FString& InTextureName);
 
+	// 색상 설정 및 조회
+	const FVector& GetColor() const { return Color; }
+	void SetColor(const FVector& InColor) { Color = InColor; ColorAmount = 1.0f; }
+	float GetColorAmount() const { return ColorAmount; }
+	void SetColorAmount(float InAmount) { ColorAmount = InAmount; }
+
 protected:
 	UPrimitiveComponent() = default;
 
@@ -33,4 +39,7 @@ private:
 	TSharedPtr<FMesh> PrimitiveMesh;
 	TSharedPtr<FMaterial> PrimitiveMaterial;
 	TSharedPtr<FAxisAlignedBoundingBox> BoundingBox;
+
+	FVector Color{ 1.0f, 1.0f, 1.0f };
+	float ColorAmount = 0.0f;
 };
