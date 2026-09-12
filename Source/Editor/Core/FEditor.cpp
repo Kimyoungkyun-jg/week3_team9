@@ -25,11 +25,7 @@ FRenderResourceLibrary *FEditor::GetRendererLibrary() {
 void FEditor::Process() {
   // 씬의 액터 업데이트
   if (SceneManager && SceneManager->CurrentScene) {
-    for (AActor *Actor : SceneManager->CurrentScene->GetActors()) {
-      if (Actor) {
-        Actor->Update(FTimeManager::Get().GetDeltaTime());
-      }
-    }
+    SceneManager->CurrentScene->Update(FTimeManager::Get().GetDeltaTime());
   }
 
   if (SelectedActor) {
@@ -112,7 +108,7 @@ void FEditor::SetCameraSensitivity(float Value)
     CameraSensitivity = Value;
 }
 
-UPrimitiveComponent *FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
+UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
   if (!SceneManager || !SceneManager->CurrentScene) {
     return nullptr;
   }

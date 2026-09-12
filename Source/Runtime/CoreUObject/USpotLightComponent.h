@@ -12,7 +12,7 @@ protected:
 	explicit USpotLightComponent() = default;
 
 public:
-	void OnRegister(UScene& Scene) override;
+	void Register(UScene& Scene) override;
 
 	float GetSpotAngle() const { return SpotAngle; }
 	void SetSpotAngle(float InAngle) { SpotAngle = InAngle; }

@@ -8,16 +8,12 @@ IMPLEMENT_UCLASS(UTextComponent, UBillBoardComp)
 UCLASS_META(UTextComponent, DisplayName, "Text")
 UCLASS_META(UTextComponent, MeshName, "Text")
 
-void UTextComponent::OnRegister(UScene &Scene) {
-  Super::OnRegister(Scene);
-
-  if (!Font) { //폰트 초기화
-    Font = MakeShared<FFont>();
-    Font->Initialize(16);
-  }
-
-  SetMaterial(Scene.GetRenderResourceLibrary().GetTextMaterial());
-  RebuildTextMesh();
+void UTextComponent::Register(UScene& Scene)
+{
+	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
+	SetMesh(Resources ? Resources->GetMesh("Text") : nullptr);
+	SetMaterial(Resources ? Resources->GetMaterial("Text") : nullptr);
+	Super::Register(Scene);
 }
 
 void UTextComponent::RebuildTextMesh() {

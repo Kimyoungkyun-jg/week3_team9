@@ -62,6 +62,9 @@
     <Filter Include="Source\ThirdParty\Json">
       <UniqueIdentifier>{4c9c9a29-5249-4fa5-bd20-4f27df236bb4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\ThirdParty\Json\nlohmann">
+      <UniqueIdentifier>{6e988244-cc94-485e-9f55-06172741ef7d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Editor\Gizmo">
       <UniqueIdentifier>{1f658ce1-7a1a-4ece-a31a-c6fa20d35a10}</UniqueIdentifier>
     </Filter>
@@ -407,6 +410,9 @@
     </ClInclude>
     <ClInclude Include="Source\ThirdParty\Json\json.hpp">
       <Filter>Source\ThirdParty\Json</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\Json\nlohmann\json.hpp">
+      <Filter>Source\ThirdParty\Json\nlohmann</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Math\FVector4.h">
       <Filter>Source\Runtime\Math</Filter>

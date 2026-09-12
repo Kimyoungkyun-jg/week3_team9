@@ -1,28 +1,61 @@
 #include "UBillBoardComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/UScene.h"
+#include "Runtime/Engine/FArchive.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
+#include "Runtime/Core/Log.h"
 #include "Runtime/Rendering/FRenderer.h"
 #include "UClass.h"
+#include <algorithm>
+#include <cctype>
 
 IMPLEMENT_UCLASS(UBillBoardComp, UPrimitiveComponent)
 UCLASS_META(UBillBoardComp, DisplayName, "BillBoard")
 UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 
-void UBillBoardComp::OnRegister(UScene &Scene) {
-  UPrimitiveComponent::OnRegister(Scene);
-
-  auto &ResLib = FRenderResourceLibrary::Get();
-  if (!GetMesh()) // 이미 있으면 다시 등록 방지
-  {
-    SetMesh(ResLib.GetMesh("Rect"));
+void UBillBoardComp::Register(UScene& InScene) {
+  FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
+  if (!GetMesh()) {
+    SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
   }
-  if (!GetMaterial()) // 이미 있으면 다시 등록 방지
-  {
-    SetMaterial(ResLib.GetMaterial("Textured"));
+  if (!GetMaterial()) {
+    SetMaterial(Resources ? Resources->GetMaterial("Textured") : nullptr);
   }
+  Super::Register(InScene);
 }
 
+void UBillBoardComp::Serialize(FArchive& Archive) const
+{
+    Super::Serialize(Archive);
+
+    Archive.SetVector2("UVScale", UVScale);
+    Archive.SetVector2("UVOffset", UVOffset);
+}
+
+void UBillBoardComp::Deserialize(const FArchive& Archive)
+{
+    Super::Deserialize(Archive);
+
+    UVScale = Archive.GetVector2("UVScale");
+    UVOffset = Archive.GetVector2("UVOffset");
+}
+
+void UBillBoardComp::CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant)
+{
+    const FTransform G = GetGlobalTransform();
+    const FVector ToCamera = Camera.Position - G.Location;
+
+
+    if (ToCamera.SizeSquared() < 1e-8f) {
+        InputConstant.MVP = FMatrix::GetIdentity();
+    }
+    const FVector Forward = ToCamera / ToCamera.Size();
+    const FMatrix CamRot = Camera.GetRotationMatrix();
+    const FVector CameraUp{ CamRot.M[2][0], CamRot.M[2][1], CamRot.M[2][2] };
+
+    FVector Right = CameraUp.Cross(Forward);
+    if (Right.SizeSquared() < 1e-8f) {
+        Right = FVector{ 0.0f, 1.0f, 0.0f };
 void UBillBoardComp::Render(FRenderer &renderer, const FCamera &Camera,
                             const bool &bHighlighted) {
   if (!GetMesh() || !GetMaterial()) {

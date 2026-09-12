@@ -1,31 +1,43 @@
 #pragma once
 
 #include "Runtime/Geometry/FTransform.h"
-#include "ThirdParty/Json/json.hpp"
+#include "ThirdParty/Json/nlohmann/json.hpp"
 #include "UObject.h"
-#include "TWeakObjectPtr.h"
 
 
 class UScene;
 class AActor;
+class FArchive;
 
 class USceneComponent : public UObject
 {
 	GENERATED_BODY()
 	DECLARE_UCLASS(USceneComponent, UObject)
+	friend class AActor;
 
 public:
-  AActor* GetOwner() const;
-  void SetOwner(AActor* InOwner);
+    virtual void Initialize() override;
+    virtual void Release() override;
+    
+    AActor* GetActorOwner() const { return ActorOwner; }
+    USceneComponent* GetSceneOwner() const { return SceneOwner; }
 
-  json::JSON Serialize() const override;
-  bool Deserialize(const json::JSON &data) override;
-  virtual void Update(float DeltaTime) {}
+    virtual void Register(UScene& InScene);
+    virtual void BeginPlay();
+    virtual void Update(float DeltaTime) {}
+    virtual void EndPlay();
+    virtual void Unregister();
 
-	virtual void OnRegister(UScene& Scene) {}
-	virtual void OnUnregister(UScene& Scene) {}
+    void SetupAttachment(USceneComponent* InParent);
+
+    [[nodiscard]] bool IsRegistered() const { return Scene != nullptr; }
+    [[nodiscard]] bool HasBegunPlay() const { return bHasBegunPlay; }
+
+	virtual void Serialize(FArchive& Archive) const override;
+	virtual void Deserialize(const FArchive& Archive) override;
+
 protected:
-  USceneComponent() = default;
+	USceneComponent() = default;
 
 	FTransform RelativeTransform;
 
@@ -36,9 +48,9 @@ public:
 	FTransform GetGlobalTransform() const;
 	//void SetRelativeTransformFromGlobal(const FTransform& GlobalTransform);
 
-  void RegisterComponentWithScene(UScene &Scene);
-  void UnregisterComponentFromScene(UScene &Scene);
-
 protected:
-  TWeakObjectPtr<AActor> Owner;
+  AActor* ActorOwner = nullptr;
+  USceneComponent* SceneOwner = nullptr;
+  UScene* Scene = nullptr;
+  bool bHasBegunPlay = false;
 };

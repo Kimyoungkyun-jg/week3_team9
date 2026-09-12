@@ -1,22 +1,96 @@
 #include "UClass.h"
 #include "USceneComponent.h"
-#include "ThirdParty/Json/json.hpp"
+#include "ThirdParty/Json/nlohmann/json.hpp"
 #include "UObjectGlobals.h" 
 #include "UPrimitiveComponent.h"
-#include "Runtime/Actors/AActor.h"
-#include "../Engine/UScene.h"
+#include "Runtime/Engine/FArchive.h"
+#include "Runtime/Engine/UScene.h"
 
 
 IMPLEMENT_UCLASS(USceneComponent, UObject)
 
-AActor* USceneComponent::GetOwner() const
+void USceneComponent::Initialize()
 {
-    return Owner.Get();
+    Super::Initialize();
+    Scene = nullptr;
+    bHasBegunPlay = false;
+}
+void USceneComponent::Release()
+{
+    if (bHasBegunPlay) { EndPlay(); }
+    if (Scene) { Unregister(); }
+
+    ActorOwner = nullptr;
+    SceneOwner = nullptr;
+    Scene = nullptr;
+
+    Super::Release();
 }
 
-void USceneComponent::SetOwner(AActor* InOwner)
+void USceneComponent::Register(UScene& InScene)
 {
-    Owner = InOwner;
+    if (Scene == &InScene) { return; }
+    if (Scene) { Unregister(); }
+
+    Scene = &InScene;
+}
+
+void USceneComponent::BeginPlay()
+{
+    if (!Scene || bHasBegunPlay) { return; }
+    bHasBegunPlay = true;
+}
+
+void USceneComponent::EndPlay()
+{
+    if (!bHasBegunPlay) { return; }
+    bHasBegunPlay = false;
+}
+
+void USceneComponent::Unregister()
+{
+    if (bHasBegunPlay) { EndPlay(); }
+    Scene = nullptr;
+}
+
+void USceneComponent::SetupAttachment(USceneComponent* InParent)
+{
+    if (InParent == this) { return; }
+
+    SceneOwner = InParent;
+    if (InParent)
+    {
+        ActorOwner = InParent->GetActorOwner();
+    }
+}
+
+void USceneComponent::Serialize(FArchive& Archive) const
+{
+    Super::Serialize(Archive);
+
+    Archive.SetVector("Location", RelativeTransform.Location);
+    Archive.SetVector("Rotation", RelativeTransform.Rotation.GetEulerXYZ());
+    Archive.SetVector("Scale", RelativeTransform.Scale3D);
+}
+
+void USceneComponent::Deserialize(const FArchive& Archive)
+{
+    Super::Deserialize(Archive);
+
+    // Location
+    RelativeTransform.Location = Archive.GetVector("Location");
+
+    // Rotation
+    constexpr float RadToDeg = 180.0f / std::numbers::pi_v<float>;
+    FVector Rotation = Archive.GetVector("Rotation");
+    for (int i = 0; i < 3; ++i)
+    {
+        Rotation[i] *= RadToDeg;
+    }
+    RelativeTransform.Rotation.FromEulerXYZDeg(Rotation);
+
+    // Scale
+    RelativeTransform.Scale3D = Archive.GetVector("Scale");
 }
 
 void USceneComponent::SetRelativeTransform(const FTransform& RelativeTransform)
@@ -24,66 +98,20 @@ void USceneComponent::SetRelativeTransform(const FTransform& RelativeTransform)
     this->RelativeTransform = RelativeTransform;
 }
 
-FTransform USceneComponent::GetGlobalTransform() const
+FTransform USceneComponent::GetGlobalTransform() const //나중에 부모 rootcomponent world좌표 써야됨
 {
-    if (!Owner || Owner->GetRootComponent() == this)
+    if (SceneOwner)
+    {
+        return SceneOwner->GetGlobalTransform() * RelativeTransform;
+    }
+
+    if (!ActorOwner || ActorOwner->GetRootComponent() == this)
     {
         return RelativeTransform;
     }
 
-    // 부모 트랜스폼과 상대 트랜스폼 합성
-    FTransform ParentWorld = Owner->GetRootComponent()->GetGlobalTransform();
+    //부모(RootComponent)의 월드 트랜스폼 가져오기
+    FTransform ParentWorld = ActorOwner->GetRootComponent()->GetGlobalTransform();
+    //부모 트랜스폼 * 내 상대 트랜스폼
     return ParentWorld * RelativeTransform;
-}
-
-json::JSON USceneComponent::Serialize() const
-{
-    FVector tmpRot = RelativeTransform.Rotation.GetEulerXYZ();
-    json::JSON result;
-    result["Location"] = json::Array(RelativeTransform.Location.X, RelativeTransform.Location.Y, RelativeTransform.Location.Z);
-    result["Rotation"] = json::Array(tmpRot.X, tmpRot.Y, tmpRot.Z);
-    result["Scale"] = json::Array(RelativeTransform.Scale3D.X, RelativeTransform.Scale3D.Y, RelativeTransform.Scale3D.Z);
-    result["Type"] = GetClass()->GetDisplayName();
-    return result;
-}
-
-bool USceneComponent::Deserialize(const json::JSON& data)
-{
-    auto location = data.at("Location");
-    if (location.size() != 3) return false;
-    RelativeTransform.Location = FVector(location[0].ToFloat(), location[1].ToFloat(), location[2].ToFloat());
-
-    auto rotation = data.at("Rotation");
-    if (rotation.size() != 3) return false;
-    constexpr float RadToDeg = 180.0f / std::numbers::pi_v<float>;
-
-    RelativeTransform.Rotation = FQuaternion::FromEulerXYZDeg({ static_cast<float>(rotation[0].ToFloat()) * RadToDeg, static_cast<float>(rotation[1].ToFloat()) * RadToDeg, static_cast<float>(rotation[2].ToFloat()) * RadToDeg });
-
-    auto scale = data.at("Scale");
-    if (scale.size() != 3) return false;
-    RelativeTransform.Scale3D = FVector(scale[0].ToFloat(), scale[1].ToFloat(), scale[2].ToFloat());
-
-
-    return true;
-}
-
-
-void USceneComponent::RegisterComponentWithScene(UScene& Scene)
-{
-    //가상함수 호출 (자식 컴포넌트가 메시/머티리얼 바인딩)
-    OnRegister(Scene);
-    //자신이 그릴 수 있는 프리미티브라면 씬의 렌더 큐에 자신을 등록
-    if (auto* Prim = this->Cast<UPrimitiveComponent>())
-    {
-        Scene.AddRenderComponent(Prim);
-    }
-}
-
-void USceneComponent::UnregisterComponentFromScene(UScene& Scene)
-{
-    if (auto* Prim = this->Cast<UPrimitiveComponent>())
-    {
-        Scene.RemoveRenderComponent(Prim);
-    }
-    OnUnregister(Scene);
 }

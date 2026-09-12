@@ -15,18 +15,14 @@ class UPrimitiveComponent : public USceneComponent {
   DECLARE_UCLASS(UPrimitiveComponent, USceneComponent)
 
 public:
-  [[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
-  [[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const {
-    return PrimitiveMaterial;
-  }
-  [[nodiscard]] FMatrix GetModelMatrix() const {
-    return GetGlobalTransform().ToMatrix();
-  }
-  virtual FMatrix GetRenderMatrix(const FCamera &Camera) {
-    return GetGlobalTransform().ToMatrix();
-  }
-  virtual void
-  SetRelativeTransform(const FTransform &RelativeTransform) override;
+	void Register(UScene& InScene) override;
+	void Unregister() override;
+
+	[[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
+	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
+	[[nodiscard]] FMatrix GetModelMatrix() const { return GetGlobalTransform().ToMatrix(); }
+	virtual FMatrix GetRenderMatrix(const FCamera& Camera) { return GetGlobalTransform().ToMatrix(); }
+	virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
 
   // 컴포넌트 렌더링
   virtual void Render(FRenderer &renderer, const FCamera &Camera,

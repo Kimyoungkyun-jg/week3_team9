@@ -38,9 +38,24 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   UTextComponent *Textcomp = NewObject<UTextComponent>();
 
 
+  //UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
+  //FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
+  //BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+  //BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+  //BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
-  AActor *Testor = CurrentScene->SpawnActor<AActor>(
-      FVector(1.0f, 1.0f, 0.25f), FVector(1.0f, 1.0f, 1.0f));
+  //AActor* BillBoard =
+  //    CurrentScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
+  //        FVector(0.5f, 0.5f, 0.5f)   // Scale
+  //    );
+  AActor* Spotlight =
+      CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f),
+          FVector(10.0f, 10.0f, 10.0f)
+      );
+  Spotlight->CreateRootComponent(USpotLightComponent::StaticClass());
+
+  //BillBoard->SetRootComponent(BillBoardComp);
+
 
   Testor->SetRootComponent(Textcomp);
   Textcomp->RegisterComponentWithScene(*CurrentScene);
@@ -108,53 +123,59 @@ void FEditorApplication::Render() {
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives)) {
-      for (auto &PrimitiveComponent :
-           SceneManager->CurrentScene->GetRenderComponents()) {
-        const bool bSelected =
-            (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
-             PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
+    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives))
+    {
+        for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
+        {
+            bool bSelected = true;
 
-        RenderView->Render(EditorViewport.ViewportCamera,
-                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                           PrimitiveComponent, bSelected);
-      }
+            if (!PrimitiveComponent) { bSelected = false; }
+            else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
+            else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
+
+            RenderView->Render
+            (
+                EditorViewport.ViewportCamera,
+                EditorViewport.TopLeftUV,
+                EditorViewport.LengthUV,
+                PrimitiveComponent,
+                bSelected
+            );
+        }
     }
 
-    if (Editor.ObjectSelected()) {
-      if (auto *SpotLight = Editor.GetSelectedActor()
-                                ->GetRootComponent()
-                                ->Cast<USpotLightComponent>()) // spotlight 용
-      {
-        if (auto Mesh = SpotLight->GetMesh()) {
-          const FMatrix ModelMatrix = SpotLight->GetModelMatrix();
-          const auto &Positions = Mesh->GetPositions();
-          const auto &Indices = Mesh->GetIndices();
-          const FVector4 WireColor{1.0f, 1.0f, 0.0f, 1.0f}; // 노란색 선
-          // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
-          for (size_t i = 0; i + 2 < Indices.size(); i += 3) {
-            FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
-            FVector B =
-                ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
-            FVector C =
-                ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
-            RenderView->RenderLine(A, B, WireColor);
-            RenderView->RenderLine(B, C, WireColor);
-            RenderView->RenderLine(C, A, WireColor);
-          }
-        }
-      } else {
-            // 바운딩 박스 그리기
-            USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
-            if (UPrimitiveComponent* PrimComp = RootComp ? RootComp->Cast<UPrimitiveComponent>() : nullptr)
-            {
-                if (auto Mesh = PrimComp->GetMesh())
+
+
+    if (Editor.ObjectSelected())
+    {
+        // AABB 그리기
+        USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
+        UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+        if (PrimComp && PrimComp->GetMesh() && PrimComp->IsA<USpotLightComponent>())
+        {
+                auto Mesh = PrimComp->GetMesh();
+                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+                const auto& Positions = Mesh->GetPositions();
+                const auto& Indices = Mesh->GetIndices();
+                const FVector4 WireColor{ 1.0f, 1.0f, 0.0f, 1.0f }; // 노란색 선
+                // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
+                for (size_t i = 0; i + 2 < Indices.size(); i += 3)
                 {
-                    const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-                    FAxisAlignedBoundingBox AABB{ *Mesh, ModelMatrix };
-                    RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+                    FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
+                    FVector B = ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
+                    FVector C = ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
+                    RenderView->RenderLine(A, B, WireColor);
+                    RenderView->RenderLine(B, C, WireColor);
+                    RenderView->RenderLine(C, A, WireColor);
                 }
-            }
+        }
+        else if (PrimComp && PrimComp->GetMesh())
+        {
+            // AABB 그리기
+            const FMesh& Mesh = *PrimComp->GetMesh();
+            const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+            FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+            RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
         }
     }
 

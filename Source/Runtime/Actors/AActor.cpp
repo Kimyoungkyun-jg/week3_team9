@@ -3,40 +3,127 @@
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
-#include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/Engine/UScene.h"
+#include "Runtime/Engine/FArchive.h"
 
 IMPLEMENT_UCLASS(AActor, UObject)
 
-void AActor::SetRootComponent(USceneComponent *InRootComponent) {
-  if (RootComponent == InRootComponent)
-    return;
-  FTransform PrevTransform{};
-  bool bHasPrevTransform = false;
-  // 기존 루트 컴포넌트가 있었다면 정리 및 트랜스폼 보관
-  if (RootComponent) {
-    PrevTransform = RootComponent->GetRelativeTransform();
-    bHasPrevTransform = true;
-    if (OwningScene) {
-      RootComponent->UnregisterComponentFromScene(
-          *OwningScene); // 씬 렌더 큐에서 제거
+void AActor::Initialize()
+{
+    Super::Initialize();
+    Owner = nullptr;
+    bHasBegunPlay = false;
+}
+
+void AActor::Release()
+{
+    UScene* RegisteredScene = Owner;
+    if (bHasBegunPlay) { EndPlay(); }
+    if (Owner) { Unregister(); }
+    if (RegisteredScene) { RegisteredScene->RemoveActor(this); }
+
+    while (!AttachedComp.empty())
+    {
+        USceneComponent* Component = AttachedComp.back();
+        std::erase(AttachedComp, Component);
+
+        if (RootComponent == Component)
+        {
+            RootComponent = nullptr;
+        }
+
+        DestroyObject(Component);
     }
-    std::erase(AttachedComp, RootComponent); // 액터 참조 목록에서 제거
-  }
-  // 새 루트 컴포넌트 장착
-  RootComponent = InRootComponent;
-  if (RootComponent) {
+
+    if (RootComponent)
+    {
+        USceneComponent* RemainingRoot = RootComponent;
+        RootComponent = nullptr;
+        DestroyObject(RemainingRoot);
+    }
+
+    Super::Release();
+}
+
+void AActor::Serialize(FArchive& Archive) const
+{
+    Super::Serialize(Archive);
+
+    if (RootComponent)
+    {
+        FArchive RootArchive{};
+        RootComponent->Serialize(RootArchive);
+        Archive.SetArchive("RootComponent", RootArchive);
+    }
+    else
+    {
+        Archive.SetNull("RootComponent");
+    }
+}
+
+void AActor::Deserialize(const FArchive& Archive)
+{
+    Super::Deserialize(Archive);
+
+    if (Archive.IsNull("RootComponent"))
+    {
+        RootComponent = nullptr;
+    }
+    else
+    {
+        FArchive RootComponentArchive = Archive.GetArchive("RootComponent");
+        UClass* ClassType = UClass::FindByName(RootComponentArchive.GetString("Type"));
+
+        if (ClassType == nullptr) { RootComponent = nullptr; return; }
+
+        CreateRootComponent(ClassType);
+        RootComponent->Deserialize(RootComponentArchive);
+    }
+}
+
+void AActor::CreateRootComponent(UClass* ClassType)
+{
+    if (RootComponent) { return; }
+
+    UObject* Object = NewObject(ClassType);
+    RootComponent = Object->Cast<USceneComponent>();
+    if (!RootComponent)
+    {
+        DestroyObject(Object);
+        return;
+    }
+
+    RootComponent->ActorOwner = this;
+    RootComponent->SetupAttachment(nullptr);
+    RootComponent->Initialize();
     AttachedComp.push_back(RootComponent);
-    InRootComponent->SetOwner(this);
-    // 기존 루트가 가지고 있던 액터 트랜스폼을 새 컴포넌트로 이전
-    if (bHasPrevTransform) {
-      InRootComponent->SetRelativeTransform(PrevTransform);
+
+    if (Owner) { RootComponent->Register(*Owner); }
+    if (bHasBegunPlay) { RootComponent->BeginPlay(); }
+}
+
+void AActor::SetRootComponent(USceneComponent *InRootComponent) {
+    if (RootComponent == InRootComponent) { return; }
+
+    // 기존 루트 컴포넌트가 있었다면 정리 및 트랜스폼 보관
+    if (RootComponent) {
+        if (RootComponent->HasBegunPlay()) { RootComponent->EndPlay(); }
+        if (RootComponent->IsRegistered()) { RootComponent->Unregister(); }
+        
+        std::erase(AttachedComp, RootComponent); // 액터 참조 목록에서 제거
     }
-    // 씬에 이미 스폰된 액터라면 새 루트 컴포넌트도 즉시 씬에 등록
-    if (OwningScene) {
-      RootComponent->RegisterComponentWithScene(*OwningScene);
+
+    // 새 루트 컴포넌트 장착
+    RootComponent = InRootComponent;
+    if (RootComponent) {
+        RootComponent->ActorOwner = this;
+        RootComponent->SetupAttachment(nullptr);
+        AttachedComp.push_back(RootComponent);
+        InRootComponent->Initialize();
+        
+        if (Owner) { RootComponent->Register(*Owner); }
+        if (bHasBegunPlay) { RootComponent->BeginPlay(); }
     }
-  }
 }
 
 void AActor::AddComponent(USceneComponent *Addcomp) {
@@ -46,27 +133,54 @@ void AActor::AddComponent(USceneComponent *Addcomp) {
 
   if (RootComponent == nullptr) {
     RootComponent = Addcomp;
+    Addcomp->SetupAttachment(nullptr);
+  }
+  else if (Addcomp->GetSceneOwner() == nullptr) {
+    Addcomp->SetupAttachment(RootComponent);
   }
 
+  Addcomp->ActorOwner = this;
   AttachedComp.push_back(Addcomp);
-  Addcomp->SetOwner(this);
+  Addcomp->Initialize();
 
-  if (OwningScene) // 씬이 존재하면 바로 register
-  {
-    Addcomp->RegisterComponentWithScene(*OwningScene);
+  if (Owner) { Addcomp->Register(*Owner); }
+  if (bHasBegunPlay) { Addcomp->BeginPlay(); }
+}
+
+void AActor::AddReferencedObjects(FReferenceCollector &Collector) {
+  UObject::AddReferencedObjects(Collector);
+
+  if (RootComponent) {
+    Collector.AddReferencedObject(RootComponent);
+  }
+
+  for (USceneComponent *Component : AttachedComp) {
+    Collector.AddReferencedObject(Component);
   }
 }
 
+void AActor::Register(UScene& Scene) {
+  if (Owner == &Scene) { return; }
+  if (Owner) { Unregister(); }
 
-void AActor::RegisterAllComponents(UScene &Scene) {
-  for (USceneComponent *Comp : AttachedComp) {
-    if (Comp) {
-      Comp->RegisterComponentWithScene(Scene);
-    }
+  Owner = &Scene;
+  for (USceneComponent* Component : AttachedComp) {
+    if (Component) { Component->Register(Scene); }
+  }
+}
+
+void AActor::BeginPlay() {
+  if (!Owner || bHasBegunPlay) { return; }
+
+  bHasBegunPlay = true;
+  for (USceneComponent* Component : AttachedComp) {
+    if (Component) { Component->BeginPlay(); }
   }
 }
 
 void AActor::Update(float DeltaTime) {
+  if (!bHasBegunPlay) { return; }
+
   for (USceneComponent *Component : AttachedComp) {
     if (Component) {
       Component->Update(DeltaTime);
@@ -74,50 +188,42 @@ void AActor::Update(float DeltaTime) {
   }
 }
 
-void AActor::UnregisterAllComponents(UScene &Scene) {
-  for (USceneComponent *Comp : AttachedComp) {
-    if (Comp) {
-      Comp->UnregisterComponentFromScene(Scene);
-    }
-  }
-}
-
-void AActor::UnregisterComponentFromScene(UScene &Scene) {
-  UnregisterAllComponents(Scene);
-}
-
-void AActor::Destroy() {
-  if (OwningScene) {
-    // 씬에서 컴포넌트 등록 해제
-    UnregisterAllComponents(*OwningScene);
-    // 씬의 액터 목록에서 제거
-    OwningScene->DestroyActor(this);
-    OwningScene = nullptr;
-  }
-  // 컴포넌트 목록 비우기
-  AttachedComp.clear();
-  RootComponent = nullptr;
-}
-
-void AActor::SetColor(const FVector &InColor) {
-  // 루트 프리미티브 컴포넌트 색상 지정
-  if (auto *PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
+void AActor::SetColor(const FVector& InColor) {
+  if (auto* PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
     PrimComp->SetColor(InColor);
   }
 }
 
 FVector AActor::GetColor() const {
-  // 루트 프리미티브 컴포넌트 색상 반환
-  if (auto *PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
+  if (auto* PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
     return PrimComp->GetColor();
   }
   return FVector{1.0f, 1.0f, 1.0f};
 }
 
-void AActor::SetScene(UScene* InScene) {
-  OwningScene = InScene;
+void AActor::EndPlay() {
+  if (!bHasBegunPlay) { return; }
+
+  for (auto It = AttachedComp.rbegin(); It != AttachedComp.rend(); ++It) {
+    if (*It) { (*It)->EndPlay(); }
+  }
+  bHasBegunPlay = false;
 }
 
-UScene* AActor::GetScene() const {
-  return OwningScene.Get();
+void AActor::Unregister() {
+  if (bHasBegunPlay) { EndPlay(); }
+  if (!Owner) { return; }
+
+  for (auto It = AttachedComp.rbegin(); It != AttachedComp.rend(); ++It) {
+    if (*It) { (*It)->Unregister(); }
+  }
+  Owner = nullptr;
+}
+
+void AActor::Destroy() {
+  if (Owner) {
+    Owner->DestroyActor(this);
+    return;
+  }
+  DestroyObject(this);
 }

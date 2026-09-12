@@ -12,6 +12,7 @@ struct PS_INPUT
 
 float4 MainPS(PS_INPUT Input) : SV_Target
 {
+    Input.UV.x = 1 - Input.UV.x;
     float4 Sampled = DiffuseTexture.Sample(DiffuseSampler, Input.UV);
 
     // 알파가 없거나 검은색인 영역 제거

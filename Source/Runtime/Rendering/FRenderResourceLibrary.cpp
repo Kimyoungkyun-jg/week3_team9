@@ -34,12 +34,9 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EBuiltinPipeline::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
     {EBuiltinPipeline::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
     {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
-    {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso",
-     L"RotationGizmoPS.cso"},
-    {EBuiltinPipeline::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false,
-     D3D11_CULL_NONE, true},
-    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"TextPS.cso", true,
-     D3D11_CULL_NONE, false},
+    {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
+    {EBuiltinPipeline::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
+    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"TextPS.cso"},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -124,8 +121,9 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateRectMesh(Renderer) || !CreateTextMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
-      !CreateTexturedMaterial(Renderer) || !CreateSpotlightMaterial(Renderer) ||
-      !CreateTextMaterial(Renderer)) {
+      !CreateTexturedMaterial(Renderer) ||
+      !CreateTextMesh(Renderer) || !CreateTextMaterial(Renderer) ||
+      !CreateSpotlightMaterial(Renderer)) {
     return false;
   }
 
@@ -1056,23 +1054,23 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer &Renderer) {
 bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
   FWString Path = GetExecutableDirectory();
 
-  FMaterialDesc Desc = {
-      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-      .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
-  };
+    FMaterialDesc Desc = {
+        .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+        .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
+    };
 
   TextMaterial = RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
   if (!TextMaterial) {
     return false;
   }
 
-  TSharedPtr<FRenderPipeline> Pipeline =
-      Renderer.GetPipeline(EBuiltinPipeline::Text);
-  if (!Pipeline) {
-    // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
-    return false;
-  }
-  TextMaterial->SetPipeLine(Pipeline);
+    TSharedPtr<FRenderPipeline> Pipeline =
+        GetPipeline(EBuiltinPipeline::Text);
+    if (!Pipeline) {
+        // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+        return false;
+    }
+    Material->SetPipeLine(Pipeline);
 
   // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
   TextMaterial->SetTexture(GetTexture("koreanatlas"));

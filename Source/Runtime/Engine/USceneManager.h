@@ -8,7 +8,7 @@ public:
 	void SaveScene(const FString& path) const;
 	void LoadScene(const FString& path);
 	void SetScene(UScene* scene);
-
+	void Release();
 
 	UScene* CurrentScene = nullptr;
 };

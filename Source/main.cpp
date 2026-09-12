@@ -104,11 +104,11 @@ int WINAPI wWinMain(
 
 		Renderer.SwapBuffer();
 
-		EditorApp.CollectGarbage();
+		//EditorApp.CollectGarbage();
 	}
 
-	SceneManager.SetScene(nullptr); // root객체 해제 - 코드 참조
-	EditorApp.CollectGarbage();
+	SceneManager.Release();
+	//EditorApp.CollectGarbage();
 	Renderer.Shutdown();
 
 	return 0;
