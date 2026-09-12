@@ -72,6 +72,7 @@ public:
   [[nodiscard]] TSharedPtr<FMesh> GetLineMesh() const { return LineMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetPlaneMesh() const { return PlaneMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetRectMesh() const { return RectMesh; }
+  [[nodiscard]] TSharedPtr<FMesh> GetTextMesh() const { return TextMesh; }
 
   // 머티리얼 조회
   TSharedPtr<FMaterial> GetMaterial(const FString &name) const {
@@ -113,6 +114,9 @@ public:
   [[nodiscard]] TSharedPtr<FMaterial> GetSpotlightMaterial() const {
     return SpotlightMaterial;
   }
+  [[nodiscard]] TSharedPtr<FMaterial> GetTextMaterial() const {
+    return TextMaterial;
+  }
 
   // 메쉬 전체 해제
   void DestroyAllMeshes() {
@@ -130,6 +134,7 @@ public:
     LineMesh.reset();
     PlaneMesh.reset();
     RectMesh.reset();
+    TextMesh.reset();
   }
 
   // 머티리얼 전체 해제
@@ -139,6 +144,7 @@ public:
     GridMaterial.reset();
     RotationGizmoMaterial.reset();
     SpotlightMaterial.reset();
+    TextMaterial.reset();
   }
 
   // 파이프라인 전체 해제
@@ -226,6 +232,7 @@ private:
   TSharedPtr<FMaterial> GridMaterial;
   TSharedPtr<FMaterial> RotationGizmoMaterial;
   TSharedPtr<FMaterial> SpotlightMaterial;
+  TSharedPtr<FMaterial> TextMaterial;
 
   FRenderer *RendererRef = nullptr;
 };

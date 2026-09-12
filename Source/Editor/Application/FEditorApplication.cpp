@@ -2,18 +2,20 @@
 
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
-#include "Runtime/CoreUObject/UPrimitiveComponent.h"
-#include "Runtime/CoreUObject/UCubeComp.h"
-#include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
-#include "Runtime/CoreUObject/USpotLightComponent.h"
+#include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
+#include "Runtime/CoreUObject/USpotLightComponent.h"
+#include "Runtime/CoreUObject/UTextComponent.h"
 #include "Runtime/Engine/FRayCastingManager.h"
-#include "Runtime/Rendering/FMesh.h"
-#include "Runtime/Math/FMatrix.h"
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
+#include "Runtime/Math/FMatrix.h"
+#include "Runtime/Rendering/FMesh.h"
 #include <Windows.h>
+
 
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
@@ -25,13 +27,11 @@ void FEditorApplication::Initialize_ImguiWin32DX11(
   ImguiManager.Initialize_ImplWin32DX11(Window, Device, Context);
 }
 
-void FEditorApplication::Initialize_Runtime(
-    USceneManager *SceneManager,
-    FRenderView *RenderView) {
+void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
+                                            FRenderView *RenderView) {
   this->RenderView = RenderView;
   this->SceneManager = SceneManager;
   this->CurrentScene = SceneManager->CurrentScene;
-
 
   Editor.Initialize(SceneManager);
 
@@ -56,7 +56,11 @@ void FEditorApplication::Initialize_Runtime(
   //BillBoard->SetRootComponent(BillBoardComp);
 
 
-  //Editor.SelectActor(Cube);
+  AActor* Testor = CurrentScene->SpawnActor<AActor>();
+  Testor->CreateRootComponent(UTextComponent::StaticClass());
+
+  Editor.SelectActor(Testor);
+
 
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
@@ -111,7 +115,8 @@ void FEditorApplication::Render() {
   for (auto &EditorViewport : EditorViewports) {
     if (RenderView) {
       RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
-      RenderView->GetRenderer().UpdateLightConstants(Editor.GlobalLight); //globallgiht udpate
+      RenderView->GetRenderer().UpdateLightConstants(
+          Editor.GlobalLight); // globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
@@ -175,18 +180,15 @@ void FEditorApplication::Render() {
     }
 
     RenderView->GetRenderer().FlushLineBatch(
-        EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
-    ); //line batch 일괄 flush
+        EditorViewport.ViewportCamera
+            .CreateViewProjectionMatrix()); // line batch 일괄 flush
 
-    if (Editor.ObjectSelected())
-    {
+    if (Editor.ObjectSelected()) {
       // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
     }
-
-
 
     // 선택 객체 하이라이트 렌더
   }

@@ -2,44 +2,26 @@
 
 #include "Editor/Gizmo/FGizmo.h"
 #include "Editor/Grid/FGrid.h"
+#include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/Engine/FCamera.h"
 #include "Runtime/Math/FVector2.h"
 #include "Runtime/Rendering/FRenderer.h"
 #include "Runtime/Rendering/ShaderConstants.h"
-#include "Runtime/CoreUObject/UBillBoardComp.h"
+#include <fstream>
+
 
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
-void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered, bool bHighlighted) {
-	if (!Rendered || !Rendered->GetMesh() || !Rendered->GetMaterial()) { return; }
-	Renderer.SetViewportUV(TopLeftUV, LengthUV);
+void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV,
+                         FVector2 LengthUV, UPrimitiveComponent *Rendered,
+                         bool bHighlighted) {
+  if (!Rendered) {
+    return;
+  }
 
-  // TODO: 렌더뷰가 렌더러 구현을 알게 해서 여기서 V, P 따로 받고
-  // 월드축변환행렬을 곱하거나, 렌더러쪽 UpdateObjectConstants를 Draw함수 안에
-  // 숨긴뒤 인수로 M, V, P와 월드축을 받게 하면 렌더뷰도 렌더러 구현 모름
-  const FMatrix VP = Camera.CreateViewProjectionMatrix();
-  const FMatrix World = Rendered->GetRenderMatrix(Camera);
-
-  FObjectConstants Constants;
-  Constants.MVP = World * VP;
-  Constants.World = World;
-    if (auto* BBcomp = Rendered->Cast<UBillBoardComp>()) 
-    {
-        BBcomp->CalculateRotate(Camera, Constants);//빌보드일때 바라보는 계산
-        BBcomp->UpdateUVinfo(Constants);
-    }
-    Constants.ColorOverride = Rendered->GetColor();
-    Constants.ColorOverrideAmount = Rendered->GetColorAmount();
-    if (bHighlighted) {
-        if (Constants.ColorOverrideAmount > 0.0f) {
-            Constants.ColorOverride = Constants.ColorOverride * 0.7f + FVector{ 0.3f, 0.3f, 0.3f };
-        } else {
-            Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
-            Constants.ColorOverrideAmount = 0.5f;
-        }
-    }
-
-    Renderer.Draw(*Rendered->GetMesh(), *Rendered->GetMaterial(), Constants);
+  Renderer.SetViewportUV(TopLeftUV, LengthUV);
+  Rendered->Render(Renderer, Camera, bHighlighted);
 }
 
 void FRenderView::RenderGizmo(const FTransform &Transform,
@@ -56,26 +38,27 @@ void FRenderView::RenderGrid(const FCamera &Camera, FVector2 TopLeftUV,
   Grid.DrawLine(Renderer, Camera);
 }
 
-void FRenderView::RenderLine(const FVector& Start, const FVector& End, const FVector4& Color)
-{
-    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
-    LineBatcher.DrawLine(Start, End, Color);
+void FRenderView::RenderLine(const FVector &Start, const FVector &End,
+                             const FVector4 &Color) {
+  FLineBatcher &LineBatcher = Renderer.GetLineBatcher();
+  LineBatcher.DrawLine(Start, End, Color);
 }
 
-void FRenderView::RenderBoxCenterExtent(const FVector& Center, const FVector& Extent, const FVector4& Color)
-{
-    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
-    LineBatcher.DrawBoxCenterExtent(Center, Extent, Color);
+void FRenderView::RenderBoxCenterExtent(const FVector &Center,
+                                        const FVector &Extent,
+                                        const FVector4 &Color) {
+  FLineBatcher &LineBatcher = Renderer.GetLineBatcher();
+  LineBatcher.DrawBoxCenterExtent(Center, Extent, Color);
 }
 
-void FRenderView::RenderBoxMinMax(const FVector& Min, const FVector& Max, const FVector4& Color)
-{
-    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
-    LineBatcher.DrawBoxMinMax(Min, Max, Color);
+void FRenderView::RenderBoxMinMax(const FVector &Min, const FVector &Max,
+                                  const FVector4 &Color) {
+  FLineBatcher &LineBatcher = Renderer.GetLineBatcher();
+  LineBatcher.DrawBoxMinMax(Min, Max, Color);
 }
 
-void FRenderView::RenderSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments)
-{
-    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
-    LineBatcher.DrawSphere(Center, Radius, Color, Segments);
+void FRenderView::RenderSphere(const FVector &Center, float Radius,
+                               const FVector4 &Color, uint32 Segments) {
+  FLineBatcher &LineBatcher = Renderer.GetLineBatcher();
+  LineBatcher.DrawSphere(Center, Radius, Color, Segments);
 }

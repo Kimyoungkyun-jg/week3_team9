@@ -93,9 +93,23 @@ void FImguiPropertyWindow::Process(FEditor& Editor)
 					ImGui::DragFloat3("Rel Scale", &RelTransform.Scale3D.X, 0.01f);
 				}
 
-				// 컴포넌트별 고유 속성 편집
-				if (auto* LightComp = Comp->Cast<USpotLightComponent>())
+				// 컴포넌트별 속성 편집
+				if (Comp->IsA<UTextComponent>())
 				{
+					auto* TextComp = static_cast<UTextComponent*>(Comp);
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Text Settings");
+
+					static char Buffer[128] = "Hello Jungle!";
+					if (ImGui::InputText("Text Content", Buffer, sizeof(Buffer), ImGuiInputTextFlags_EnterReturnsTrue))
+					{
+						TextComp->SetText(Buffer);
+					}
+				}
+
+				if (Comp->IsA<USpotLightComponent>())
+				{
+					auto* LightComp = static_cast<USpotLightComponent*>(Comp);
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.3f, 1.0f), "Spot Light Settings");
 
@@ -123,8 +137,9 @@ void FImguiPropertyWindow::Process(FEditor& Editor)
 						LightComp->SetRange(LightRange);
 					}
 				}
-				else if (auto* PrimComp = Comp->Cast<UPrimitiveComponent>())
+				else if (Comp->IsA<UPrimitiveComponent>())
 				{
+					auto* PrimComp = static_cast<UPrimitiveComponent*>(Comp);
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Primitive Settings");
 
@@ -136,17 +151,6 @@ void FImguiPropertyWindow::Process(FEditor& Editor)
 						{
 							SelectedActor->SetColor(CurrentColor);
 						}
-					}
-				}
-				else if (auto* TextComp = Comp->Cast<UTextComponent>())
-				{
-					ImGui::Separator();
-					ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Text Settings");
-
-					static char Buffer[128] = "Hello Jungle!";
-					if (ImGui::InputText("Text Content", Buffer, sizeof(Buffer), ImGuiInputTextFlags_EnterReturnsTrue))
-					{
-						TextComp->SetText(Buffer);
 					}
 				}
 

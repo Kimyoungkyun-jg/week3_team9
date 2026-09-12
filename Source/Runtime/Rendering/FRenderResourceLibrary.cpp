@@ -10,12 +10,11 @@
 #include <cmath>
 #include <numbers>
 
-
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "ThirdParty/stb/stb_image.h"
 
-FRenderResourceLibrary& FRenderResourceLibrary::Get() {
+FRenderResourceLibrary &FRenderResourceLibrary::Get() {
   static FRenderResourceLibrary Instance;
   return Instance;
 }
@@ -97,7 +96,7 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
         .bEnableDepthWrite = Entry.bDepthWrite,
         .CullMode = Entry.CullMode,
         .bAdditiveBlend = Entry.bAdditiveBlend,
-    };     
+    };
 
     TSharedPtr<FRenderPipeline> Pipeline =
         Renderer.CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
@@ -112,15 +111,14 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
 
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
-  if (!InitializePipelines(Renderer) ||
-      !CreateCubeMesh(Renderer) ||
+  if (!InitializePipelines(Renderer) || !CreateCubeMesh(Renderer) ||
       !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
       !CreateConeMesh(Renderer) || !CreateSpotlightConeMesh(Renderer) ||
-      !CreateArrowMesh(Renderer) ||
-      !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
-      !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
-      !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
-      !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
+      !CreateArrowMesh(Renderer) || !CreateCircleMesh(Renderer) ||
+      !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
+      !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
+      !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
+      !CreateRectMesh(Renderer) || !CreateTextMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
       !CreateTexturedMaterial(Renderer) ||
@@ -170,8 +168,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
     Vertices.push_back({TopRadius * std::cos(Theta),
-                        TopRadius * std::sin(Theta), HalfH, 0.0f, 0.0f, 1.0f, 1.0f,
-                        0.5f + 0.5f * std::cos(Theta),
+                        TopRadius * std::sin(Theta), HalfH, 0.0f, 0.0f, 1.0f,
+                        1.0f, 0.5f + 0.5f * std::cos(Theta),
                         0.5f + 0.5f * std::sin(Theta), 0.0f, 0.0f, 1.0f});
   }
 
@@ -183,8 +181,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
     Vertices.push_back({BottomRadius * std::cos(Theta),
-                        BottomRadius * std::sin(Theta), -HalfH, 0.0f, 0.0f, 1.0f, 1.0f,
-                        0.5f + 0.5f * std::cos(Theta),
+                        BottomRadius * std::sin(Theta), -HalfH, 0.0f, 0.0f,
+                        1.0f, 1.0f, 0.5f + 0.5f * std::cos(Theta),
                         0.5f + 0.5f * std::sin(Theta), 0.0f, 0.0f, -1.0f});
   }
 
@@ -192,7 +190,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
     Vertices.push_back({TopRadius * std::cos(Theta),
-                        TopRadius * std::sin(Theta), HalfH, 0.0f, 0.0f, 1.0f, 1.0f,
+                        TopRadius * std::sin(Theta), HalfH, 0.0f, 0.0f, 1.0f,
+                        1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
                         0.0f, std::cos(Theta), std::sin(Theta), 0.0f});
   }
@@ -201,7 +200,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
     Vertices.push_back({BottomRadius * std::cos(Theta),
-                        BottomRadius * std::sin(Theta), -HalfH, 0.0f, 0.0f, 1.0f, 1.0f,
+                        BottomRadius * std::sin(Theta), -HalfH, 0.0f, 0.0f,
+                        1.0f, 1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
                         1.0f, std::cos(Theta), std::sin(Theta), 0.0f});
   }
@@ -263,7 +263,8 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
   TArray<uint32> Indices;
 
   const float HalfH = Height * 0.5f;
-  const float SlantLen = std::sqrt(Height * Height + BottomRadius * BottomRadius);
+  const float SlantLen =
+      std::sqrt(Height * Height + BottomRadius * BottomRadius);
   const float NormalFactor = Height / SlantLen;
   const float NormalZ = BottomRadius / SlantLen;
 
@@ -284,17 +285,19 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
     const float BaseNy1 = NormalFactor * std::sin(Theta);
     const uint32 BaseIdx1 = static_cast<uint32>(Vertices.size());
     Vertices.push_back({BottomRadius * std::cos(Theta),
-                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
+                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f,
+                        1.0f, 1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
                         1.0f, BaseNx1, BaseNy1, NormalZ});
 
     const float BaseNx2 = NormalFactor * std::cos(NextTheta);
     const float BaseNy2 = NormalFactor * std::sin(NextTheta);
     const uint32 BaseIdx2 = static_cast<uint32>(Vertices.size());
-    Vertices.push_back({BottomRadius * std::cos(NextTheta),
-                        BottomRadius * std::sin(NextTheta), -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
-                        static_cast<float>(i + 1) / static_cast<float>(SliceCount),
-                        1.0f, BaseNx2, BaseNy2, NormalZ});
+    Vertices.push_back(
+        {BottomRadius * std::cos(NextTheta), BottomRadius * std::sin(NextTheta),
+         -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
+         static_cast<float>(i + 1) / static_cast<float>(SliceCount), 1.0f,
+         BaseNx2, BaseNy2, NormalZ});
 
     Indices.push_back(ApexIdx);
     Indices.push_back(BaseIdx2);
@@ -311,8 +314,8 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
     const float Theta = static_cast<float>(i) * DTheta;
     const float U = static_cast<float>(i) / static_cast<float>(SliceCount);
     Vertices.push_back({BottomRadius * std::cos(Theta),
-                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
-                        U, 1.0f, 0.0f, 0.0f, -1.0f});
+                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f,
+                        1.0f, 1.0f, U, 1.0f, 0.0f, 0.0f, -1.0f});
   }
 
   for (uint32 i = 0; i < SliceCount; ++i) {
@@ -349,7 +352,8 @@ bool FRenderResourceLibrary::CreateSpotlightConeMesh(FRenderer &Renderer) {
   TArray<uint32> Indices;
 
   const float HalfH = Height * 0.5f;
-  const float SlantLen = std::sqrt(Height * Height + BottomRadius * BottomRadius);
+  const float SlantLen =
+      std::sqrt(Height * Height + BottomRadius * BottomRadius);
   const float NormalFactor = Height / SlantLen;
   const float NormalZ = BottomRadius / SlantLen;
 
@@ -370,17 +374,19 @@ bool FRenderResourceLibrary::CreateSpotlightConeMesh(FRenderer &Renderer) {
     const float BaseNy1 = NormalFactor * std::sin(Theta);
     const uint32 BaseIdx1 = static_cast<uint32>(Vertices.size());
     Vertices.push_back({BottomRadius * std::cos(Theta),
-                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
+                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f,
+                        1.0f, 1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
                         1.0f, BaseNx1, BaseNy1, NormalZ});
 
     const float BaseNx2 = NormalFactor * std::cos(NextTheta);
     const float BaseNy2 = NormalFactor * std::sin(NextTheta);
     const uint32 BaseIdx2 = static_cast<uint32>(Vertices.size());
-    Vertices.push_back({BottomRadius * std::cos(NextTheta),
-                        BottomRadius * std::sin(NextTheta), -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
-                        static_cast<float>(i + 1) / static_cast<float>(SliceCount),
-                        1.0f, BaseNx2, BaseNy2, NormalZ});
+    Vertices.push_back(
+        {BottomRadius * std::cos(NextTheta), BottomRadius * std::sin(NextTheta),
+         -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
+         static_cast<float>(i + 1) / static_cast<float>(SliceCount), 1.0f,
+         BaseNx2, BaseNy2, NormalZ});
 
     Indices.push_back(ApexIdx);
     Indices.push_back(BaseIdx2);
@@ -817,8 +823,7 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   SimpleMaterial = RegisterMaterial("Simple", Renderer.CreateMaterial(Desc));
 
   if (SimpleMaterial) {
-    SimpleMaterial->SetPipeLine(
-        GetPipeline(EBuiltinPipeline::Simple_Solid));
+    SimpleMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Simple_Solid));
     return true;
   } else {
     return false;
@@ -946,7 +951,8 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
 
       // 확장자 제거
       FString KeyWide = Entry.path().stem().string();
-      std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
+      std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
+                     ::tolower);
 
       // 이미 로드된 텍스처 건너뜀
       if (AllTextureMap.find(KeyWide) != AllTextureMap.end()) {
@@ -985,82 +991,78 @@ bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer &Renderer,
   return false;
 }
 
-bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
-{
-    TArray<FVertexData> Vertices;
-    TArray<uint32> Indices;
-    FFont Font;
-    Font.Initialize(16);
-    FString Text{ "Welcome To Jungle" };    // 메시 임의 초기값
+bool FRenderResourceLibrary::CreateTextMesh(FRenderer &Renderer) {
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
+  FFont Font;
+  Font.Initialize(16);
+  FString Text{"Welcome To Jungle"}; // 메시 임의 초기값
 
-    // TODO: PlaneGenerator 만들어야 함.
-    FTextVertex plane[4] =
-    {
-        { { 0.0f, -0.5f, 0.5f }, 0.0f, 0.0f },
-        { { 0.0f, 0.5f, 0.5f }, 0.0f, 0.0f },
-        { { 0.0f, -0.5f, -0.5f }, 0.0f, 0.0f },
-        { { 0.0f, 0.5f, -0.5f }, 0.0f, 0.0f }
-    };
-    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
+  // TODO: PlaneGenerator 만들어야 함.
+  FTextVertex plane[4] = {{{0.0f, -0.5f, 0.5f}, 0.0f, 0.0f},
+                          {{0.0f, 0.5f, 0.5f}, 0.0f, 0.0f},
+                          {{0.0f, -0.5f, -0.5f}, 0.0f, 0.0f},
+                          {{0.0f, 0.5f, -0.5f}, 0.0f, 0.0f}};
+  TArray<uint32> IndexSet = {0, 1, 2, 1, 3, 2, 0, 2, 1, 1, 2, 3};
 
-    const float size = 1.0f;
-    for (uint16 i = 0; i < Text.length(); ++i)
-    {
-        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
-        for (uint16 j = 0; j < 4; ++j)
-        {	// ranged-for 로 수정?
-            FVertexData tv;
-            float sizeAmount = size * i;
-            tv.x = plane[j].Pos.X;
-            tv.y = plane[j].Pos.Y + sizeAmount;
-            tv.z = plane[j].Pos.Z;
+  // 텍스트 가운데 정렬
+  const float size = 0.55f;
+  const float totalWidth =
+      (Text.length() > 0) ? (Text.length() - 1) * size : 0.0f;
+  const float startOffset = -totalWidth * 0.5f;
 
-            bool bIsRight = (j == 1) || (j == 3);
-            bool bIsBottom = (j == 2) || (j == 3);
+  for (uint16 i = 0; i < Text.length(); ++i) {
+    const FCharacterInfo &CharInfo = Font.GetEngCharInfo(Text.at(i));
+    for (uint16 j = 0; j < 4; ++j) {
+      FVertexData tv;
+      float sizeAmount = startOffset + size * i;
+      tv.x = plane[j].Pos.X;
+      tv.y = plane[j].Pos.Y + sizeAmount;
+      tv.z = plane[j].Pos.Z;
 
-            float width = (bIsRight) ? CharInfo.width : 0.0f;
-            float height = (bIsBottom) ? CharInfo.height : 0.0f;
-            tv.u = CharInfo.u + width;
-            tv.v = CharInfo.v + height;
-            Vertices.push_back(tv);
-        }
+      bool bIsRight = (j == 1) || (j == 3);
+      bool bIsBottom = (j == 2) || (j == 3);
 
-        uint32 VertexOffset = i * 4;
-        for (uint32 index : IndexSet)
-        {
-            Indices.push_back(index + VertexOffset);
-        }
+      float width = (bIsRight) ? CharInfo.width : 0.0f;
+      float height = (bIsBottom) ? CharInfo.height : 0.0f;
+      tv.u = CharInfo.u + width;
+      tv.v = CharInfo.v + height;
+      Vertices.push_back(tv);
     }
 
-    // 메시 빌드 추가하기
-    FMeshDesc MeshData{
-        .VertexData = Vertices.data(),
-        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-        .VertexStride = sizeof(FVertexData),
-        .VertexCount = static_cast<uint32>(Vertices.size()),
-        .IndexData = Indices.data(),
-        .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-        .IndexCount = static_cast<uint32>(Indices.size())
-    };
-    
-    TextMesh = RegisterMesh("Text", Renderer.CreateDynamicMesh(MeshData));
-    return TextMesh != nullptr;
+    uint32 VertexOffset = i * 4;
+    for (uint32 index : IndexSet) {
+      Indices.push_back(index + VertexOffset);
+    }
+  }
+
+  // 메시 빌드 추가하기
+  FMeshDesc MeshData{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = sizeof(FVertexData),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size())};
+
+  TextMesh = RegisterMesh("Text", Renderer.CreateDynamicMesh(MeshData));
+  return TextMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
-{
-    FWString Path = GetExecutableDirectory();
+bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
 
     FMaterialDesc Desc = {
         .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
         .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
     };
 
-    TSharedPtr<FMaterial> Material =
-        RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
-    if (!Material) {
-        return false;
-    }
+  TextMaterial = RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
+  if (!TextMaterial) {
+    return false;
+  }
 
     TSharedPtr<FRenderPipeline> Pipeline =
         GetPipeline(EBuiltinPipeline::Text);
@@ -1068,13 +1070,10 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
         // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
         return false;
     }
-    Material->SetPipeLine(Pipeline);
+    TextMaterial->SetPipeLine(Pipeline);
 
-    // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-    Material->SetTexture(GetTexture("dejavusansmono"));
+  // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+  TextMaterial->SetTexture(GetTexture("koreanatlas"));
 
-    return true;
+  return true;
 }
-
-
-

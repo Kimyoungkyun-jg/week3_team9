@@ -19,9 +19,6 @@ public:
   // 매 프레임 애니메이션 갱신
   void Update(float DeltaTime) override;
 
-  // 상수 버퍼 좌표 갱신
-  void UpdateUVinfo(FObjectConstants &InputConstant) override;
-
   // 스프라이트 시트 설정
   void SetSpriteSheet(int InGridX, int InGridY, float InFrameRate = 10.0f,
                       int InTotalFrames = -1);
@@ -75,3 +72,4 @@ private:
   FVector2 CurrentUVScale{1.0f, 1.0f};
   FVector2 CurrentUVOffset{0.0f, 0.0f};
 };
+

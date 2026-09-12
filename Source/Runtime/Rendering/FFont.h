@@ -15,10 +15,11 @@ class FFont
 public:
 	void Initialize(float InNumberOfLine);
 
-	const FCharacterInfo& GetCharInfo(char InCharacter) const;
+	const FCharacterInfo& GetEngCharInfo(char InCharacter) const;
+	const FCharacterInfo& GetKrCharInfo(wchar_t InCharacter) const;
 private:
-	//FTexture	// 텍스처 아틀라스
-	//FMeterial	// 폰트 머터리얼
 
-	TMap<char, FCharacterInfo> CharInfoMap;
+
+	TMap<char, FCharacterInfo> EngCharInfoMap;
+	TMap<wchar_t, FCharacterInfo> KrCharInfoMap;
 };

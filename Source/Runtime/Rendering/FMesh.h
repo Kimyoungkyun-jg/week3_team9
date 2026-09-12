@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Vertices.h"
 #include "Runtime/Math/FVector.h"
@@ -22,15 +22,20 @@ public:
 	[[nodiscard]] const TArray<uint32>& GetIndices() const { return Indices; }
 	[[nodiscard]] const FAxisAlignedBoundingBox& GetLocalBounds() const { return LocalBounds; }
 
+	// 버퍼 데이터 갱신
+	bool UpdateBuffers(ID3D11Device* Device, ID3D11DeviceContext* Context, const struct FMeshDesc& Desc);
+
 private:
 	void BindResources(ID3D11DeviceContext& Context) const;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer;
 	uint32 VertexCount = 0u;
 	uint32 VertexStride = 0u;
+	uint32 VertexBufferSize = 0u;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer;
 	uint32 IndexCount = 0u;
+	uint32 IndexBufferSize = 0u;
 
 	TArray<FVector> Positions;
 	TArray<uint32> Indices;
