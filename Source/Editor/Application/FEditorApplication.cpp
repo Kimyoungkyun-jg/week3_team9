@@ -27,7 +27,7 @@ void FEditorApplication::Initialize_Runtime(
     FRenderView *RenderView) {
   this->RenderView = RenderView;
   this->SceneManager = SceneManager;
-  this->curScene = SceneManager->CurrentScene;
+  this->CurrentScene = SceneManager->CurrentScene;
 
 
   Editor.Initialize(RendererLibrary, SceneManager);
@@ -39,7 +39,7 @@ void FEditorApplication::Initialize_Runtime(
 	//CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
  // AActor *Cube =
- //     curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
+ //     CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
  //                                  FVector(0.5f, 0.5f, 0.5f)   // Scale
  //     );
 
@@ -54,7 +54,7 @@ void FEditorApplication::Initialize_Runtime(
   BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
   AActor* BillBoard =
-      curScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
+      CurrentScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
           FVector(0.5f, 0.5f, 0.5f)   // Scale
       );
 
@@ -135,28 +135,35 @@ void FEditorApplication::Render() {
       }
     }
 
+
+
+    if (Editor.ObjectSelected())
+    {
+        // AABB 그리기
+        USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
+        UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+        if (PrimComp)
+        {
+            const FMesh& Mesh = *PrimComp->GetMesh();
+            const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+            FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+            RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+        }
+    }
+
     RenderView->GetRenderer().FlushLineBatch(
         EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
     ); //line batch 일괄 flush
 
     if (Editor.ObjectSelected())
     {
-      // AABB 그리기
-      USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
-      UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-      if (PrimComp)
-      {
-          const FMesh& Mesh = *PrimComp->GetMesh();
-          const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-          FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-          RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{1.0f, 1.0f, 1.0f, 1.0f});
-      }
-
       // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
     }
+
+
 
     // 선택 객체 하이라이트 렌더
   }
