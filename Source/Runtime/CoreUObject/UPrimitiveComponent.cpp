@@ -24,7 +24,7 @@ bool UPrimitiveComponent::SetTextureByName(const FString& InTextureName)
 	auto NewMaterial = TSharedPtr<FMaterial>(new FMaterial());
 	NewMaterial->SetPipeLine(CurrentMat->GetPipeline());
 
-	if (!NewMaterial->SetTextureByName(InTextureName, ResLib))
+	if (!NewMaterial->SetTextureByName(InTextureName))
 	{
 		return false;
 	}

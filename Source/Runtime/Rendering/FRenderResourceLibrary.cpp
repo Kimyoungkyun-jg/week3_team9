@@ -800,46 +800,62 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
 }
 
 bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
-  const std::filesystem::path Root =
-      std::filesystem::path(GetExecutableDirectory()) / L"Textures";
-  if (!std::filesystem::exists(Root)) {
-    return true; // 폴더가 없는 건 실패가 아님
-  }
+  const std::filesystem::path ExeDir(GetExecutableDirectory());
+  const std::filesystem::path ProjectRoot =
+      ExeDir.parent_path().parent_path().parent_path();
 
-  for (const auto &Entry :
-       std::filesystem::recursive_directory_iterator(Root)) {
-    if (!Entry.is_regular_file())
+  TArray<std::filesystem::path> SearchRoots = {
+      ProjectRoot / L"Textures",
+      std::filesystem::current_path() / L"Textures",
+      ExeDir / L"Textures",
+  };
+
+  for (const auto &Root : SearchRoots) {
+    std::error_code Ec;
+    if (!std::filesystem::exists(Root, Ec)) {
       continue;
+    }
 
-    FWString Ext = Entry.path().extension().wstring();
-    std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
-    if (Ext != L".png" && Ext != L".jpg")
-      continue;
+    for (const auto &Entry :
+         std::filesystem::recursive_directory_iterator(Root, Ec)) {
+      if (!Entry.is_regular_file(Ec))
+        continue;
 
-    // 확장자 제거는 stem()이 해줌
-    FString KeyWide = Entry.path().stem().string(); // "icon"
-    std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
+      FWString Ext = Entry.path().extension().wstring();
+      std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+      if (Ext != L".png" && Ext != L".jpg" && Ext != L".jpeg")
+        continue;
 
-    int W = 0, H = 0, ChannelsInFile = 0;
-    unsigned char *Pixels =
-        stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
-    if (!Pixels)
-      continue;
+      // 확장자 제거
+      FString KeyWide = Entry.path().stem().string();
+      std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
 
-    FTextureDesc Desc{
-        .PixelData = Pixels,
-        .Width = static_cast<uint32>(W),
-        .Height = static_cast<uint32>(H),
-        .RowPitch = static_cast<uint32>(W) * 4u,
-    };
+      // 이미 로드된 텍스처 건너뜀
+      if (AllTextureMap.find(KeyWide) != AllTextureMap.end()) {
+        continue;
+      }
 
-    TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
-    stbi_image_free(Pixels);
+      int W = 0, H = 0, ChannelsInFile = 0;
+      unsigned char *Pixels =
+          stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
+      if (!Pixels)
+        continue;
 
-    if (!Texture)
-      continue; // 실패한 텍스처는 맵에 넣지 않는다
+      FTextureDesc Desc{
+          .PixelData = Pixels,
+          .Width = static_cast<uint32>(W),
+          .Height = static_cast<uint32>(H),
+          .RowPitch = static_cast<uint32>(W) * 4u,
+      };
 
-    RegisterTexture(KeyWide, Texture);
+      TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
+      stbi_image_free(Pixels);
+
+      if (!Texture)
+        continue;
+
+      RegisterTexture(KeyWide, Texture);
+    }
   }
 
   return true;

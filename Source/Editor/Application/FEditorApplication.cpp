@@ -5,6 +5,7 @@
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/FRayCastingManager.h"
@@ -47,20 +48,17 @@ void FEditorApplication::Initialize_Runtime(
   
 
 
-  UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
-  FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
-  BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-  BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-  BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-
-  AActor* BillBoard =
-      CurrentScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
-          FVector(0.5f, 0.5f, 0.5f)   // Scale
+  UAnimatedBillboardComp* AnimatedBBComp = NewObject<UAnimatedBillboardComp>();
+  
+  AActor* Explosion =
+      CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f),
+          FVector(10.0f, 10.0f, 10.0f)
       );
 
-
-  BillBoard->SetRootComponent(BillBoardComp);
-
+  Explosion->SetRootComponent(AnimatedBBComp);
+  AnimatedBBComp->SetTexture("Explosion");
+  AnimatedBBComp->SetSpriteSheet(6,6,20,36);
+  AnimatedBBComp->SetLooping(true);
 
   //Editor.SelectActor(Cube);
 

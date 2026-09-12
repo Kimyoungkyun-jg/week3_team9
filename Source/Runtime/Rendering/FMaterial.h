@@ -25,9 +25,8 @@ public:
   void SetTexture(const TSharedPtr<FTexture>& InTexture);
   [[nodiscard]] TSharedPtr<FTexture> GetTexture() const { return Texture; }
 
-  // 텍스처 교체 함수
-  bool SetTextureByName(const FString& InTextureName, const FRenderResourceLibrary& InLibrary);
-  bool SetTextureByName(const FString& InTextureName, const TMap<FString, TSharedPtr<FTexture>>& InTextureMap);
+  // 원본 머터리얼에서 텍스처 교체 함수
+  bool SetTextureByName(const FString& InTextureName);
 
 private:
   void BindResources(ID3D11DeviceContext &Context) const;

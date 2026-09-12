@@ -12,8 +12,14 @@ void UBillBoardComp::OnRegister(UScene &Scene) {
   UPrimitiveComponent::OnRegister(Scene);
 
   auto &ResLib = FRenderResourceLibrary::Get();
-  SetMesh(ResLib.GetMesh("Rect"));
-  SetMaterial(ResLib.GetMaterial("Textured"));
+  if (!GetMesh()) //이미 있으면 다시 등록x
+  {
+    SetMesh(ResLib.GetMesh("Rect"));
+  }
+  if (!GetMaterial()) //이미 있으면 다시 등록x
+  {
+    SetMaterial(ResLib.GetMaterial("Textured"));
+  }
 }
 
 void UBillBoardComp::CalculateRotate(const FCamera &Camera,
@@ -23,6 +29,7 @@ void UBillBoardComp::CalculateRotate(const FCamera &Camera,
 
   if (ToCamera.SizeSquared() < 1e-8f) {
     InputConstant.MVP = FMatrix::GetIdentity();
+    return;
   }
   const FVector Forward = ToCamera / ToCamera.Size();
   const FMatrix CamRot = Camera.GetRotationMatrix();
@@ -47,17 +54,23 @@ void UBillBoardComp::CalculateRotate(const FCamera &Camera,
   InputConstant.MVP = InputConstant.MVP * View * Proj;
 }
 
-void UBillBoardComp::SetTexture(FString texture)
+void UBillBoardComp::SetTexture(FString texture) //원본 머터리얼을 건드리지 않고 instance로 생성해서 사용
 {
     auto& lib = FRenderResourceLibrary::Get();
     
-    auto NewTex = lib.GetTexture(texture);
+    // 소문자 변환
+    FString LowerName = texture;
+    std::transform(LowerName.begin(), LowerName.end(), LowerName.begin(), ::tolower);
+
+    auto NewTex = lib.GetTexture(LowerName);
     if (!NewTex)
     {
+        UE_LOG("There is no such texture");
         return;
     }
     
-    auto materialinstance = TSharedPtr<FMaterial>(new FMaterial()); //���͸��� �ν��Ͻ� ���� ����
+    // 머티리얼 인스턴스 생성
+    auto materialinstance = TSharedPtr<FMaterial>(new FMaterial());
     
     if (GetMaterial())
     {

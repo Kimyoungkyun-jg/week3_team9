@@ -532,5 +532,8 @@
       <Command>if exist "$(SolutionDir)Textures" xcopy /Y /D /I /E "$(SolutionDir)Textures" "$(OutDir)Textures\"</Command>
       <Message>Copying textures to output directory...</Message>
     </PostBuildEvent>
+    <ClCompile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Runtime/Core/Log.h</ForcedIncludeFiles>
+    </ClCompile>
   </ItemDefinitionGroup>
 </Project>

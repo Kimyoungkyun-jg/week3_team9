@@ -18,7 +18,7 @@ public:
 	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
 
 	virtual void UpdateUVinfo(FObjectConstants &InputConstant) {};
-	virtual void SetTexture(FString texture);
+	virtual void SetTexture(FString texture); //원본 머터리얼을 건드리지 않고 instance로 생성해서 사용
 private:
   // 시선 회전 보간용 쿼터니언
   FQuaternion CurrentRotation = FQuaternion::Identity();
