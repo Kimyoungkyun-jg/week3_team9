@@ -16,12 +16,8 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 Len
   // 월드축변환행렬을 곱하거나, 렌더러쪽 UpdateObjectConstants를 Draw함수 안에
   // 숨긴뒤 인수로 M, V, P와 월드축을 받게 하면 렌더뷰도 렌더러 구현 모름
   const FMatrix VP = Camera.CreateViewProjectionMatrix();
-	FObjectConstants Constants = { Rendered->GetRenderMatrix(Camera) * VP};
-  if (bHighlighted) {
-    Constants.ColorOverride = FVector{1.0f, 1.0f, 1.0f};
-    Constants.ColorOverrideAmount = 0.5f;
-  }
 
+  FObjectConstants Constants;
     if (auto* BBcomp = Rendered->Cast<UBillBoardComp>()) 
     {
         BBcomp->CalculateRotate(Camera, Constants);//빌보드일때 바라보는 계산
