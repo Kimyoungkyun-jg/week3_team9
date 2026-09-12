@@ -8,10 +8,17 @@
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Core/TMap.h"
 #include "Vertices.h"
+#include "FFont.h"
 
 
 class FRenderer;
 class FTexture;
+struct FTextVertex
+{
+    FVector Pos;
+    float u, v;
+};
+
 
 class FRenderResourceLibrary final {
 public:
@@ -163,6 +170,8 @@ private:
   bool CreateTexturedMaterial(FRenderer& Renderer);
   bool CreateCommonMaterial(FRenderer& Renderer, FString& textureName);
 
+  // TextMesh
+  bool CreateTextMesh(FRenderer& Renderer);
 
 
   // 개별 리소스 멤버 변수
@@ -178,6 +187,7 @@ private:
   TSharedPtr<FMesh> LineMesh;
   TSharedPtr<FMesh> PlaneMesh;
   TSharedPtr<FMesh> RectMesh;
+  TSharedPtr<FMesh> TextMesh;
 
   TSharedPtr<FMaterial> SimpleMaterial;
   TSharedPtr<FMaterial> GridMaterial;

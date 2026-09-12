@@ -12,6 +12,7 @@
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
+#include "Runtime/CoreUObject/UTextComponent.h"
 
 void FEditorApplication::Initialize_ImguiWin32DX11(
     HWND &Window, ID3D11Device *Device, ID3D11DeviceContext *Context) {
@@ -54,8 +55,20 @@ void FEditorApplication::Initialize_Runtime(
           FVector(0.5f, 0.5f, 0.5f)   // Scale
       );
 
+  UTextComponent* TextComp = NewObject<UTextComponent>();
+  FTransform& TextTransform = TextComp->GetRelativeTransform();
+  TextTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+  TextTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+  TextTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+  
+  AActor* TextActor =
+      curScene->SpawnActor<AActor>(FVector(0.0f, 10.0f, 0.25f), // Location
+          FVector(0.5f, 0.5f, 0.5f)   // Scale
+      );
+
 
   BillBoard->SetRootComponent(BillBoardComp);
+  TextActor->SetRootComponent(TextComp);
 
 
   //Editor.SelectActor(Cube);

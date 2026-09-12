@@ -298,6 +298,7 @@
     <ClCompile Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.cpp" />
     <ClCompile Include="Source\Runtime\Input\FCameraInputController.cpp" />
     <ClCompile Include="Source\Runtime\Input\FInputManager.cpp" />
+    <ClCompile Include="Source\Runtime\Rendering\FFont.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderer.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FMaterial.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FMesh.cpp" />
@@ -360,6 +361,7 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">TurnOffAllWarnings</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\Application\FEditorApplication.h" />
@@ -414,6 +416,7 @@
     <ClInclude Include="Source\Runtime\Math\FVector.h" />
     <ClInclude Include="Source\Runtime\Math\FVector2.h" />
     <ClInclude Include="Source\Runtime\Math\FVector4.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FFont.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderResourceLibrary.h" />
     <ClInclude Include="Source\Runtime\Rendering\FTexture.h" />
     <ClInclude Include="Source\Runtime\Rendering\ShaderConstants.h" />
@@ -433,6 +436,7 @@
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_textedit.h" />
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_truetype.h" />
     <ClInclude Include="Source\ThirdParty\Json\json.hpp" />
+    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
