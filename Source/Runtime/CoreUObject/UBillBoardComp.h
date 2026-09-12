@@ -4,6 +4,9 @@
 #include "Runtime/Math/FQuaternion.h"
 #include "Runtime/Rendering/ShaderConstants.h"
 
+
+
+
 class UScene;
 class UBillBoardComp : public UPrimitiveComponent
 {
@@ -40,9 +43,15 @@ public:
             * FMatrix::MakeTranslation(RelativeTransform.Location);
     }
 	// 빌보드 회전 계산
-	FObjectConstants CalculateRotate(const FCamera& Camera, uint32 Signal = 0);
+	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
+
+    virtual void UpdateUVinfo(FObjectConstants& InputConstant) {};
 
 private:
 	// 시선 회전 보간용 쿼터니언
 	FQuaternion CurrentRotation = FQuaternion::Identity();
+    
+    FVector2 UVScale{ 1.0f, 1.0f };
+    FVector2 UVOffset{ 0.0f, 0.0f };
+
 };
