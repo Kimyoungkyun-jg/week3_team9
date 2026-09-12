@@ -170,9 +170,9 @@ private:
   bool CreateTexturedMaterial(FRenderer& Renderer);
   bool CreateCommonMaterial(FRenderer& Renderer, FString& textureName);
 
-  // TextMesh
+  // Text
   bool CreateTextMesh(FRenderer& Renderer);
-
+  bool CreateTextMaterial(FRenderer& Renderer);
 
   // 개별 리소스 멤버 변수
   TSharedPtr<FMesh> CubeMesh;

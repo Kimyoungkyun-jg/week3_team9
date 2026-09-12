@@ -11,6 +11,7 @@ void UTextComponent::OnRegister(UScene& Scene)
 	Super::OnRegister(Scene);
 
 	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Text"));
+	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Text"));
 }
 
 void UTextComponent::RebuildTextMesh()
