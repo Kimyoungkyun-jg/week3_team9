@@ -1,4 +1,5 @@
 #include "FRenderer.h"
+#include "FRenderResourceLibrary.h"
 
 #include "FMaterial.h"
 #include "FMesh.h"
@@ -15,8 +16,7 @@
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
-      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers() ||
-      !InitializePipeLines()) {
+      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers()) {
     Shutdown();
     return false;
   }
@@ -34,7 +34,6 @@ void FRenderer::Shutdown() {
 
   LineBatcher.Shutdown();
 
-  AllPipelineMap.clear();
   b0ConstantBuffer.Reset();
   FrameConstantBuffer.Reset();
 
@@ -339,80 +338,7 @@ TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
 }
 
 TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
-  auto it = AllPipelineMap.find(Id);
-  if (it != AllPipelineMap.end()) {
-    return it->second;
-  }
-  return nullptr;
-}
-
-bool FRenderer::CreateSolidWireframePipeline() {
-  const FWString Path = GetExecutableDirectory();
-  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
-  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
-
-  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-    return false;
-  }
-
-  FRenderPipelineDesc Desc = {
-      .VertexShaderFileName = VsPath,
-      .PixelShaderFileName = PsPath,
-      .bEnableDepthTest = true,
-  };
-
-  // 솔리드 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> SolidPipeline =
-      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
-  if (SolidPipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
-  }
-
-  // 와이어프레임 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> WireframePipeline =
-      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
-  if (WireframePipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
-  }
-
-  return SolidPipeline != nullptr && WireframePipeline != nullptr;
-}
-
-bool FRenderer::InitializePipeLines() {
-  // 솔리드 및 와이어프레임 파이프라인 개별 생성
-  CreateSolidWireframePipeline();
-
-  const FWString Path = GetExecutableDirectory();
-
-  for (const FPipelineEntry &Entry : pipelineTable) {
-    // 이미 등록된 경우 건너뜀
-    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
-      continue;
-    }
-
-    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
-    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
-
-    // 셰이더 파일 미존재 시 건너뜀
-    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-      continue;
-    }
-
-    FRenderPipelineDesc PipelineDesc = {
-        .VertexShaderFileName = VsPath,
-        .PixelShaderFileName = PsPath,
-        .bEnableDepthTest = true,
-    };
-
-    TSharedPtr<FRenderPipeline> Pipeline =
-        CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
-    if (!Pipeline) {
-      return false;
-    }
-
-    AllPipelineMap[Entry.Id] = Pipeline;
-  }
-  return true;
+  return FRenderResourceLibrary::Get().GetPipeline(Id);
 }
 
 bool FRenderer::InitializeDeviceAndSwapChain(HWND Window) {

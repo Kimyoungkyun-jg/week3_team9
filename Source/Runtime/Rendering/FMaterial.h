@@ -26,12 +26,8 @@ public:
   [[nodiscard]] TSharedPtr<FTexture> GetTexture() const { return Texture; }
 
   // 텍스처 교체 함수
-  bool SetTextureByName(const FString& InTextureName);
   bool SetTextureByName(const FString& InTextureName, const FRenderResourceLibrary& InLibrary);
   bool SetTextureByName(const FString& InTextureName, const TMap<FString, TSharedPtr<FTexture>>& InTextureMap);
-
-  void SetResourceLibrary(const FRenderResourceLibrary* InResourceLibrary) { ResourceLibrary = InResourceLibrary; }
-  [[nodiscard]] const FRenderResourceLibrary* GetResourceLibrary() const { return ResourceLibrary; }
 
 private:
   void BindResources(ID3D11DeviceContext &Context) const;
@@ -40,7 +36,6 @@ private:
   TSharedPtr<FRenderPipeline> WireframePipeline;
   // TODO: 텍스처를 여러 개 쓰게 되면 TArray로 바꾸고 슬롯 단위로 바인딩
   TSharedPtr<FTexture> Texture;
-  const FRenderResourceLibrary* ResourceLibrary = nullptr;
 };
 
 struct FMaterialDesc {

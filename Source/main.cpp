@@ -1,4 +1,4 @@
-﻿#include "Editor/Application/FEditorApplication.h"
+#include "Editor/Application/FEditorApplication.h"
 #include "Runtime/Core/Log.h"
 #include "Runtime/Engine/UScene.h"
 #include "Runtime/Engine/FRenderView.h"
@@ -56,7 +56,7 @@ int WINAPI wWinMain(
 	}
 	FRenderView RenderView(Renderer);
 
-	FRenderResourceLibrary RenderResources;
+	FRenderResourceLibrary& RenderResources = FRenderResourceLibrary::Get();
 	if (!RenderResources.Initialize(Renderer))
 	{
 		return -1;
@@ -65,8 +65,7 @@ int WINAPI wWinMain(
 	UClass::ResolveTypeBitsets();
 
 	USceneManager SceneManager;
-	SceneManager.ResourceLibrary = &RenderResources;
-	SceneManager.SetScene(NewObject<UScene>(RenderResources));
+	SceneManager.SetScene(NewObject<UScene>());
 
 	FEditorApplication& EditorApp = FEditorApplication::Get();
 	{
@@ -74,7 +73,7 @@ int WINAPI wWinMain(
 		Renderer.GetDeviceAndContext_ImplDX11(Device, Context);
 		EditorApp.Initialize_ImguiWin32DX11(Window, Device, Context);
 	}
-	EditorApp.Initialize_Runtime(&RenderResources, &SceneManager, &RenderView);
+	EditorApp.Initialize_Runtime(&SceneManager, &RenderView);
 
 	bool bQuit = false;
 	while (!bQuit)

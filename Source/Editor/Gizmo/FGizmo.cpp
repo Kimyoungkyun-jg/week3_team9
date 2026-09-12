@@ -1,4 +1,4 @@
-﻿#include "FGizmo.h"
+#include "FGizmo.h"
 
 #include "Runtime/Core/IntTypes.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
@@ -12,8 +12,9 @@
 
 #include "Runtime/Engine/FRayCastingManager.h"
 
-void FGizmo::Initialize(FRenderResourceLibrary& RenderResources)
+void FGizmo::Initialize()
 {
+	auto& RenderResources = FRenderResourceLibrary::Get();
 	ArrowMesh = RenderResources.GetMesh("Arrow");
 	CircleMesh = RenderResources.GetMesh("Circle");
 	RotationGizmoMesh = RenderResources.GetMesh("RotationGizmo");

@@ -1,6 +1,5 @@
 #pragma once
 #include "UScene.h"
-#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 class USceneManager final
 {
@@ -12,5 +11,4 @@ public:
 
 
 	UScene* CurrentScene = nullptr;
-	FRenderResourceLibrary* ResourceLibrary = nullptr;
 };

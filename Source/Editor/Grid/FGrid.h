@@ -4,7 +4,6 @@
 #include "Runtime/Rendering/FMesh.h"
 #include "Runtime/Rendering/FMaterial.h"
 
-class FRenderResourceLibrary;
 struct FCamera;
 
 class FGrid
@@ -22,7 +21,7 @@ public:
 
 	void DrawLine(FRenderer& Renderer, const FCamera& Camera);
 
-	void Initialize(FRenderResourceLibrary& RenderResources);
+	void Initialize();
 
 	float GetCellSize() const { return CellSize; }
 	void SetCellSize(float InCellSize) { CellSize = (InCellSize > 0.01f) ? InCellSize : 0.01f; }

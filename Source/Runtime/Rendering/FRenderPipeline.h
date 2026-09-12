@@ -5,6 +5,18 @@
 #include <wrl/client.h>
 #include "Runtime/Core/FString.h"
 
+#include "Runtime/Core/IntTypes.h"
+
+// 내장 파이프라인 종류
+enum class EBuiltinPipeline : uint8 {
+  Simple_Solid,
+  Simple_Wireframe,
+  Textured,
+  Grid,
+  RotationGizmo,
+  Count
+};
+
 struct FRenderPipelineDesc {
   FWString VertexShaderFileName;
   FWString PixelShaderFileName;
@@ -13,9 +25,12 @@ struct FRenderPipelineDesc {
   bool operator==(const FRenderPipelineDesc &) const = default;
 };
 
+class FRenderResourceLibrary;
+
 class FRenderPipeline final {
   friend class FRenderer;
   friend class FLineBatcher;
+  friend class FRenderResourceLibrary;
 
 public:
   [[nodiscard]] FRenderPipelineDesc GetPipelineDesc() const { return desc; }

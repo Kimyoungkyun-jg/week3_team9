@@ -9,12 +9,14 @@
 #include <numbers>
 
 
-void FEditor::Initialize(FRenderResourceLibrary *RendererLibrary,
-                         USceneManager *SceneManager) {
-  Gizmo.Initialize(*RendererLibrary);
-  Grid.Initialize(*RendererLibrary);
-  this->RendererLibrary = RendererLibrary;
+void FEditor::Initialize(USceneManager *SceneManager) {
+  Gizmo.Initialize();
+  Grid.Initialize();
   this->SceneManager = SceneManager;
+}
+
+FRenderResourceLibrary *FEditor::GetRendererLibrary() {
+  return &FRenderResourceLibrary::Get();
 }
 
 void FEditor::Process() {
@@ -34,7 +36,7 @@ void FEditor::Process() {
 
 void FEditor::NewScene() {
   SelectedActor = nullptr;
-  SceneManager->SetScene(NewObject<UScene>(*RendererLibrary));
+  SceneManager->SetScene(NewObject<UScene>());
 }
 
 void FEditor::SaveScene(const FString &Path) { SceneManager->SaveScene(Path); }

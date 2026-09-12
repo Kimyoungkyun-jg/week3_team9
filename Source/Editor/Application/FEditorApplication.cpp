@@ -19,14 +19,14 @@ void FEditorApplication::Initialize_ImguiWin32DX11(
 }
 
 void FEditorApplication::Initialize_Runtime(
-    FRenderResourceLibrary *RendererLibrary, USceneManager *SceneManager,
+    USceneManager *SceneManager,
     FRenderView *RenderView) {
   this->RenderView = RenderView;
   this->SceneManager = SceneManager;
   this->curScene = SceneManager->CurrentScene;
 
 
-  Editor.Initialize(RendererLibrary, SceneManager);
+  Editor.Initialize(SceneManager);
 
 	//UCubeComp* CubeComp = NewObject<UCubeComp>();
 	//FTransform& CubeTransform = CubeComp->GetRelativeTransform();

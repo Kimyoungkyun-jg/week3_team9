@@ -15,9 +15,97 @@
 
 #include "ThirdParty/stb/stb_image.h"
 
+FRenderResourceLibrary& FRenderResourceLibrary::Get() {
+  static FRenderResourceLibrary Instance;
+  return Instance;
+}
+
+// 파이프라인 정보 엔트리
+struct FPipelineEntry {
+  EBuiltinPipeline Id;
+  const wchar_t *VertexShader;
+  const wchar_t *PixelShader;
+};
+
+// 기본 파이프라인 테이블
+constexpr FPipelineEntry pipelineTable[] = {
+    {EBuiltinPipeline::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
+    {EBuiltinPipeline::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
+    {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
+    {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
+};
+
+bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
+  const FWString Path = GetExecutableDirectory();
+  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
+  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
+
+  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+    return false;
+  }
+
+  FRenderPipelineDesc Desc = {
+      .VertexShaderFileName = VsPath,
+      .PixelShaderFileName = PsPath,
+      .bEnableDepthTest = true,
+  };
+
+  // 솔리드 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> SolidPipeline =
+      Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
+  if (SolidPipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
+  }
+
+  // 와이어프레임 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> WireframePipeline =
+      Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
+  if (WireframePipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
+  }
+
+  return SolidPipeline != nullptr && WireframePipeline != nullptr;
+}
+
+bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
+  // 솔리드 및 와이어프레임 파이프라인 개별 생성
+  CreateSolidWireframePipeline(Renderer);
+
+  const FWString Path = GetExecutableDirectory();
+
+  for (const FPipelineEntry &Entry : pipelineTable) {
+    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
+      continue;
+    }
+
+    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
+    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
+
+    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+      continue;
+    }
+
+    FRenderPipelineDesc PipelineDesc = {
+        .VertexShaderFileName = VsPath,
+        .PixelShaderFileName = PsPath,
+        .bEnableDepthTest = true,
+    };
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        Renderer.CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
+    if (!Pipeline) {
+      return false;
+    }
+
+    AllPipelineMap[Entry.Id] = Pipeline;
+  }
+  return true;
+}
+
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
-  if (!CreateCubeMesh(Renderer) ||
+  if (!InitializePipelines(Renderer) ||
+      !CreateCubeMesh(Renderer) ||
       !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
       !CreateConeMesh(Renderer) || !CreateArrowMesh(Renderer) ||
       !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
@@ -638,7 +726,7 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
 
   if (SimpleMaterial) {
     SimpleMaterial->SetPipeLine(
-        Renderer.GetPipeline(EBuiltinPipeline::Simple_Solid));
+        GetPipeline(EBuiltinPipeline::Simple_Solid));
     return true;
   } else {
     return false;
@@ -660,7 +748,7 @@ bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
   }
 
   TSharedPtr<FRenderPipeline> Pipeline =
-      Renderer.GetPipeline(EBuiltinPipeline::Textured);
+      GetPipeline(EBuiltinPipeline::Textured);
   if (!Pipeline) {
     // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
     return false;
@@ -684,7 +772,7 @@ bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
   GridMaterial = RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
 
   if (GridMaterial) {
-    GridMaterial->SetPipeLine(Renderer.GetPipeline(EBuiltinPipeline::Grid));
+    GridMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Grid));
     return true;
   } else {
     return false;
@@ -704,7 +792,7 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
 
   if (RotationGizmoMaterial) {
     RotationGizmoMaterial->SetPipeLine(
-        Renderer.GetPipeline(EBuiltinPipeline::RotationGizmo));
+        GetPipeline(EBuiltinPipeline::RotationGizmo));
     return true;
   } else {
     return false;

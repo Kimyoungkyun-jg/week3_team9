@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Runtime/CoreUObject/USceneComponent.h"
 #include "Runtime/Core/IntTypes.h"
@@ -10,7 +10,6 @@
 struct FVector2;
 struct FCamera;
 class FRenderer;
-class FRenderResourceLibrary;
 class FEditor;
 
 enum class EGizmoMode : uint8
@@ -38,7 +37,7 @@ enum class EGizmoHandle : uint8
 class FGizmo final
 {
 public:
-	void Initialize(FRenderResourceLibrary& RenderResources); // TODO: 이거랑 메시 머티리얼 없애야 함...
+	void Initialize();
 
 	void Draw(FRenderer& Renderer, const FTransform& Transform, const FCamera& Camera) const;
 

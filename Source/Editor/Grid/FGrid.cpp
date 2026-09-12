@@ -13,8 +13,9 @@
 #include "Runtime/Engine/FRayCastingManager.h"
 
 
-void FGrid::Initialize(FRenderResourceLibrary& RenderResources)
+void FGrid::Initialize()
 {
+	auto& RenderResources = FRenderResourceLibrary::Get();
 	GridMesh = RenderResources.GetMesh("Grid");
 	GridMaterial = RenderResources.GetMaterial("Grid");
 	LineMesh = RenderResources.GetMesh("Arrow");

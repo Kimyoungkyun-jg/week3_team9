@@ -18,10 +18,7 @@ public:
 	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
 
 	virtual void UpdateUVinfo(FObjectConstants &InputConstant) {};
-
-  // 텍스처 이름으로 머티리얼 텍스처 교체
-	bool SetTextureByName(const FString &InTextureName);
-
+	virtual void SetTexture(FString texture);
 private:
   // 시선 회전 보간용 쿼터니언
   FQuaternion CurrentRotation = FQuaternion::Identity();

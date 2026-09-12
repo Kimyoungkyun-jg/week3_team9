@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
@@ -33,6 +33,7 @@ public:
 
 
 	void SetScene(UScene* InScene) { OwningScene = InScene; }
+	[[nodiscard]] UScene* GetScene() const { return OwningScene; }
 	void Destroy();
 
 	void RegisterAllComponents(UScene& Scene);

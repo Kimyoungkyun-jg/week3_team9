@@ -16,17 +16,6 @@ void FMaterial::SetTexture(const TSharedPtr<FTexture>& InTexture)
     Texture = InTexture;
 }
 
-bool FMaterial::SetTextureByName(const FString& InTextureName)
-{
-    if (!ResourceLibrary)
-    {
-        UE_LOG("[Material] Resource library is null. Texture '%s' cannot be found.", InTextureName.c_str());
-        return false;
-    }
-
-    return SetTextureByName(InTextureName, *ResourceLibrary);
-}
-
 bool FMaterial::SetTextureByName(const FString& InTextureName, const FRenderResourceLibrary& InLibrary)
 {
     return SetTextureByName(InTextureName, InLibrary.AllTextureMap);

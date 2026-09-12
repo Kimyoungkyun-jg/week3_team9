@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Editor/Core/FEditor.h"
 #include "Editor/UI/Imgui/FImguiManager.h"
 #include "Editor/UI/Imgui/FImguiToolBar.h"
@@ -41,7 +41,7 @@ public:
 	FEditorApplication& operator=(FEditorApplication&&) = delete;
 
 	void Initialize_ImguiWin32DX11(HWND& Window, ID3D11Device* Device, ID3D11DeviceContext* Context);
-	void Initialize_Runtime(FRenderResourceLibrary* RendererLibrary, USceneManager* SceneManager, FRenderView* RenderView); // TODO: RendererLibrary의존성 사라져야 함
+	void Initialize_Runtime(USceneManager* SceneManager, FRenderView* RenderView);
 	bool CheckSceneExistsAndInitializeIfNotExists(const FString& path = "");
 	void Update(float DeltaTime);
 	void Render();

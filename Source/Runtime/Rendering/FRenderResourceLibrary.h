@@ -14,14 +14,27 @@ class FTexture;
 
 class FRenderResourceLibrary final {
 public:
+  // 전역 싱글톤 접근자
+  static FRenderResourceLibrary& Get();
+
   bool Initialize(FRenderer &Renderer);
 
+  // 파이프라인 보관 맵
+  TMap<EBuiltinPipeline, TSharedPtr<FRenderPipeline>> AllPipelineMap;
   // 메쉬 보관 맵
   TMap<FString, TSharedPtr<FMesh>> AllMeshMap;
   // 머티리얼 보관 맵
   TMap<FString, TSharedPtr<FMaterial>> AllMaterialMap;
   // 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
+
+  // 파이프라인 조회
+  [[nodiscard]] TSharedPtr<FRenderPipeline> GetPipeline(EBuiltinPipeline Id) const {
+    auto it = AllPipelineMap.find(Id);
+    if (it != AllPipelineMap.end())
+      return it->second;
+    return nullptr;
+  }
 
   // 메쉬 조회
   TSharedPtr<FMesh> GetMesh(const FString &name) const {
@@ -40,18 +53,12 @@ public:
 
   // 개별 메쉬 접근자
   [[nodiscard]] TSharedPtr<FMesh> GetCubeMesh() const { return CubeMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetCylinderMesh() const {
-    return CylinderMesh;
-  }
+  [[nodiscard]] TSharedPtr<FMesh> GetCylinderMesh() const { return CylinderMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetConeMesh() const { return ConeMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetArrowMesh() const { return ArrowMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetCircleMesh() const { return CircleMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetRotationGizmoMesh() const {
-    return RotationGizmoMesh;
-  }
-  [[nodiscard]] TSharedPtr<FMesh> GetSquareArrowMesh() const {
-    return SquareArrowMesh;
-  }
+  [[nodiscard]] TSharedPtr<FMesh> GetRotationGizmoMesh() const { return RotationGizmoMesh; }
+  [[nodiscard]] TSharedPtr<FMesh> GetSquareArrowMesh() const { return SquareArrowMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetGridMesh() const { return GridMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetSphereMesh() const { return SphereMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetLineMesh() const { return LineMesh; }
@@ -69,9 +76,6 @@ public:
   // 머티리얼 등록
   TSharedPtr<FMaterial> RegisterMaterial(const FString &name,
                                          TSharedPtr<FMaterial> inMaterial) {
-    if (inMaterial) {
-      inMaterial->SetResourceLibrary(this);
-    }
     AllMaterialMap[name] = inMaterial;
     return inMaterial;
   }
@@ -124,6 +128,11 @@ public:
     RotationGizmoMaterial.reset();
   }
 
+  // 파이프라인 전체 해제
+  void DestroyAllPipelines() {
+    AllPipelineMap.clear();
+  }
+
   // 전체 머티리얼 맵 조회
   const TMap<FString, TSharedPtr<FMaterial>> &GetAllMaterials() const {
     return AllMaterialMap;
@@ -151,6 +160,9 @@ public:
                                     const TArray<FVertexData> &vertices);
 
 private:
+  bool InitializePipelines(FRenderer &Renderer);
+  bool CreateSolidWireframePipeline(FRenderer &Renderer);
+
   bool CreateCubeMesh(FRenderer &Renderer);
   bool CreateCylinderMesh(FRenderer &Renderer, float Height, uint32 SliceCount,
                           float TopRadius, float BottomRadius);
