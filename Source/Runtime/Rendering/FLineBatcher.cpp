@@ -63,9 +63,13 @@ void FLineBatcher::DrawLine(const FVector& Start, const FVector& End, const FVec
 	});
 }
 
-void FLineBatcher::DrawBox(const FVector& Center, const FVector& Extent, const FVector4& Color) {
+void FLineBatcher::DrawBoxCenterExtent(const FVector& Center, const FVector& Extent, const FVector4& Color) {
 	const FVector Min = Center - Extent;
 	const FVector Max = Center + Extent;
+	DrawBoxMinMax(Min, Max, Color);
+}
+
+void FLineBatcher::DrawBoxMinMax(const FVector& Min, const FVector& Max, const FVector4& Color) {
 
 	// 하단 사각형
 	DrawLine(FVector{ Min.X, Min.Y, Min.Z }, FVector{ Max.X, Min.Y, Min.Z }, Color);

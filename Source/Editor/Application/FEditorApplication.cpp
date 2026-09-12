@@ -2,11 +2,15 @@
 
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/FRayCastingManager.h"
+#include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Math/FMatrix.h"
+#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 #include <Windows.h>
 
 #include "Runtime/Actors/AActor.h"
@@ -135,8 +139,20 @@ void FEditorApplication::Render() {
         EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
     ); //line batch 일괄 flush
 
-    if (Editor.ObjectSelected()) // 기즈모 그리기
+    if (Editor.ObjectSelected())
     {
+      // AABB 그리기
+      USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
+      UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+      if (PrimComp)
+      {
+          const FMesh& Mesh = *PrimComp->GetMesh();
+          const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+          FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+          RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{1.0f, 1.0f, 1.0f, 1.0f});
+      }
+
+      // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());

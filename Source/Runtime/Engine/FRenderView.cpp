@@ -43,3 +43,27 @@ void FRenderView::RenderGrid(const FCamera &Camera, FVector2 TopLeftUV,
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   Grid.DrawLine(Renderer, Camera);
 }
+
+void FRenderView::RenderLine(const FVector& Start, const FVector& End, const FVector4& Color)
+{
+    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
+    LineBatcher.DrawLine(Start, End, Color);
+}
+
+void FRenderView::RenderBoxCenterExtent(const FVector& Center, const FVector& Extent, const FVector4& Color)
+{
+    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
+    LineBatcher.DrawBoxCenterExtent(Center, Extent, Color);
+}
+
+void FRenderView::RenderBoxMinMax(const FVector& Min, const FVector& Max, const FVector4& Color)
+{
+    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
+    LineBatcher.DrawBoxMinMax(Min, Max, Color);
+}
+
+void FRenderView::RenderSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments)
+{
+    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
+    LineBatcher.DrawSphere(Center, Radius, Color, Segments);
+}
