@@ -24,16 +24,9 @@ void UPrimitiveComponent::Unregister()
 
 	Super::Unregister();
 }
-
-void UPrimitiveComponent::SetRelativeTransform(const FTransform& RelativeTransform)
-{
-	Super::SetRelativeTransform(RelativeTransform);	
-#include "UObjectGlobals.h"
-
-IMPLEMENT_UCLASS(UPrimitiveComponent, USceneComponent)
-
 void UPrimitiveComponent::Render(FRenderer &renderer, const FCamera &Camera,
                                  const bool &bHighlighted) {
+
   if (!GetMesh() || !GetMaterial()) {
     return;
   }

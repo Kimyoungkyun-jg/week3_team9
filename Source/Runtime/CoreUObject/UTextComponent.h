@@ -16,7 +16,8 @@ public:
   [[nodiscard]] const FString &GetText() const { return Text; }
   void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
 
-    void Register(UScene& Scene) override;
+  void Register(UScene& Scene) override;
+  void RebuildTextMesh();
 
 private:
   TSharedPtr<FFont> Font;

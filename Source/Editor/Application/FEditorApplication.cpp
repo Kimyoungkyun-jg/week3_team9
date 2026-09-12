@@ -35,7 +35,6 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
 
   Editor.Initialize(SceneManager);
 
-  UTextComponent *Textcomp = NewObject<UTextComponent>();
 
 
   //UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
@@ -57,10 +56,11 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   //BillBoard->SetRootComponent(BillBoardComp);
 
 
-  Testor->SetRootComponent(Textcomp);
-  Textcomp->RegisterComponentWithScene(*CurrentScene);
+  AActor* Testor = CurrentScene->SpawnActor<AActor>();
+  Testor->CreateRootComponent(UTextComponent::StaticClass());
 
   Editor.SelectActor(Testor);
+
 
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};

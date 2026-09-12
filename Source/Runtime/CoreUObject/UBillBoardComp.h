@@ -17,13 +17,15 @@ protected:
   virtual void Serialize(FArchive& Archive) const;
   virtual void Deserialize(const FArchive& Archive);
 
+  // 텍스처 좌표 속성
+  FVector2 UVScale{1.0f, 1.0f};
+  FVector2 UVOffset{0.0f, 0.0f};
+
 public:
 	void Register(UScene& InScene) override;
 	// 빌보드 회전 계산
 	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
 
-public:
-  void OnRegister(UScene &Scene) override;
   // 빌보드 렌더링
   void Render(FRenderer &renderer, const FCamera &Camera,
               const bool &bHighlighted) override;
@@ -33,7 +35,5 @@ public:
 private:
   // 시선 회전 보간용 쿼터니언
   FQuaternion CurrentRotation = FQuaternion::Identity();
-
-  FVector2 UVScale{1.0f, 1.0f};
-  FVector2 UVOffset{0.0f, 0.0f};
 };
+

@@ -68,4 +68,8 @@ private:
 
   bool bPlaying = true;
   bool bLoop = true;
+
+  FVector2 CurrentUVScale{1.0f, 1.0f};
+  FVector2 CurrentUVOffset{0.0f, 0.0f};
 };
+

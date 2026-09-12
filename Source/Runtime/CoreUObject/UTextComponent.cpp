@@ -10,11 +10,22 @@ UCLASS_META(UTextComponent, MeshName, "Text")
 
 void UTextComponent::Register(UScene& Scene)
 {
-	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
-	SetMesh(Resources ? Resources->GetMesh("Text") : nullptr);
-	SetMaterial(Resources ? Resources->GetMaterial("Text") : nullptr);
 	Super::Register(Scene);
+
+	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
+
+	if (!Font) {
+		Font = MakeShared<FFont>();
+		Font->Initialize(16);
+	}
+
+	if (Resources) {
+		SetMaterial(Resources->GetTextMaterial());
+	}
+	RebuildTextMesh();
 }
+
+
 
 void UTextComponent::RebuildTextMesh() {
     if (Text.empty()) return;

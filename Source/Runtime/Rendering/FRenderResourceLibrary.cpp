@@ -1070,7 +1070,7 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
         // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
         return false;
     }
-    Material->SetPipeLine(Pipeline);
+    TextMaterial->SetPipeLine(Pipeline);
 
   // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
   TextMaterial->SetTexture(GetTexture("koreanatlas"));

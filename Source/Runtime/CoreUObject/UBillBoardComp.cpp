@@ -56,7 +56,25 @@ void UBillBoardComp::CalculateRotate(const FCamera& Camera, FObjectConstants& In
     FVector Right = CameraUp.Cross(Forward);
     if (Right.SizeSquared() < 1e-8f) {
         Right = FVector{ 0.0f, 1.0f, 0.0f };
+    }
+    Right = Right / Right.Size();
+    const FVector Up = Forward.Cross(Right);
+
+    const FMatrix Rotation{ Forward, Right, Up, FVector{ 0.0f, 0.0f, 0.0f } };
+
+    InputConstant.MVP = FMatrix::MakeScale(G.Scale3D)
+        * Rotation
+        * FMatrix::MakeTranslation(G.Location);
+
+    const FMatrix InvRot = Camera.GetRotationMatrix().Transpose();
+    const FMatrix View = FMatrix::MakeTranslation(-Camera.Position) * InvRot;
+    const FMatrix Proj = Camera.GetProjectionMatrix();
+
+    InputConstant.MVP = InputConstant.MVP * View * Proj;
+}
+
 void UBillBoardComp::Render(FRenderer &renderer, const FCamera &Camera,
+
                             const bool &bHighlighted) {
   if (!GetMesh() || !GetMaterial()) {
     return;
