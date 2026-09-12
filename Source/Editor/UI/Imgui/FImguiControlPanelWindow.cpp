@@ -150,6 +150,12 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
                 bOrthographic ? EProjectionType::Orthographic : EProjectionType::Perspective;
         }
 
+        float CameraSensitivity = Editor.GetCameraSensitivity();
+        ImGui::SetNextItemWidth(180.0f);
+        ImGui::DragFloat("##Sensitivity", &CameraSensitivity, 0.1f, 0.2f, 2.0f, "%.1f");
+        ImGui::SameLine();
+        ImGui::Text("Sensitivity");
+        Editor.SetCameraSensitivity(CameraSensitivity);
 
         ImGui::SetNextItemWidth(180.0f);
         ImGui::DragFloat("##FOV", &Camera.Projection.FOV, 0.1f, 1.0f, 179.0f, "%.1f");
