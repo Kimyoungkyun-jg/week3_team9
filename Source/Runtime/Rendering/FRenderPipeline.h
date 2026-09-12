@@ -15,7 +15,8 @@ enum class EBuiltinPipeline : uint8 {
   Grid,
   RotationGizmo,
   Count,
-  Spotlight
+  Spotlight,
+  Text
 };
 
 struct FRenderPipelineDesc {

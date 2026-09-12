@@ -12,17 +12,19 @@ class UBillBoardComp : public UPrimitiveComponent {
 protected:
   explicit UBillBoardComp() = default;
 
-public:
-	void OnRegister(UScene& Scene) override;
-	// 빌보드 회전 계산
-	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
+  // 텍스처 좌표 속성
+  FVector2 UVScale{1.0f, 1.0f};
+  FVector2 UVOffset{0.0f, 0.0f};
 
-	virtual void UpdateUVinfo(FObjectConstants &InputConstant) {};
-	virtual void SetTexture(FString texture); //원본 머터리얼을 건드리지 않고 instance로 생성해서 사용
+public:
+  void OnRegister(UScene &Scene) override;
+  // 빌보드 렌더링
+  void Render(FRenderer &renderer, const FCamera &Camera,
+              const bool &bHighlighted) override;
+
+  virtual void SetTexture(FString texture); // 원본 머터리얼을 건드리지 않고
+                                            // instance로 생성해서 사용
 private:
   // 시선 회전 보간용 쿼터니언
   FQuaternion CurrentRotation = FQuaternion::Identity();
-
-  FVector2 UVScale{1.0f, 1.0f};
-  FVector2 UVOffset{0.0f, 0.0f};
 };

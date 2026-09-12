@@ -2,18 +2,20 @@
 
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
-#include "Runtime/CoreUObject/UPrimitiveComponent.h"
-#include "Runtime/CoreUObject/UCubeComp.h"
-#include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
-#include "Runtime/CoreUObject/USpotLightComponent.h"
+#include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
+#include "Runtime/CoreUObject/USpotLightComponent.h"
+#include "Runtime/CoreUObject/UTextComponent.h"
 #include "Runtime/Engine/FRayCastingManager.h"
-#include "Runtime/Rendering/FMesh.h"
-#include "Runtime/Math/FMatrix.h"
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
+#include "Runtime/Math/FMatrix.h"
+#include "Runtime/Rendering/FMesh.h"
 #include <Windows.h>
+
 
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
@@ -25,28 +27,25 @@ void FEditorApplication::Initialize_ImguiWin32DX11(
   ImguiManager.Initialize_ImplWin32DX11(Window, Device, Context);
 }
 
-void FEditorApplication::Initialize_Runtime(
-    USceneManager *SceneManager,
-    FRenderView *RenderView) {
+void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
+                                            FRenderView *RenderView) {
   this->RenderView = RenderView;
   this->SceneManager = SceneManager;
   this->CurrentScene = SceneManager->CurrentScene;
 
-
   Editor.Initialize(SceneManager);
 
+  UTextComponent *Textcomp = NewObject<UTextComponent>();
 
 
-  USpotLightComponent* AnimatedBBComp = NewObject<USpotLightComponent>();
-  
-  AActor* Spotlight =
-      CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f),
-          FVector(10.0f, 10.0f, 10.0f)
-      );
 
-  Spotlight->SetRootComponent(AnimatedBBComp);
+  AActor *Testor = CurrentScene->SpawnActor<AActor>(
+      FVector(1.0f, 1.0f, 0.25f), FVector(1.0f, 1.0f, 1.0f));
 
-  //Editor.SelectActor(Cube);
+  Testor->SetRootComponent(Textcomp);
+  Textcomp->RegisterComponentWithScene(*CurrentScene);
+
+  Editor.SelectActor(Testor);
 
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
@@ -101,7 +100,8 @@ void FEditorApplication::Render() {
   for (auto &EditorViewport : EditorViewports) {
     if (RenderView) {
       RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
-      RenderView->GetRenderer().UpdateLightConstants(Editor.GlobalLight); //globallgiht udpate
+      RenderView->GetRenderer().UpdateLightConstants(
+          Editor.GlobalLight); // globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
@@ -109,8 +109,10 @@ void FEditorApplication::Render() {
                            Editor.GetGrid()); // 그리드 그리기
 
     if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives)) {
-      for (auto &PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents()) {
-        const bool bSelected = (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
+      for (auto &PrimitiveComponent :
+           SceneManager->CurrentScene->GetRenderComponents()) {
+        const bool bSelected =
+            (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
              PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
 
         RenderView->Render(EditorViewport.ViewportCamera,
@@ -119,58 +121,53 @@ void FEditorApplication::Render() {
       }
     }
 
-
-
-    if (Editor.ObjectSelected())
-    {
-        if (auto* SpotLight = Editor.GetSelectedActor()->GetRootComponent()->Cast<USpotLightComponent>()) //spotlight 용
-        {
-            if (auto Mesh = SpotLight->GetMesh())
-            {
-                const FMatrix ModelMatrix = SpotLight->GetModelMatrix();
-                const auto& Positions = Mesh->GetPositions();
-                const auto& Indices = Mesh->GetIndices();
-                const FVector4 WireColor{ 1.0f, 1.0f, 0.0f, 1.0f }; // 노란색 선
-                // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
-                for (size_t i = 0; i + 2 < Indices.size(); i += 3)
-                {
-                    FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
-                    FVector B = ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
-                    FVector C = ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
-                    RenderView->RenderLine(A, B, WireColor);
-                    RenderView->RenderLine(B, C, WireColor);
-                    RenderView->RenderLine(C, A, WireColor);
-                }
-            }
+    if (Editor.ObjectSelected()) {
+      if (auto *SpotLight = Editor.GetSelectedActor()
+                                ->GetRootComponent()
+                                ->Cast<USpotLightComponent>()) // spotlight 용
+      {
+        if (auto Mesh = SpotLight->GetMesh()) {
+          const FMatrix ModelMatrix = SpotLight->GetModelMatrix();
+          const auto &Positions = Mesh->GetPositions();
+          const auto &Indices = Mesh->GetIndices();
+          const FVector4 WireColor{1.0f, 1.0f, 0.0f, 1.0f}; // 노란색 선
+          // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
+          for (size_t i = 0; i + 2 < Indices.size(); i += 3) {
+            FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
+            FVector B =
+                ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
+            FVector C =
+                ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
+            RenderView->RenderLine(A, B, WireColor);
+            RenderView->RenderLine(B, C, WireColor);
+            RenderView->RenderLine(C, A, WireColor);
+          }
         }
-        else
-        {
-            // AABB 그리기
+      } else {
+            // 바운딩 박스 그리기
             USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
-            UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-            if (PrimComp)
+            if (UPrimitiveComponent* PrimComp = RootComp ? RootComp->Cast<UPrimitiveComponent>() : nullptr)
             {
-                const FMesh& Mesh = *PrimComp->GetMesh();
-                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-                FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-                RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+                if (auto Mesh = PrimComp->GetMesh())
+                {
+                    const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+                    FAxisAlignedBoundingBox AABB{ *Mesh, ModelMatrix };
+                    RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+                }
             }
         }
     }
 
     RenderView->GetRenderer().FlushLineBatch(
-        EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
-    ); //line batch 일괄 flush
+        EditorViewport.ViewportCamera
+            .CreateViewProjectionMatrix()); // line batch 일괄 flush
 
-    if (Editor.ObjectSelected())
-    {
+    if (Editor.ObjectSelected()) {
       // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
     }
-
-
 
     // 선택 객체 하이라이트 렌더
   }

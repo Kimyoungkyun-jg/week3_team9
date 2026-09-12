@@ -50,6 +50,8 @@ public:
   TSharedPtr<FMaterial> CreateMaterial(const FMaterialDesc &Desc);
   
   void GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,ID3D11DeviceContext *&ContextOut);
+  [[nodiscard]] ID3D11Device* GetDevice() const { return Device.Get(); }
+  [[nodiscard]] ID3D11DeviceContext* GetContext() const { return Context.Get(); }
 
   [[nodiscard]]
   TSharedPtr<FRenderPipeline> CreateRenderPipeline(const FRenderPipelineDesc &Desc,EViewModeIndex RenderMode = EViewModeIndex::VMI_Lit);

@@ -208,7 +208,7 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   return Mesh;
 }
 
-TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) {
+TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) { 
     if (!Desc.VertexData || Desc.VertexCount == 0 || Desc.VertexDataSize == 0 ||
         Desc.VertexStride == 0) {
         return nullptr;
@@ -236,6 +236,7 @@ TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) {
     }
     Mesh->VertexCount = Desc.VertexCount;
     Mesh->VertexStride = Desc.VertexStride;
+    Mesh->VertexBufferSize = Desc.VertexDataSize;
 
     if (Desc.IndexCount > 0 && Desc.IndexData) {
         D3D11_BUFFER_DESC IndexBufferDesc = {
@@ -255,6 +256,7 @@ TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) {
         }
     }
     Mesh->IndexCount = Desc.IndexCount;
+    Mesh->IndexBufferSize = Desc.IndexDataSize;
 
     const auto* vertices = static_cast<const FVertexData*>(Desc.VertexData);
 
