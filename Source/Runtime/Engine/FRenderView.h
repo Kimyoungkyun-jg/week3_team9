@@ -24,4 +24,5 @@ public:
 	void RenderBoxCenterExtent(const FVector& Center, const FVector& Extent, const FVector4& Color);
 	void RenderBoxMinMax(const FVector& Min, const FVector& Max, const FVector4& Color);
 	void RenderSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments = 16);
+	void RenderVerticetoline();
 };

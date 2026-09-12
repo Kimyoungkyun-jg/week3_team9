@@ -13,6 +13,10 @@
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
 void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered, bool bHighlighted) {
+  // 렌더 대상과 필수 자원 유효성 검증
+  if (!Rendered || !Rendered->GetMesh() || !Rendered->GetMaterial()) {
+    return;
+  }
 
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
 

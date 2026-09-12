@@ -62,6 +62,7 @@ public:
   [[nodiscard]] TSharedPtr<FMesh> GetCubeMesh() const { return CubeMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetCylinderMesh() const { return CylinderMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetConeMesh() const { return ConeMesh; }
+  [[nodiscard]] TSharedPtr<FMesh> GetSpotlightConeMesh() const { return SpotlightConeMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetArrowMesh() const { return ArrowMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetCircleMesh() const { return CircleMesh; }
   [[nodiscard]] TSharedPtr<FMesh> GetRotationGizmoMesh() const { return RotationGizmoMesh; }
@@ -109,6 +110,9 @@ public:
   [[nodiscard]] TSharedPtr<FMaterial> GetRotationGizmoMaterial() const {
     return RotationGizmoMaterial;
   }
+  [[nodiscard]] TSharedPtr<FMaterial> GetSpotlightMaterial() const {
+    return SpotlightMaterial;
+  }
 
   // 메쉬 전체 해제
   void DestroyAllMeshes() {
@@ -116,6 +120,7 @@ public:
     CubeMesh.reset();
     CylinderMesh.reset();
     ConeMesh.reset();
+    SpotlightConeMesh.reset();
     ArrowMesh.reset();
     CircleMesh.reset();
     RotationGizmoMesh.reset();
@@ -133,6 +138,7 @@ public:
     SimpleMaterial.reset();
     GridMaterial.reset();
     RotationGizmoMaterial.reset();
+    SpotlightMaterial.reset();
   }
 
   // 파이프라인 전체 해제
@@ -174,6 +180,7 @@ private:
   bool CreateCylinderMesh(FRenderer &Renderer, float Height, uint32 SliceCount,
                           float TopRadius, float BottomRadius);
   bool CreateConeMesh(FRenderer &Renderer);
+  bool CreateSpotlightConeMesh(FRenderer &Renderer);
   bool CreateArrowMesh(FRenderer &Renderer);
   bool CreateCircleMesh(FRenderer &Renderer);
   bool CreateRotationGizmoMesh(FRenderer &Renderer);
@@ -187,6 +194,8 @@ private:
   bool CreateSimpleMaterial(FRenderer &Renderer);
   bool CreateGridMaterial(FRenderer &Renderer);
   bool CreateRotationGizmoMaterial(FRenderer &Renderer);
+  bool CreateSpotlightMaterial(FRenderer &Renderer);
+  
   // 시작시 1번만 호출
   bool CreateTextures(FRenderer &Renderer);
   // 텍스처를 샘플링하는 머티리얼. CreateTextures 이후에 호출해야 함
@@ -201,6 +210,7 @@ private:
   TSharedPtr<FMesh> CubeMesh;
   TSharedPtr<FMesh> CylinderMesh;
   TSharedPtr<FMesh> ConeMesh;
+  TSharedPtr<FMesh> SpotlightConeMesh;
   TSharedPtr<FMesh> ArrowMesh;
   TSharedPtr<FMesh> CircleMesh;
   TSharedPtr<FMesh> RotationGizmoMesh;
@@ -215,6 +225,7 @@ private:
   TSharedPtr<FMaterial> SimpleMaterial;
   TSharedPtr<FMaterial> GridMaterial;
   TSharedPtr<FMaterial> RotationGizmoMaterial;
+  TSharedPtr<FMaterial> SpotlightMaterial;
 
   FRenderer *RendererRef = nullptr;
 };

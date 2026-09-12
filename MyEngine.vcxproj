@@ -281,6 +281,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp" />
+    <ClCompile Include="Source\Runtime\CoreUObject\USpotLightComponent.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCylinderComp.cpp" />
     <ClCompile Include="Source\Runtime\Actors\AActor.cpp" />
@@ -385,6 +386,7 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UClass.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\USpotLightComponent.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCubeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCylinderComp.h" />
     <ClInclude Include="Source\Runtime\Actors\AActor.h" />
@@ -503,6 +505,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\GridPS.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\SpotlightPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>

@@ -84,6 +84,10 @@ private:
   // b1뷰포트 단위. b0와 동시에 바인딩되므로 별도 버퍼가 필요하다.
   Microsoft::WRL::ComPtr<ID3D11Buffer> FrameConstantBuffer;
 
+  // b2에 할당되는 lightbuffer
+  Microsoft::WRL::ComPtr<ID3D11Buffer> LightBuffer;
+
+
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> EditorViewPortRTV;
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> EditorViewPortSRV;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
