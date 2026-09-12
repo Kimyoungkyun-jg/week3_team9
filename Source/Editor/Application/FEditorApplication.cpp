@@ -3,6 +3,7 @@
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
+#include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/FRayCastingManager.h"
@@ -24,22 +25,40 @@ void FEditorApplication::Initialize_Runtime(
   this->SceneManager = SceneManager;
   this->curScene = SceneManager->CurrentScene;
 
+
   Editor.Initialize(RendererLibrary, SceneManager);
 
-	UCubeComp* CubeComp = NewObject<UCubeComp>();
-	FTransform& CubeTransform = CubeComp->GetRelativeTransform();
-	CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-	CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-	CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+	//UCubeComp* CubeComp = NewObject<UCubeComp>();
+	//FTransform& CubeTransform = CubeComp->GetRelativeTransform();
+	//CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+	//CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+	//CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
-  AActor *Cube =
-      curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
-                                   FVector(0.5f, 0.5f, 0.5f)   // Scale
+ // AActor *Cube =
+ //     curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
+ //                                  FVector(0.5f, 0.5f, 0.5f)   // Scale
+ //     );
+
+ // Cube->SetRootComponent(CubeComp);
+  
+
+
+  UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
+  FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
+  BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
+  BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
+  BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+
+  AActor* BillBoard =
+      curScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
+          FVector(0.5f, 0.5f, 0.5f)   // Scale
       );
 
-  Cube->SetRootComponent(CubeComp);
 
-  Editor.SelectActor(Cube);
+  BillBoard->SetRootComponent(BillBoardComp);
+
+
+  //Editor.SelectActor(Cube);
 
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
@@ -112,12 +131,17 @@ void FEditorApplication::Render() {
       }
     }
 
+    RenderView->GetRenderer().FlushLineBatch(
+        EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
+    ); //line batch 일괄 flush
+
     if (Editor.ObjectSelected()) // 기즈모 그리기
     {
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
     }
+
     // 선택 객체 하이라이트 렌더
   }
   ImguiManager.RenderUI();

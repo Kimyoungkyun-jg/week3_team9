@@ -5,6 +5,7 @@
 #include "Runtime/Rendering/FMaterial.h"
 #include "Runtime/Rendering/FMesh.h"
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
+#include "Runtime/Engine/FCamera.h"
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -15,7 +16,7 @@ public:
 	[[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
 	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
 	[[nodiscard]] FMatrix GetModelMatrix() const { return RelativeTransform.ToMatrix(); }
-
+	virtual FMatrix GetRenderMatrix(const FCamera& Camera) const { return RelativeTransform.ToMatrix(); }
 	virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
 
 	// 메쉬 및 재질 설정
