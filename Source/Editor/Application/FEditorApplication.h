@@ -6,6 +6,7 @@
 #include "Editor/UI/Imgui/FImguiEditorViewportWindow.h"
 #include "Editor/UI/Imgui/FImguiControlPanelWindow.h"
 #include "Editor/UI/Imgui/FImguiConsoleWindow.h"
+#include "Editor/UI/Imgui/FImguiWorldOutliner.h"
 #include "Runtime/Engine/FRenderView.h"
 #include "Runtime/Input/FCameraInputController.h"
 
@@ -22,6 +23,7 @@ class FEditorApplication final {
 	FImguiEditorViewportWindow EditorViewportWindow;
 	FImguiPropertyWindow PropertyWindow;
 	FImguiConsoleWindow ConsoleWindow;
+	FImguiWorldOutliner WorldOutliner;
 
 	FRenderView* RenderView = nullptr;
 

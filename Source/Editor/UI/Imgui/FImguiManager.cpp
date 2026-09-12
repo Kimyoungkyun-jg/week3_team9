@@ -1,4 +1,4 @@
-﻿#include "FImguiManager.h"
+#include "FImguiManager.h"
 #include "ThirdParty/Imgui/imgui.h"
 #include "ThirdParty/Imgui/imgui_internal.h"
 #include "ThirdParty/Imgui/imgui_impl_dx11.h"
@@ -59,6 +59,7 @@ void FImguiManager::NewFrame()
 		ImGuiID ConsoleID = ImGui::DockBuilderSplitNode(MainID, ImGuiDir_Down, 0.25f, nullptr, &MainID);
 
 		ImGui::DockBuilderDockWindow("Viewport", MainID);
+		ImGui::DockBuilderDockWindow("World Outliner", PropertyWindowID);
 		ImGui::DockBuilderDockWindow("Jungle Property Window", PropertyWindowID);
 		ImGui::DockBuilderDockWindow("Jungle Control Panel", ControlPanelID);
 		ImGui::DockBuilderDockWindow("Console Window", ConsoleID);

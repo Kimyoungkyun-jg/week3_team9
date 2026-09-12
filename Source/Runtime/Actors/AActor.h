@@ -20,6 +20,7 @@ protected:
 
 public:
 	USceneComponent* GetRootComponent() const { return RootComponent; }
+	const TArray<USceneComponent*>& GetAttachedComponents() const { return AttachedComp; }
 	void SetRootComponent(USceneComponent* InRootComponent); //root 입력받으면서 동시에 AttachedComp에 제일 먼저 넣기
 
 

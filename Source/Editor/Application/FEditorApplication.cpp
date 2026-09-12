@@ -101,6 +101,7 @@ void FEditorApplication::BeginFrame() { ImguiManager.NewFrame(); }
 void FEditorApplication::Tick(float DeltaTime) {
   ToolBar.Process(Editor, ConsoleWindow, ControlPanelWindow, PropertyWindow);
   EditorViewportWindow.Process(Editor, DeltaTime);
+  WorldOutliner.Process(Editor);
   ControlPanelWindow.Process(Editor);
   PropertyWindow.Process(Editor);
   ConsoleWindow.Process(Editor);

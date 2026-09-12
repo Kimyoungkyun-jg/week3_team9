@@ -12,6 +12,12 @@ void UCubeComp::OnRegister(UScene& Scene)
 	UPrimitiveComponent::OnRegister(Scene);
 
 	auto& ResLib = FRenderResourceLibrary::Get();
-	SetMesh(ResLib.GetMesh("Cube"));
-	SetMaterial(ResLib.GetMaterial("Textured"));
+	if (!GetMesh())
+	{
+		SetMesh(ResLib.GetMesh("Cube"));
+	}
+	if (!GetMaterial())
+	{
+		SetMaterial(ResLib.GetMaterial("Simple"));
+	}
 }

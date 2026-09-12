@@ -272,6 +272,7 @@
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiManager.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiToolBar.cpp" />
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
@@ -372,6 +373,7 @@
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiManager.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FClassIdSet.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
