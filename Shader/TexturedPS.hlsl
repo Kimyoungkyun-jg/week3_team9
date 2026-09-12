@@ -14,6 +14,11 @@ float4 MainPS(PS_INPUT Input) : SV_Target
 {
     float4 Sampled = DiffuseTexture.Sample(DiffuseSampler, Input.UV);
 
-    float3 FinalColor = lerp(Sampled.rgb, ColorOverride, ColorOverrideAmount);
+    // 투명 영역 제거
+    clip(Sampled.a - 0.1f);
+    // 정점 색상 반영
+    float3 TintedColor = Sampled.rgb * Input.Color.rgb;
+    
+    float3 FinalColor = lerp(TintedColor, ColorOverride, ColorOverrideAmount);
     return float4(FinalColor, Sampled.a);
 }

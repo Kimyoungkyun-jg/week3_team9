@@ -14,63 +14,35 @@ void UBillBoardComp::OnRegister(UScene &Scene) {
   SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Textured"));
 }
 
-FObjectConstants UBillBoardComp::CalculateRotate(const FCamera& Camera, uint32 signal)
+void UBillBoardComp::CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant)
 {
-  FObjectConstants Result;
-  const FTransform GlobalTransform = GetGlobalTransform();
-  const FVector BillboardPos = GlobalTransform.Location;
-  const FVector Scale = GlobalTransform.Scale3D;
+    const FTransform G = GetGlobalTransform();
+    const FVector ToCamera = Camera.Position - G.Location;
 
-  if (signal == 0) {
-    // 뷰 공간 기준 회전 정렬
+
+    if (ToCamera.SizeSquared() < 1e-8f) {
+        InputConstant.MVP = FMatrix::GetIdentity();
+    }
+    const FVector Forward = ToCamera / ToCamera.Size();
+    const FMatrix CamRot = Camera.GetRotationMatrix();
+    const FVector CameraUp{ CamRot.M[2][0], CamRot.M[2][1], CamRot.M[2][2] };
+
+    FVector Right = CameraUp.Cross(Forward);
+    if (Right.SizeSquared() < 1e-8f) {
+        Right = FVector{ 0.0f, 1.0f, 0.0f };
+    }
+    Right = Right / Right.Size();
+    const FVector Up = Forward.Cross(Right);
+
+    const FMatrix Rotation{ Forward, Right, Up, FVector{ 0.0f, 0.0f, 0.0f } };
+
+    InputConstant.MVP = FMatrix::MakeScale(G.Scale3D)
+        * Rotation
+        * FMatrix::MakeTranslation(G.Location);
+
     const FMatrix InvRot = Camera.GetRotationMatrix().Transpose();
     const FMatrix View = FMatrix::MakeTranslation(-Camera.Position) * InvRot;
     const FMatrix Proj = Camera.GetProjectionMatrix();
 
-    FMatrix ModelView = FMatrix::MakeTranslation(BillboardPos) * View;
-
-    // 화면 축 매핑
-    ModelView.M[0][0] = Scale.X;
-    ModelView.M[0][1] = 0.0f;
-    ModelView.M[0][2] = 0.0f;
-    ModelView.M[1][0] = 0.0f;
-    ModelView.M[1][1] = Scale.Y;
-    ModelView.M[1][2] = 0.0f;
-    ModelView.M[2][0] = 0.0f;
-    ModelView.M[2][1] = 0.0f;
-    ModelView.M[2][2] = Scale.Z;
-
-    Result.MVP = ModelView * Proj;
-  } else {
-    // 목표 시선 각도 계산
-    FVector Dir = Camera.Position - BillboardPos;
-    float DistH = std::sqrt(Dir.X * Dir.X + Dir.Y * Dir.Y);
-
-    constexpr float RadToDeg = 180.0f / std::numbers::pi_v<float>;
-    float TargetYaw = std::atan2(Dir.Y, Dir.X) * RadToDeg;
-    float TargetPitch = std::atan2(Dir.Z, DistH) * RadToDeg;
-
-    // 목표 쿼터니언 생성
-    FQuaternion TargetQuat = FQuaternion::FromEulerXYZDeg(FVector(0.0f, TargetPitch, TargetYaw));
-
-    // 쿼터니언 보간 및 정규화
-    constexpr float Alpha = 0.1f;
-    CurrentRotation.X = CurrentRotation.X * 0.9f + TargetQuat.X * Alpha;
-    CurrentRotation.Y = CurrentRotation.Y * 0.9f + TargetQuat.Y * Alpha;
-    CurrentRotation.Z = CurrentRotation.Z * 0.9f + TargetQuat.Z * Alpha;
-    CurrentRotation.W = CurrentRotation.W * 0.9f + TargetQuat.W * Alpha;
-    CurrentRotation.Normalize();
-
-    // 회전 행렬 생성
-    FMatrix RotMat = CurrentRotation.ToMatrixRow();
-
-    // 최종 모델 변환 행렬 구성
-    FMatrix ScaleMat = FMatrix::MakeScale(Scale);
-    FMatrix TransMat = FMatrix::MakeTranslation(BillboardPos);
-    FMatrix Model = ScaleMat * RotMat * TransMat;
-
-    Result.MVP = Model * Camera.CreateViewProjectionMatrix();
-  }
-
-  return Result;
+    InputConstant.MVP = InputConstant.MVP * View* Proj;
 }

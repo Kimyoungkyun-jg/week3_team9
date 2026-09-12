@@ -82,6 +82,12 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UBillBoardComp.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
@@ -250,6 +256,12 @@
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UClass.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UBillBoardComp.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\PointerTypes.h">
