@@ -24,7 +24,8 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 Len
 
     if (auto* BBcomp = Rendered->Cast<UBillBoardComp>()) 
     {
-        Constants = BBcomp->CalculateRotate(Camera,0);//빌보드일때 바라보는 계산
+        BBcomp->CalculateRotate(Camera, Constants);//빌보드일때 바라보는 계산
+        BBcomp->UpdateUVinfo(Constants);
     }
     
     Renderer.Draw(*Rendered->GetMesh(), *Rendered->GetMaterial(), Constants);
