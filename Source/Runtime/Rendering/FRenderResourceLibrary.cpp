@@ -25,7 +25,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
-      !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer)) {
+      !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer) ||
+      !CreateTextMaterial(Renderer)) {
     return false;
   }
 
@@ -822,6 +823,35 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
     
     TextMesh = RegisterMesh("Text", Renderer.CreateMesh(MeshData));
     return TextMesh != nullptr;
+}
+
+bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
+{
+    FWString Path = GetExecutableDirectory();
+
+    FMaterialDesc Desc = {
+        .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+        .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
+    };
+
+    TSharedPtr<FMaterial> Material =
+        RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
+    if (!Material) {
+        return false;
+    }
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        Renderer.GetPipeline(EBuiltinPipeline::Textured);
+    if (!Pipeline) {
+        // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+        return false;
+    }
+    Material->SetPipeLine(Pipeline);
+
+    // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+    Material->SetTexture(GetTexture("sandclock"));
+
+    return true;
 }
 
 
