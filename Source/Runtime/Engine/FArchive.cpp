@@ -93,20 +93,66 @@ void FArchive::SetNull(const FString& Key)
 	Object[Key] = nullptr;
 }
 
-TArray<const FArchive> FArchive::GetObjectArray(const FString& Key) const
+FVector FArchive::GetVector(const FString& Key) const
 {
-	TArray<const FArchive> Array;
+	TArray<float> Array = GetArray<float>(Key);
+
+	return FVector
+	{
+		Array[0],
+		Array[1],
+		Array[2],
+	};
+}
+
+void FArchive::SetVector(const FString& Key, const FVector& Value)
+{
+	TArray<float> Array
+	{
+		Value.X,
+		Value.Y,
+		Value.Z,
+	};
+
+	SetArray(Key, Array);
+}
+
+FVector2 FArchive::GetVector2(const FString& Key) const
+{
+	TArray<float> Array = GetArray<float>(Key);
+
+	return FVector2
+	{
+		Array[0],
+		Array[1],
+	};
+}
+
+void FArchive::SetVector2(const FString& Key, const FVector2& Value)
+{
+	TArray<float> Array
+	{
+		Value.X,
+		Value.Y,
+	};
+
+	SetArray(Key, Array);
+}
+
+TArray<FArchive> FArchive::GetArchiveArray(const FString& Key) const
+{
+	TArray<FArchive> Array;
 
 	for (const auto& Item : Object.at(Key))
 	{
-		const FArchive ItemArchive{ Item };
+		FArchive ItemArchive{ Item };
 		Array.push_back(ItemArchive);
 	}
 
 	return Array;
 }
 
-void FArchive::SetObjectArray(const FString& Key, const TArray<const FArchive>& Value)
+void FArchive::SetArchiveArray(const FString& Key, const TArray<FArchive>& Value)
 {
 	Object[Key] = nlohmann::json::array();
 
@@ -116,12 +162,12 @@ void FArchive::SetObjectArray(const FString& Key, const TArray<const FArchive>& 
 	}
 }
 
-FArchive FArchive::GetObject(const FString& Key) const
+FArchive FArchive::GetArchive(const FString& Key) const
 {
 	return FArchive{ Object.at(Key) };
 }
 
-void FArchive::SetObject(const FString& Key, const FArchive& Archive)
+void FArchive::SetArchive(const FString& Key, const FArchive& Archive)
 {
 	Object[Key] = Archive.GetJSON();
 }

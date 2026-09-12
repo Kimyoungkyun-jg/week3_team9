@@ -13,6 +13,9 @@ class UPrimitiveComponent : public USceneComponent
 	DECLARE_UCLASS(UPrimitiveComponent, USceneComponent)
 
 public:
+	virtual void Initialize(UObject* Context = nullptr) override;
+	virtual void Release() override;
+
 	[[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
 	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
 	[[nodiscard]] FMatrix GetModelMatrix() const { return RelativeTransform.ToMatrix(); }

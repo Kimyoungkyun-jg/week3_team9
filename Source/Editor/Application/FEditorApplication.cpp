@@ -122,17 +122,25 @@ void FEditorApplication::Render() {
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives)) {
-      for (auto &PrimitiveComponent :
-           SceneManager->CurrentScene->GetRenderComponents()) {
-        const bool bSelected =
-            (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
-             PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
+    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives))
+    {
+        for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
+        {
+            bool bSelected = true;
 
-        RenderView->Render(EditorViewport.ViewportCamera,
-                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                           PrimitiveComponent, bSelected);
-      }
+            if (!PrimitiveComponent) { bSelected = false; }
+            else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
+            else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
+
+            RenderView->Render
+            (
+                EditorViewport.ViewportCamera,
+                EditorViewport.TopLeftUV,
+                EditorViewport.LengthUV,
+                PrimitiveComponent,
+                bSelected
+            );
+        }
     }
 
 

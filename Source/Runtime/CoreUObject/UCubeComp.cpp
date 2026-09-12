@@ -10,6 +10,6 @@ void UCubeComp::OnRegister(UScene& Scene)
 {
 	UPrimitiveComponent::OnRegister(Scene);
 
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Cube"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Textured"));
+	SetMesh(Scene.GetRenderResourceLibrary()->GetMesh("Cube"));
+	SetMaterial(Scene.GetRenderResourceLibrary()->GetMaterial("Textured"));
 }

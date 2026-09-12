@@ -291,6 +291,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\USphereComp.cpp" />
     <ClCompile Include="Source\Runtime\Core\FName.cpp" />
     <ClCompile Include="Source\Runtime\Core\FNamePool.cpp" />
+    <ClCompile Include="Source\Runtime\Engine\FArchive.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FRayCastingManager.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FRenderView.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FTimeManager.cpp" />
@@ -396,6 +397,7 @@
     <ClInclude Include="Source\Runtime\Core\PointerTypes.h" />
     <ClInclude Include="Source\Runtime\Core\TArray.h" />
     <ClInclude Include="Source\Runtime\Core\IntTypes.h" />
+    <ClInclude Include="Source\Runtime\Engine\FArchive.h" />
     <ClInclude Include="Source\Runtime\Engine\FCameraProjection.h" />
     <ClInclude Include="Source\Editor\Grid\FGrid.h" />
     <ClInclude Include="Source\Runtime\Engine\FRenderView.h" />

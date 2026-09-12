@@ -1,17 +1,29 @@
 #include "UObject.h"
-#include "UClass.h"
-#include "UObjectGlobals.h"
+#include "Runtime/Engine/FArchive.h"
+#include "Runtime/CoreUObject/UClass.h"
+#include "Runtime/CoreUObject/UObjectGlobals.h"
 
 IMPLEMENT_ROOT_UCLASS(UObject)
+UCLASS_META(UObject, DisplayName, "Object")
 
-json::JSON UObject::Serialize() const
+void UObject::Initialize(UObject* Context)
 {
-	return json::JSON();
+	static_cast<void>(Context);
 }
 
-bool UObject::Deserialize(const json::JSON& data)
+void UObject::Release()
 {
-	return false;
+}
+
+void UObject::Serialize(FArchive& Archive) const
+{
+	Archive.SetInt32("UUID", UUID);
+	Archive.SetString("Type", GetClass()->GetUClassName());
+}
+
+void UObject::Deserialize(const FArchive& Archive)
+{
+	UUID = Archive.GetInt32("UUID");
 }
 
 void UObject::AddReferencedObjects(FReferenceCollector& Collector)

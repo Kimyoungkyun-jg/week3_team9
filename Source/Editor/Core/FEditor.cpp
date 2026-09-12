@@ -34,7 +34,7 @@ void FEditor::Process() {
 
 void FEditor::NewScene() {
   SelectedActor = nullptr;
-  SceneManager->SetScene(NewObject<UScene>(*RendererLibrary));
+  SceneManager->SetScene(NewObject<UScene>());
 }
 
 void FEditor::SaveScene(const FString &Path) { SceneManager->SaveScene(Path); }

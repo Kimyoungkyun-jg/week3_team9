@@ -66,7 +66,7 @@ int WINAPI wWinMain(
 
 	USceneManager SceneManager;
 	SceneManager.ResourceLibrary = &RenderResources;
-	SceneManager.SetScene(NewObject<UScene>(RenderResources));
+	SceneManager.SetScene(NewObject<UScene>());
 
 	FEditorApplication& EditorApp = FEditorApplication::Get();
 	{
@@ -105,11 +105,11 @@ int WINAPI wWinMain(
 
 		Renderer.SwapBuffer();
 
-		EditorApp.CollectGarbage();
+		//EditorApp.CollectGarbage();
 	}
 
 	SceneManager.SetScene(nullptr); // root객체 해제 - 코드 참조
-	EditorApp.CollectGarbage();
+	//EditorApp.CollectGarbage();
 	Renderer.Shutdown();
 
 	return 0;

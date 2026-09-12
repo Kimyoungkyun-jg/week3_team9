@@ -3,7 +3,12 @@
 #include "Runtime/Core/FString.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Core/IntTypes.h"
+#include "Runtime/Math/FVector.h"
+#include "Runtime/Math/FVector2.h"
 #include "ThirdParty/Json/json.hpp"
+
+// 임시...
+#undef GetObject
 
 /// <summary>
 /// UObject의 데이터를 직렬화/역직렬화 하는 클래스입니다.
@@ -45,6 +50,12 @@ public:
 
 	bool IsNull(const FString& Key) const;
 	void SetNull(const FString& Key);
+
+	FVector GetVector(const FString& Key) const;
+	void SetVector(const FString& Key, const FVector& Value);
+
+	FVector2 GetVector2(const FString& Key) const;
+	void SetVector2(const FString& Key, const FVector2& Value);
 	
 	template <typename T>
 	TArray<T> GetArray(const FString& Key) const
@@ -54,7 +65,7 @@ public:
 		for (const auto& Item : Object.at(Key))
 		{
 			T Value = Item.get<T>();
-			Array.Add(Value);
+			Array.push_back(Value);
 		}
 
 		return Array;
@@ -65,15 +76,15 @@ public:
 	{
 		Object[Key] = nlohmann::json::array();
 
-		for (int i = 0; i < Value.Num(); ++i)
+		for (int i = 0; i < Value.size(); ++i)
 		{
 			Object[Key].push_back(Value[i]);
 		}
 	}
 
-	TArray<const FArchive> GetObjectArray(const FString& Key) const;
-	void SetObjectArray(const FString& Key, const TArray<const FArchive>& Value);
+	TArray<FArchive> GetArchiveArray(const FString& Key) const;
+	void SetArchiveArray(const FString& Key, const TArray<FArchive>& Value);
 
-	FArchive GetObject(const FString& Key) const;
-	void SetObject(const FString& Key, const FArchive& Archive);
+	FArchive GetArchive(const FString& Key) const;
+	void SetArchive(const FString& Key, const FArchive& Archive);
 };

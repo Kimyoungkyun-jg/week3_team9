@@ -1,6 +1,7 @@
 #include "UBillBoardComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/UScene.h"
+#include "Runtime/Engine/FArchive.h"
 #include "UClass.h"
 
 IMPLEMENT_UCLASS(UBillBoardComp, UPrimitiveComponent)
@@ -10,8 +11,24 @@ UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 void UBillBoardComp::OnRegister(UScene &Scene) {
   UPrimitiveComponent::OnRegister(Scene);
 
-  SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Rect"));
-  SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Textured"));
+  SetMesh(Scene.GetRenderResourceLibrary()->GetMesh("Rect"));
+  SetMaterial(Scene.GetRenderResourceLibrary()->GetMaterial("Textured"));
+}
+
+void UBillBoardComp::Serialize(FArchive& Archive) const
+{
+    Super::Serialize(Archive);
+
+    Archive.SetVector2("UVScale", UVScale);
+    Archive.SetVector2("UVOffset", UVOffset);
+}
+
+void UBillBoardComp::Deserialize(const FArchive& Archive)
+{
+    Super::Deserialize(Archive);
+
+    UVScale = Archive.GetVector2("UVScale");
+    UVOffset = Archive.GetVector2("UVOffset");
 }
 
 void UBillBoardComp::CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant)

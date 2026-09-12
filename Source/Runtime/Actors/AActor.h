@@ -2,6 +2,9 @@
 
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
+#include "Runtime/CoreUObject/UObjectGlobals.h"
+#include <type_traits>
+#include <concepts>
 
 class UScene;
 
@@ -18,10 +21,17 @@ protected:
 
 	explicit AActor() = default;
 
+	virtual void Serialize(FArchive& Archive) const override;
+	virtual void Deserialize(const FArchive& Archive) override;
+
+	void CreateRootComponent(UClass* ClassType);
+
 public:
+	void Initialize(UObject* Context = nullptr) override;
+	UScene* GetOwner() const { return Owner; }
+
 	USceneComponent* GetRootComponent() const { return RootComponent; }
 	void SetRootComponent(USceneComponent* InRootComponent); //root 입력받으면서 동시에 AttachedComp에 제일 먼저 넣기
-
 
 	FTransform GetTransform() const { return RootComponent ? RootComponent->GetRelativeTransform() : FTransform{}; }
 	void SetTransform(const FTransform& NewTransform) { if (RootComponent) RootComponent->SetRelativeTransform(NewTransform); }
@@ -31,14 +41,11 @@ public:
 
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-
-	void SetScene(UScene* InScene) { OwningScene = InScene; }
 	void Destroy();
 
 	void RegisterAllComponents(UScene& Scene);
 	void UnregisterAllComponents(UScene& Scene);
 	void UnregisterComponentFromScene(UScene& Scene);
 private:
-	UScene* OwningScene = nullptr; // SpawnActor될 때 설정됨
+	UScene* Owner = nullptr; // SpawnActor될 때 설정됨
 };
-

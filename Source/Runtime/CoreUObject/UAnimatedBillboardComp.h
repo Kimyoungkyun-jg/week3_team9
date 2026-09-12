@@ -2,6 +2,8 @@
 
 #include "UBillBoardComp.h"
 
+class FArchive;
+
 // 애니메이션 빌보드 컴포넌트
 class UAnimatedBillboardComp : public UBillBoardComp {
   DECLARE_UCLASS(UAnimatedBillboardComp, UBillBoardComp)
@@ -9,6 +11,9 @@ class UAnimatedBillboardComp : public UBillBoardComp {
 
 protected:
   explicit UAnimatedBillboardComp() = default;
+
+  virtual void Serialize(FArchive& Archive) const;
+  virtual void Deserialize(const FArchive& Archive);
 
 public:
   // 매 프레임 애니메이션 갱신

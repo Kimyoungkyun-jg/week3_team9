@@ -1,5 +1,6 @@
 #include "UAnimatedBillboardComp.h"
 #include "Runtime/Engine/UScene.h"
+#include "Runtime/Engine/FArchive.h"
 #include "UClass.h"
 #include <algorithm>
 
@@ -36,6 +37,38 @@ void UAnimatedBillboardComp::SetCurrentFrame(int InFrame) {
     CurrentFrame = std::clamp(InFrame, 0, TotalFrames - 1);
     RefreshUV();
   }
+}
+
+void UAnimatedBillboardComp::Serialize(FArchive& Archive) const
+{
+	Super::Serialize(Archive);
+
+	Archive.SetInt32("GridX", GridX);
+	Archive.SetInt32("GridY", GridY);
+	Archive.SetInt32("TotalFrames", TotalFrames);
+	//Archive.SetInt32("CurrentFrame", CurrentFrame);
+	Archive.SetFloat("FrameRate", FrameRate);
+	//Archive.SetFloat("ElapsedTime", ElapsedTime);
+	//Archive.SetBool("Playing", bPlaying);
+	Archive.SetBool("Loop", bLoop);
+	Archive.SetVector2("CurrentUVScale", CurrentUVScale);
+	Archive.SetVector2("CurrentUVOffset", CurrentUVOffset);
+}
+
+void UAnimatedBillboardComp::Deserialize(const FArchive& Archive)
+{
+	Super::Deserialize(Archive);
+
+	GridX = Archive.GetInt32("GridX");
+	GridY = Archive.GetInt32("GridY");
+	TotalFrames = Archive.GetInt32("TotalFrames");
+	//CurrentFrame = Archive.GetInt32("CurrentFrame");
+	FrameRate = Archive.GetFloat("FrameRate");
+	//ElapsedTime = Archive.GetFloat("ElapsedTime");
+	//bPlaying = Archive.GetBool("Playing");
+	bLoop = Archive.GetBool("Loop");
+	CurrentUVScale = Archive.GetVector2("CurrentUVScale");
+	CurrentUVOffset = Archive.GetVector2("CurrentUVOffset");
 }
 
 void UAnimatedBillboardComp::Update(float DeltaTime) {

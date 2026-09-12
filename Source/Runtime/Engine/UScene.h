@@ -14,18 +14,20 @@
 #include "ThirdParty/Json/json.hpp"
 
 class UScene final : public UObject {
-  GENERATED_BODY()
+    DECLARE_UCLASS(UScene, UObject)
+    GENERATED_BODY()
 
 public:
 
   // 렌더링 컴포넌트 목록 반환
-  [[nodiscard]] TArray<UPrimitiveComponent *> GetRenderComponents() const;
-  [[nodiscard]] FRenderResourceLibrary &GetRenderResourceLibrary() const {
+  [[nodiscard]] TArray<UPrimitiveComponent*> GetRenderComponents() const;
+  [[nodiscard]] FRenderResourceLibrary* GetRenderResourceLibrary() const {
     return RenderResourceLibrary;
   }
+  void SetRenderResourceLibrary(FRenderResourceLibrary* InRenderResourceLibrary);
 
   // 액터 목록 반환
-  [[nodiscard]] const TArray<AActor *> &GetActors() const { return Actors; }
+  [[nodiscard]] const TArray<AActor*> &GetActors() const { return Actors; }
 
   // 위치와 크기를 지정하여 액터 생성
   template <typename TActor, typename... TArgs>
@@ -33,9 +35,8 @@ public:
   TActor *SpawnActor(const FVector &Location, const FVector &Scale,
                      TArgs &&...Args) {
     TActor *Actor = NewObject<TActor>(std::forward<TArgs>(Args)...);
+    Actor->Initialize(this); // 스폰할 때 Scene 컨텍스트를 먼저 설정해야 component 등록 가능
     Actor->SetRootComponent(NewObject<UPrimitiveComponent>());
-    Actor->SetScene(this); // 스폰할때 바론 Scene 등록 이래야 component등록할때
-                           // 바로 scene에 등록가능
 
     if (Actor->GetRootComponent()) {
       FTransform Transform{};
@@ -69,10 +70,8 @@ public:
         std::forward<FirstArg>(First), std::forward<RestArgs>(Rest)...);
   }
 
-  json::JSON Serialize() const;
-  virtual bool Deserialize(const json::JSON &data) override;
-
-  void CreateFromJson(json::JSON data);
+  virtual void Serialize(FArchive& Archive) const override;
+  virtual void Deserialize(const FArchive& Archive) override;
 
   void AddReferencedObjects(FReferenceCollector &Collector) override;
 
@@ -82,14 +81,12 @@ public:
 
   void DestroyActor(AActor* Actor);
 
+protected:
+    AActor* SpawnActor(UClass* ClassType);
+
 private:
-  explicit UScene(FRenderResourceLibrary &RenderResources)
-      : RenderResourceLibrary(RenderResources) {}
+  TArray<AActor*> Actors;                        // 액터 목록 (Update용)
+  TArray<UPrimitiveComponent*> RenderComponents; // 렌더링큐 (Draw용)
 
-  uint32 Version = 1u;
-  uint32 NextUUID = 1u;
-  TArray<AActor *> Actors;                        // 액터 목록 (Update용)
-  TArray<UPrimitiveComponent *> RenderComponents; // 렌더링큐 (Draw용)
-
-  FRenderResourceLibrary &RenderResourceLibrary;
+  FRenderResourceLibrary* RenderResourceLibrary = nullptr;
 };

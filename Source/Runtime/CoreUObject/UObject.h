@@ -10,6 +10,7 @@
 class UObjectGlobals;
 class UClass;
 class FReferenceCollector;
+class FArchive;
 
 /*
  * UObject를 상속받는 클래스는 반드시 GENERATED_BODY() 매크로를 사용해야 한다.
@@ -64,11 +65,11 @@ private:										\
     static UObject* CreateObject();				\
 	static UClass* ClassInfo;					\
 
-#define IMPLEMENT_UCLASS(ClassName, ParentClass)																\
-UObject* ClassName::CreateObject() { return NewObject<ClassName>(); }											\
-UClass* ClassName::ClassInfo = UClass::RegisterToFactory(#ClassName, &ClassName::CreateObject, #ParentClass);	\
-UClass* ClassName::StaticClass() { return ClassInfo; }															\
-UClass* ClassName::GetClass() const { return StaticClass(); }													\
+#define IMPLEMENT_UCLASS(ClassName, ParentClass)																			\
+UObject* ClassName::CreateObject()		{ return NewObject<ClassName>(); }													\
+UClass* ClassName::ClassInfo			= UClass::RegisterToFactory(#ClassName, &ClassName::CreateObject, #ParentClass);	\
+UClass* ClassName::StaticClass()		{ return ClassInfo; }																\
+UClass* ClassName::GetClass() const		{ return StaticClass(); }															\
 
 #define UCLASS_META(ClassName, Key, Value)					\
 struct _MetaRegister_##ClassName##_##Key					\
@@ -95,9 +96,11 @@ public:
 
 	UObject(UObject&&) = delete;
 	const UObject& operator=(UObject&&) = delete;
-	virtual  json::JSON Serialize() const;
-	virtual bool Deserialize(const json::JSON& data);
+
 	void SetUUID(uint32 _UUID) { UUID = _UUID; }
+
+	virtual void Initialize(UObject* Context = nullptr);
+	virtual void Release();
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector);
 
@@ -127,6 +130,9 @@ protected:
 	UObject() = default;
 	virtual ~UObject() = default;
 
+	virtual void Serialize(FArchive& Archive) const;
+	virtual void Deserialize(const FArchive& Archive);
+
 private:
 	uint32 UUID = 0u;
 	uint32 InternalIndex = 0u;
@@ -137,6 +143,11 @@ public:
 	template<typename T>
 	bool IsA() const {
 		return GetClass()->IsChildOrSelfOf(T::StaticClass());
+	}
+
+	bool IsA(UClass* ClassType) const
+	{
+		return GetClass()->IsChildOrSelfOf(ClassType);
 	}
 
 	template<typename T>

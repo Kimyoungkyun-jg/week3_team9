@@ -18,3 +18,23 @@ TObject* NewObject(TArgs&&... Args)
 	}
 	return Object;
 }
+
+inline UObject* NewObject(UClass* ClassType)
+{
+	UObject* Object = ClassType->CreateDefaultObject();
+	FUObjectArray::Get().AddObject(Object);
+
+	return Object;
+}
+
+
+/// <summary>
+/// UObject를 엔진에서 안전하게 할당 해제합니다. (delete Object와 동일)
+/// 제거된 UObject 포인터는 반드시 폐기해주세요.
+/// </summary>
+/// <param name="Object"></param>
+inline void DestroyObject(UObject* Object)
+{
+	FUObjectArray& ObjectArray = FUObjectArray::Get();
+	ObjectArray.DestroyObject(Object);
+}

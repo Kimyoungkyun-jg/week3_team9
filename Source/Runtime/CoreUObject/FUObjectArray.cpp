@@ -2,6 +2,11 @@
 
 #include <cassert>
 
+void FUObjectArray::SetNextUUID(uint32 UUID)
+{
+	NextUUID = UUID;
+}
+
 void FUObjectArray::AddObject(UObject* Object)
 {
 	Object->InternalIndex = static_cast<uint32>(Objects.size());
@@ -25,6 +30,7 @@ void FUObjectArray::RemoveObject(UObject* Object)
 void FUObjectArray::DestroyObject(UObject* Object) {
 	if (Object == nullptr) return;
 
+	Object->Release();
 	RemoveObject(Object);
 	delete Object; // 오버라이드해서 통계 구현 필요
 }

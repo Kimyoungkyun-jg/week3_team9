@@ -5,12 +5,17 @@
 #include "UPrimitiveComponent.h"
 
 class UScene;
+class FArchive;
+
 class UBillBoardComp : public UPrimitiveComponent {
   DECLARE_UCLASS(UBillBoardComp, UPrimitiveComponent)
   GENERATED_BODY()
 
 protected:
   explicit UBillBoardComp() = default;
+
+  virtual void Serialize(FArchive& Archive) const;
+  virtual void Deserialize(const FArchive& Archive);
 
 public:
 	void OnRegister(UScene& Scene) override;

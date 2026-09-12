@@ -7,6 +7,7 @@
 
 class UScene;
 class AActor;
+class FArchive;
 
 class USceneComponent : public UObject
 {
@@ -14,17 +15,21 @@ class USceneComponent : public UObject
 	DECLARE_UCLASS(USceneComponent, UObject)
 
 public:
-  AActor* GetOwner() const { return Owner; }
-  void SetOwner(AActor* InOwner) { Owner = InOwner; }
+    virtual void Initialize(UObject* Context = nullptr) override;
+    
+    AActor* GetActorOwner() const { return ActorOwner; }
+    USceneComponent* GetSceneOwner() const { return SceneOwner; }
 
-  json::JSON Serialize() const override;
-  bool Deserialize(const json::JSON &data) override;
-  virtual void Update(float DeltaTime) {}
+    virtual void Update(float DeltaTime) {}
 
 	virtual void OnRegister(UScene& Scene) {}
 	virtual void OnUnregister(UScene& Scene) {}
+
+	virtual void Serialize(FArchive& Archive) const override;
+	virtual void Deserialize(const FArchive& Archive) override;
+
 protected:
-  USceneComponent() = default;
+	USceneComponent() = default;
 
 	FTransform RelativeTransform;
 
@@ -38,5 +43,7 @@ public:
   void UnregisterComponentFromScene(UScene &Scene);
 
 protected:
-  AActor* Owner = nullptr; // 소유 액터
+  AActor* ActorOwner = nullptr;
+  USceneComponent* SceneOwner = nullptr;
+  UScene* Scene = nullptr;
 };

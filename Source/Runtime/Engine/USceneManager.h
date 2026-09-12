@@ -10,7 +10,6 @@ public:
 	void LoadScene(const FString& path);
 	void SetScene(UScene* scene);
 
-
 	UScene* CurrentScene = nullptr;
 	FRenderResourceLibrary* ResourceLibrary = nullptr;
 };
