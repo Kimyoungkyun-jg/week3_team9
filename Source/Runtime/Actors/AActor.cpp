@@ -3,6 +3,7 @@
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
+#include "Runtime/Core/Log.h"
 #include "Runtime/Engine/UScene.h"
 #include "Runtime/Engine/FArchive.h"
 
@@ -67,18 +68,48 @@ void AActor::Deserialize(const FArchive& Archive)
 
     if (Archive.IsNull("RootComponent"))
     {
-        RootComponent = nullptr;
+        if (RootComponent)
+        {
+            UE_LOG_WARN(
+                "[%s::Deserialize] RootComponent(%s)에 대한 직렬화 데이터가 누락되었습니다.",
+                GetClass()->GetUClassName(),
+                RootComponent->GetClass()->GetUClassName());
+        }
+        return;
     }
-    else
+
+    FArchive RootComponentArchive = Archive.GetArchive("RootComponent");
+    const FString& SavedTypeName = RootComponentArchive.GetString("Type");
+    UClass* SavedClass = UClass::FindByName(SavedTypeName);
+
+    if (SavedClass == nullptr)
     {
-        FArchive RootComponentArchive = Archive.GetArchive("RootComponent");
-        UClass* ClassType = UClass::FindByName(RootComponentArchive.GetString("Type"));
-
-        if (ClassType == nullptr) { RootComponent = nullptr; return; }
-
-        CreateRootComponent(ClassType);
-        RootComponent->Deserialize(RootComponentArchive);
+        UE_LOG_WARN(
+            "[%s::Deserialize] 알 수 없는 타입 %s",
+            GetClass()->GetUClassName(), SavedTypeName);
+        return;
     }
+
+    if (RootComponent == nullptr)
+    {
+        UE_LOG_WARN(
+            "[%s::Deserialize] RootComponent %s를 찾을 수 없습니다.",
+            GetClass()->GetUClassName(), SavedTypeName);
+        return;
+    }
+
+    if (RootComponent->GetClass() != SavedClass)
+    {
+        UE_LOG_WARN(
+            "[%s::Deserialize] 기본 RootComponent (%s)와 저장된 타입 (%s)가 일치하지 않습니다.",
+            GetClass()->GetUClassName(),
+            RootComponent->GetClass()->GetUClassName(),
+            SavedTypeName
+        );
+        return;
+    }
+
+    RootComponent->Deserialize(RootComponentArchive);
 }
 
 void AActor::CreateRootComponent(UClass* ClassType)
