@@ -2,6 +2,7 @@
 
 #include "Runtime/Core/TMap.h"
 #include "ThirdParty/Json/json.hpp"
+#include "Runtime/Core/FString.h"
 
 struct FCharacterInfo
 {
@@ -22,7 +23,7 @@ class FFont
 {
 public:
 	void InitializeForASCII(float InNumberOfLine);
-	void Deserialize(json::JSON& data);
+	void Deserialize(const FWString& path);
 	const FCharacterInfo& GetCharInfo(char InCharacter) const;
 private:
 	//FTexture	// 텍스처 아틀라스

@@ -109,6 +109,7 @@ public:
     LineMesh.reset();
     PlaneMesh.reset();
     RectMesh.reset();
+    TextMesh.reset();
   }
 
   // 머티리얼 전체 해제
@@ -173,6 +174,8 @@ private:
   // Text
   bool CreateTextMesh(FRenderer& Renderer);
   bool CreateTextMaterial(FRenderer& Renderer);
+  // Kor
+  bool CreateKorTextMesh(FRenderer& Renderer);
 
   // 개별 리소스 멤버 변수
   TSharedPtr<FMesh> CubeMesh;
@@ -188,6 +191,7 @@ private:
   TSharedPtr<FMesh> PlaneMesh;
   TSharedPtr<FMesh> RectMesh;
   TSharedPtr<FMesh> TextMesh;
+  TSharedPtr<FMesh> KorTextMesh;
 
   TSharedPtr<FMaterial> SimpleMaterial;
   TSharedPtr<FMaterial> GridMaterial;

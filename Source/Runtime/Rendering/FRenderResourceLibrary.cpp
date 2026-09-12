@@ -26,7 +26,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
       !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer) ||
-      !CreateTextMaterial(Renderer)) {
+      !CreateTextMaterial(Renderer) || !CreateKorTextMesh(Renderer)) {
     return false;
   }
 
@@ -852,6 +852,75 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
     Material->SetTexture(GetTexture("dejavusansmono"));
 
     return true;
+}
+
+bool FRenderResourceLibrary::CreateKorTextMesh(FRenderer& Renderer)
+{
+    TArray<FVertexData> Vertices;
+    TArray<uint32> Indices;
+
+    // Font 로드하는 함수
+    FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
+    FFont Font;
+    Font.Deserialize(Path);
+    FWString Text{ L"안녕하세요" };    // 메시 임의 초기값
+    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
+
+    float prevAdvance = 0.0f;
+    for (uint16 i = 0; i < Text.length(); ++i)
+    {
+        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
+        FVertexData tv[4]{};
+
+        tv[0].x = 0.0f;
+        tv[0].y = CharInfo.planeLeft + prevAdvance;
+        tv[0].z = CharInfo.planeTop;
+        tv[0].u = CharInfo.u;
+        tv[0].v = CharInfo.v;
+        Vertices.push_back(tv[0]);
+
+        tv[1].x = 0.0f;
+        tv[1].y = CharInfo.planeRight + prevAdvance;
+        tv[1].z = CharInfo.planeTop;
+        tv[1].u = CharInfo.u + CharInfo.width;
+        tv[1].v = CharInfo.v;
+        Vertices.push_back(tv[1]);
+
+        tv[2].x = 0.0f;
+        tv[2].y = CharInfo.planeLeft + prevAdvance;
+        tv[2].z = CharInfo.planeBottom;
+        tv[2].u = CharInfo.u;
+        tv[2].v = CharInfo.v + CharInfo.height;
+        Vertices.push_back(tv[2]);
+
+        tv[3].x = 0.0f;
+        tv[3].y = CharInfo.planeRight + prevAdvance;
+        tv[3].z = CharInfo.planeBottom;
+        tv[3].u = CharInfo.u + CharInfo.width;
+        tv[3].v = CharInfo.v + CharInfo.height;
+        Vertices.push_back(tv[3]);
+
+        prevAdvance += CharInfo.advance;
+        uint32 VertexOffset = i * 4;
+        for (uint32 index : IndexSet)
+        {
+            Indices.push_back(index + VertexOffset);
+        }
+    }
+
+    // 메시 빌드 추가하기
+    FMeshDesc MeshData{
+        .VertexData = Vertices.data(),
+        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+        .VertexStride = sizeof(FVertexData),
+        .VertexCount = static_cast<uint32>(Vertices.size()),
+        .IndexData = Indices.data(),
+        .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+        .IndexCount = static_cast<uint32>(Indices.size())
+    };
+
+    KorTextMesh = RegisterMesh("KorText", Renderer.CreateDynamicMesh(MeshData));
+    return KorTextMesh != nullptr;
 }
 
 

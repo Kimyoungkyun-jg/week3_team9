@@ -10,7 +10,7 @@ void UTextComponent::OnRegister(UScene& Scene)
 {
 	Super::OnRegister(Scene);
 
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Text"));
+	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("KorText"));
 	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Text"));
 }
 

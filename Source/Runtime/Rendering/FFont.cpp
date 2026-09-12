@@ -1,6 +1,8 @@
 #include "FFont.h"
 #include "Runtime/Core/IntTypes.h"
 #include "Runtime/Core/FString.h"
+#include <filesystem>
+#include <fstream>
 
 void FFont::InitializeForASCII(float InNumberOfLine)
 {
@@ -21,8 +23,19 @@ void FFont::InitializeForASCII(float InNumberOfLine)
 	}
 }
 
-void FFont::Deserialize(json::JSON& data)
+void FFont::Deserialize(const FWString& path)
 {
+	std::ifstream f(path);
+	if (!f)
+	{
+		return;
+	}
+
+	std::stringstream buffer;
+	buffer << f.rdbuf();
+
+	json::JSON data = json::JSON::Load(buffer.str());
+
 	// atlas 자체 정보 
 	FString type = data["atlas"]["type"].ToString();
 	uint32 distanceRange = data["atlas"]["distanceRange"].ToInt();
@@ -70,7 +83,7 @@ void FFont::Deserialize(json::JSON& data)
 			info.height = (atlBot - atlTop) / height;
 		}
 
-		CharInfoMap[static_cast<char32_t>(unicode)] = info;
+		CharInfoMap.emplace(static_cast<char32_t>(unicode), info);
 	}
 }
 
