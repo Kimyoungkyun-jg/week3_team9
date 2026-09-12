@@ -102,6 +102,11 @@ void FEditor::ClearSelectionForGC() {
   Gizmo.HoveredHandle = EGizmoHandle::None;
 }
 
+void FEditor::SetCameraSensitivity(float Value)
+{
+    CameraSensitivity = Value;
+}
+
 UPrimitiveComponent *FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
   if (!SceneManager || !SceneManager->CurrentScene) {
     return nullptr;
