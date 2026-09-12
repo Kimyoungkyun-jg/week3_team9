@@ -25,6 +25,9 @@ struct FPipelineEntry {
   EBuiltinPipeline Id;
   const wchar_t *VertexShader;
   const wchar_t *PixelShader;
+  bool bDepthWrite = true;
+  D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;
+  bool bAdditiveBlend = false;
 };
 
 // 기본 파이프라인 테이블
@@ -33,6 +36,7 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EBuiltinPipeline::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
     {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
     {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
+    {EBuiltinPipeline::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -89,7 +93,10 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
         .VertexShaderFileName = VsPath,
         .PixelShaderFileName = PsPath,
         .bEnableDepthTest = true,
-    };
+        .bEnableDepthWrite = Entry.bDepthWrite,
+        .CullMode = Entry.CullMode,
+        .bAdditiveBlend = Entry.bAdditiveBlend,
+    };     
 
     TSharedPtr<FRenderPipeline> Pipeline =
         Renderer.CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
@@ -107,14 +114,16 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   if (!InitializePipelines(Renderer) ||
       !CreateCubeMesh(Renderer) ||
       !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
-      !CreateConeMesh(Renderer) || !CreateArrowMesh(Renderer) ||
+      !CreateConeMesh(Renderer) || !CreateSpotlightConeMesh(Renderer) ||
+      !CreateArrowMesh(Renderer) ||
       !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
       !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
       !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
       !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
-      !CreateTexturedMaterial(Renderer)) {
+      !CreateTexturedMaterial(Renderer) ||
+      !CreateSpotlightMaterial(Renderer)) {
     return false;
   }
 
@@ -244,49 +253,64 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
 bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
   constexpr float BottomRadius = 0.5f;
   constexpr float Height = 1.0f;
-  constexpr uint32 SliceCount = 24;
+  constexpr uint32 SliceCount = 48;
   constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
   const float DTheta = TAU / static_cast<float>(SliceCount);
 
   TArray<FVertexData> Vertices;
   TArray<uint32> Indices;
 
-  Vertices.reserve(SliceCount * 2 + 2);
-  Indices.reserve(SliceCount * 6);
-
   const float HalfH = Height * 0.5f;
+  const float SlantLen = std::sqrt(Height * Height + BottomRadius * BottomRadius);
+  const float NormalFactor = Height / SlantLen;
+  const float NormalY = BottomRadius / SlantLen;
 
-  const uint32 ApexIndex = static_cast<uint32>(Vertices.size());
-  Vertices.push_back({0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.0f,
-                      0.0f, 1.0f, 0.0f});
-
-  const uint32 SideBaseStart = static_cast<uint32>(Vertices.size());
+  // 옆면 정점 생성
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
+    const float NextTheta = static_cast<float>(i + 1) * DTheta;
+    const float MidTheta = (Theta + NextTheta) * 0.5f;
+
+    const float ApexNx = NormalFactor * std::cos(MidTheta);
+    const float ApexNz = NormalFactor * std::sin(MidTheta);
+
+    const uint32 ApexIdx = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({0.0f, HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.0f,
+                        ApexNx, NormalY, ApexNz});
+
+    const float BaseNx1 = NormalFactor * std::cos(Theta);
+    const float BaseNz1 = NormalFactor * std::sin(Theta);
+    const uint32 BaseIdx1 = static_cast<uint32>(Vertices.size());
     Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
-                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+                        BottomRadius * std::sin(Theta), 1.0f, 1.0f, 1.0f, 1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
-                        1.0f, std::cos(Theta), 0.0f, std::sin(Theta)});
+                        1.0f, BaseNx1, NormalY, BaseNz1});
+
+    const float BaseNx2 = NormalFactor * std::cos(NextTheta);
+    const float BaseNz2 = NormalFactor * std::sin(NextTheta);
+    const uint32 BaseIdx2 = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({BottomRadius * std::cos(NextTheta), -HalfH,
+                        BottomRadius * std::sin(NextTheta), 1.0f, 1.0f, 1.0f, 1.0f,
+                        static_cast<float>(i + 1) / static_cast<float>(SliceCount),
+                        1.0f, BaseNx2, NormalY, BaseNz2});
+
+    Indices.push_back(ApexIdx);
+    Indices.push_back(BaseIdx2);
+    Indices.push_back(BaseIdx1);
   }
 
+  // 밑면 뚜껑 정점 생성
   const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
-  Vertices.push_back({0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
+  Vertices.push_back({0.0f, -HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.2f,
                       0.0f, -1.0f, 0.0f});
 
   const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
+    const float U = static_cast<float>(i) / static_cast<float>(SliceCount);
     Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
-                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
-                        0.5f + 0.5f * std::cos(Theta),
-                        0.5f + 0.5f * std::sin(Theta), 0.0f, -1.0f, 0.0f});
-  }
-
-  for (uint32 i = 0; i < SliceCount; ++i) {
-    const uint32 Next = (i + 1) % SliceCount;
-    Indices.push_back(ApexIndex);
-    Indices.push_back(SideBaseStart + Next);
-    Indices.push_back(SideBaseStart + i);
+                        BottomRadius * std::sin(Theta), 1.0f, 1.0f, 1.0f, 1.0f,
+                        U, 1.0f, 0.0f, -1.0f, 0.0f});
   }
 
   for (uint32 i = 0; i < SliceCount; ++i) {
@@ -309,6 +333,72 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
 
   ConeMesh = RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
   return ConeMesh != nullptr;
+}
+
+// 스포트라이트 전용 열린 원뿔 메쉬 생성
+bool FRenderResourceLibrary::CreateSpotlightConeMesh(FRenderer &Renderer) {
+  constexpr float BottomRadius = 0.5f;
+  constexpr float Height = 1.0f;
+  constexpr uint32 SliceCount = 48;
+  constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
+  const float DTheta = TAU / static_cast<float>(SliceCount);
+
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
+
+  const float HalfH = Height * 0.5f;
+  const float SlantLen = std::sqrt(Height * Height + BottomRadius * BottomRadius);
+  const float NormalFactor = Height / SlantLen;
+  const float NormalY = BottomRadius / SlantLen;
+
+  // 옆면 정점만 생성하고 밑면 뚜껑은 생성하지 않음
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    const float NextTheta = static_cast<float>(i + 1) * DTheta;
+    const float MidTheta = (Theta + NextTheta) * 0.5f;
+
+    const float ApexNx = NormalFactor * std::cos(MidTheta);
+    const float ApexNz = NormalFactor * std::sin(MidTheta);
+
+    const uint32 ApexIdx = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({0.0f, HalfH, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.0f,
+                        ApexNx, NormalY, ApexNz});
+
+    const float BaseNx1 = NormalFactor * std::cos(Theta);
+    const float BaseNz1 = NormalFactor * std::sin(Theta);
+    const uint32 BaseIdx1 = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
+                        BottomRadius * std::sin(Theta), 1.0f, 1.0f, 1.0f, 1.0f,
+                        static_cast<float>(i) / static_cast<float>(SliceCount),
+                        1.0f, BaseNx1, NormalY, BaseNz1});
+
+    const float BaseNx2 = NormalFactor * std::cos(NextTheta);
+    const float BaseNz2 = NormalFactor * std::sin(NextTheta);
+    const uint32 BaseIdx2 = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({BottomRadius * std::cos(NextTheta), -HalfH,
+                        BottomRadius * std::sin(NextTheta), 1.0f, 1.0f, 1.0f, 1.0f,
+                        static_cast<float>(i + 1) / static_cast<float>(SliceCount),
+                        1.0f, BaseNx2, NormalY, BaseNz2});
+
+    Indices.push_back(ApexIdx);
+    Indices.push_back(BaseIdx2);
+    Indices.push_back(BaseIdx1);
+  }
+
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
+
+  SpotlightConeMesh =
+      RegisterMesh("SpotlightCone", Renderer.CreateMesh(MeshDesc));
+  return SpotlightConeMesh != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
@@ -757,6 +847,32 @@ bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
 
   // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
   Material->SetTexture(GetTexture("sandclock"));
+
+  return true;
+}
+
+// 스포트라이트 머티리얼 초기화
+bool FRenderResourceLibrary::CreateSpotlightMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
+
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/SpotlightPS.cso",
+  };
+
+  SpotlightMaterial =
+      RegisterMaterial("Spotlight", Renderer.CreateMaterial(Desc));
+  if (!SpotlightMaterial) {
+    return false;
+  }
+
+  TSharedPtr<FRenderPipeline> Pipeline =
+      GetPipeline(EBuiltinPipeline::Spotlight);
+  if (!Pipeline) {
+    return false;
+  }
+  // 파이프라인 지정
+  SpotlightMaterial->SetPipeLine(Pipeline);
 
   return true;
 }

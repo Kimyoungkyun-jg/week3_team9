@@ -6,6 +6,7 @@
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
+#include "Runtime/CoreUObject/USpotLightComponent.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/FRayCastingManager.h"
@@ -33,32 +34,16 @@ void FEditorApplication::Initialize_Runtime(
 
   Editor.Initialize(SceneManager);
 
-	//UCubeComp* CubeComp = NewObject<UCubeComp>();
-	//FTransform& CubeTransform = CubeComp->GetRelativeTransform();
-	//CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-	//CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-	//CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
- // AActor *Cube =
- //     CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
- //                                  FVector(0.5f, 0.5f, 0.5f)   // Scale
- //     );
 
- // Cube->SetRootComponent(CubeComp);
+  USpotLightComponent* AnimatedBBComp = NewObject<USpotLightComponent>();
   
-
-
-  UAnimatedBillboardComp* AnimatedBBComp = NewObject<UAnimatedBillboardComp>();
-  
-  AActor* Explosion =
+  AActor* Spotlight =
       CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f),
           FVector(10.0f, 10.0f, 10.0f)
       );
 
-  Explosion->SetRootComponent(AnimatedBBComp);
-  AnimatedBBComp->SetTexture("Explosion");
-  AnimatedBBComp->SetSpriteSheet(6,6,20,36);
-  AnimatedBBComp->SetLooping(true);
+  Spotlight->SetRootComponent(AnimatedBBComp);
 
   //Editor.SelectActor(Cube);
 
@@ -138,15 +123,38 @@ void FEditorApplication::Render() {
 
     if (Editor.ObjectSelected())
     {
-        // AABB 그리기
-        USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
-        UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-        if (PrimComp)
+        if (auto* SpotLight = Editor.GetSelectedActor()->GetRootComponent()->Cast<USpotLightComponent>()) //spotlight 용
         {
-            const FMesh& Mesh = *PrimComp->GetMesh();
-            const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-            FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-            RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+            if (auto Mesh = SpotLight->GetMesh())
+            {
+                const FMatrix ModelMatrix = SpotLight->GetModelMatrix();
+                const auto& Positions = Mesh->GetPositions();
+                const auto& Indices = Mesh->GetIndices();
+                const FVector4 WireColor{ 1.0f, 1.0f, 0.0f, 1.0f }; // 노란색 선
+                // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
+                for (size_t i = 0; i + 2 < Indices.size(); i += 3)
+                {
+                    FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
+                    FVector B = ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
+                    FVector C = ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
+                    RenderView->RenderLine(A, B, WireColor);
+                    RenderView->RenderLine(B, C, WireColor);
+                    RenderView->RenderLine(C, A, WireColor);
+                }
+            }
+        }
+        else
+        {
+            // AABB 그리기
+            USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
+            UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+            if (PrimComp)
+            {
+                const FMesh& Mesh = *PrimComp->GetMesh();
+                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+                FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+                RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+            }
         }
     }
 

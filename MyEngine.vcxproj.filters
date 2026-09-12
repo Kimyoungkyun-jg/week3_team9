@@ -211,6 +211,9 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\USpotLightComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Core\FNamePool.cpp">
       <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
@@ -372,6 +375,9 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\USpotLightComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.h">
       <Filter>Source\Editor\UI\Imgui</Filter>
     </ClInclude>
@@ -432,6 +438,9 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\GridPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\SpotlightPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\GridVS.hlsl">

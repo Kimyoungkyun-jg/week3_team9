@@ -261,7 +261,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
       .FillMode = (RenderMode == EViewModeIndex::VMI_Wireframe)
                       ? D3D11_FILL_WIREFRAME
                       : D3D11_FILL_SOLID,
-      .CullMode = D3D11_CULL_BACK,
+      .CullMode = Desc.CullMode,
       .FrontCounterClockwise = false,
   };
 
@@ -273,12 +273,38 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
 
   D3D11_DEPTH_STENCIL_DESC DepthStencilDesc{
       .DepthEnable = Desc.bEnableDepthTest,
-      .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
+      .DepthWriteMask = Desc.bEnableDepthWrite ? D3D11_DEPTH_WRITE_MASK_ALL
+                                               : D3D11_DEPTH_WRITE_MASK_ZERO,
       .DepthFunc = D3D11_COMPARISON_LESS,
   };
 
   Result = Device->CreateDepthStencilState(&DepthStencilDesc,
                                            &Pipeline->DepthStencilState);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  // 블렌드 상태 생성
+  D3D11_BLEND_DESC BlendDesc{};
+  BlendDesc.AlphaToCoverageEnable = false;
+  BlendDesc.IndependentBlendEnable = false;
+  auto &RenderTargetBlend = BlendDesc.RenderTarget[0];
+
+  if (Desc.bAdditiveBlend) {
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_ZERO;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+  } else {
+    RenderTargetBlend.BlendEnable = false;
+    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+  }
+
+  Result = Device->CreateBlendState(&BlendDesc, &Pipeline->BlendState);
   if (FAILED(Result)) {
     return nullptr;
   }

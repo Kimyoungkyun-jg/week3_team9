@@ -14,13 +14,17 @@ enum class EBuiltinPipeline : uint8 {
   Textured,
   Grid,
   RotationGizmo,
-  Count
+  Count,
+  Spotlight
 };
 
 struct FRenderPipelineDesc {
   FWString VertexShaderFileName;
   FWString PixelShaderFileName;
   bool bEnableDepthTest = true;
+  bool bEnableDepthWrite = true;               //기본 불투명
+  D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;  //기본 뒷면 제거
+  bool bAdditiveBlend = false;                 //기본 불투명
 
   bool operator==(const FRenderPipelineDesc &) const = default;
 };
@@ -47,4 +51,5 @@ private:
   Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState;
   Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState;
   Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState;
+  Microsoft::WRL::ComPtr<ID3D11BlendState> BlendState;
 };
