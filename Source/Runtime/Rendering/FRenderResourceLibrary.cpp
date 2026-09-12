@@ -841,7 +841,7 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
     }
 
     TSharedPtr<FRenderPipeline> Pipeline =
-        Renderer.GetPipeline(EBuiltinPipeline::Textured);
+        Renderer.GetPipeline(EBuiltinPipeline::Text);
     if (!Pipeline) {
         // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
         return false;
@@ -849,7 +849,7 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
     Material->SetPipeLine(Pipeline);
 
     // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-    Material->SetTexture(GetTexture("sandclock"));
+    Material->SetTexture(GetTexture("dejavusansmono"));
 
     return true;
 }

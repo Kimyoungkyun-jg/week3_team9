@@ -32,6 +32,7 @@ enum class EBuiltinPipeline : uint8 {
   Simple_Solid,
   Simple_Wireframe,
   Textured,
+  Text,
   Grid,
   RotationGizmo,
   Count
@@ -50,6 +51,7 @@ constexpr FPipelineEntry pipelineTable[] = {
     // VS는 ExampleVS를 그대로 씀. UV를 PS로 넘기도록 수정해 뒀고,
     // VS가 PS보다 많이 출력하는 건 D3D가 허용하므로 다른 파이프라인에 영향 없음
     {EBuiltinPipeline::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
+    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"TextPS.cso"},
     {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
     {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso",L"RotationGizmoPS.cso"},
 };
