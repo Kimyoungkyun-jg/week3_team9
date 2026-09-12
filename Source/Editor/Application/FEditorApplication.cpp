@@ -36,32 +36,6 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   Editor.Initialize(SceneManager);
 
 
-
-  //UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
-  //FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
-  //BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-  //BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-  //BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-
-  //AActor* BillBoard =
-  //    CurrentScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
-  //        FVector(0.5f, 0.5f, 0.5f)   // Scale
-  //    );
-  AActor* Spotlight =
-      CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f),
-          FVector(10.0f, 10.0f, 10.0f)
-      );
-  Spotlight->CreateRootComponent(USpotLightComponent::StaticClass());
-
-  //BillBoard->SetRootComponent(BillBoardComp);
-
-
-  AActor* Testor = CurrentScene->SpawnActor<AActor>();
-  Testor->CreateRootComponent(UTextComponent::StaticClass());
-
-  Editor.SelectActor(Testor);
-
-
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
   Viewport.ViewportCamera.Pitch = -25.0f;
