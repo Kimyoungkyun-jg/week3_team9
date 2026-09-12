@@ -768,7 +768,7 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
     TArray<FVertexData> Vertices;
     TArray<uint32> Indices;
     FFont Font;
-    Font.Initialize(16);
+    Font.InitializeForASCII(16);
     FString Text{ "Welcome To Jungle" };    // 메시 임의 초기값
 
     // TODO: PlaneGenerator 만들어야 함.
