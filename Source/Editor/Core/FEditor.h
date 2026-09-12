@@ -53,12 +53,18 @@ public:
 
   void ClearSelectionForGC();
 
+  float GetCameraSensitivity() const { return CameraSensitivity; }
+  void SetCameraSensitivity(float Value);
+
 private:
   FRenderResourceLibrary *RendererLibrary = nullptr;
   USceneManager *SceneManager =
       nullptr; // 씬을 다중으로 가질 수 있도록 구조개선 가능-이경우 에디터쪽에
                // 클래스를 추가해 씬과 FEditorViewport들을 연관
   TArray<FEditorViewport> EditorViewports;
+
+  // TODO: 이게 여기에 있으면 안됨... 구조 리팩토링 할 것..
+  float CameraSensitivity = 0.5f;
 
   FGizmo Gizmo;
   FGrid Grid;
