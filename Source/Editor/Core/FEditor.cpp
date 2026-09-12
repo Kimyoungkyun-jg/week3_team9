@@ -1,5 +1,8 @@
 #include "FEditor.h"
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/ACubeActor.h"
+#include "Runtime/Actors/ASphereActor.h"
+#include "Runtime/Actors/ACylinderActor.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObject.h"
@@ -9,12 +12,14 @@
 #include <numbers>
 
 
-void FEditor::Initialize(FRenderResourceLibrary *RendererLibrary,
-                         USceneManager *SceneManager) {
-  Gizmo.Initialize(*RendererLibrary);
-  Grid.Initialize(*RendererLibrary);
-  this->RendererLibrary = RendererLibrary;
+void FEditor::Initialize(USceneManager *SceneManager) {
+  Gizmo.Initialize();
+  Grid.Initialize();
   this->SceneManager = SceneManager;
+}
+
+FRenderResourceLibrary *FEditor::GetRendererLibrary() {
+  return &FRenderResourceLibrary::Get();
 }
 
 void FEditor::Process() {
@@ -35,7 +40,9 @@ void FEditor::NewScene() {
 
 void FEditor::SaveScene(const FString &Path) { SceneManager->SaveScene(Path); }
 
-void FEditor::LoadScene(const FString &Path) {
+void FEditor::LoadScene(const FString &Path) 
+{
+
   // 씬 로드
   SceneManager->LoadScene(Path);
   SelectedActor = nullptr;
@@ -106,33 +113,29 @@ UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
     return nullptr;
   }
 
-  // 액터를 스폰하고 컴포넌트를 루트로 장착
-  AActor *NewActor = SceneManager->CurrentScene->SpawnActor<AActor>();
-
-  switch (Type) {
-  case EEditorPrimitiveType::Cube:
-      NewActor->CreateRootComponent(UCubeComp::StaticClass());
-      break;
-  case EEditorPrimitiveType::Cylinder:
-      NewActor->CreateRootComponent(UCylinderComp::StaticClass());
-      break;
-  case EEditorPrimitiveType::Sphere:
-      NewActor->CreateRootComponent(USphereComp::StaticClass());
-      break;
-  }
-
   // 오프셋 적용
   static int SpawnSerial = 0;
   const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
-  FTransform Transform
-  {
-      FVector{ Offset, 0.0f, 0.0f },
-      FQuaternion::Identity(),
-      FVector{ 0.5f, 0.5f, 0.5f },
-  };
+  const FVector SpawnLoc{ Offset, 0.0f, 0.0f };
+  const FVector SpawnScale{ 0.5f, 0.5f, 0.5f };
 
-  NewActor->GetRootComponent()->SetRelativeTransform(Transform);
+  AActor* NewActor = nullptr;
+  switch (Type) {
+  case EEditorPrimitiveType::Cube:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ACubeActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Cylinder:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ACylinderActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Sphere:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ASphereActor>(SpawnLoc, SpawnScale);
+    break;
+  }
+
+  if (!NewActor) {
+    return nullptr;
+  }
 
   SelectActor(NewActor);
-  return NewActor->GetRootComponent()->Cast<UPrimitiveComponent>();
+  return NewActor->GetRootComponent() ? NewActor->GetRootComponent()->Cast<UPrimitiveComponent>() : nullptr;
 }

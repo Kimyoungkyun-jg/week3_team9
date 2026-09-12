@@ -1,47 +1,158 @@
 #include "FImguiPropertyWindow.h"
 #include "Runtime/CoreUObject/USceneComponent.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
+#include "Runtime/CoreUObject/USpotLightComponent.h"
+#include "Runtime/CoreUObject/UTextComponent.h"
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/Actors/AActor.h"
 #include "ThirdParty/Imgui/imgui.h"
 #include "ThirdParty/Imgui/imgui_internal.h"
 #include "ThirdParty/Imgui/imgui_impl_dx11.h"
 #include "ThirdParty/Imgui/imgui_impl_win32.h"
+#include <string>
 
 void FImguiPropertyWindow::Process(FEditor& Editor)
 {
-	USceneComponent* SceneComponent = nullptr;
 	AActor* SelectedActor = Editor.GetSelectedActor();
-	if (SelectedActor)
-	{
-		SceneComponent = SelectedActor->GetRootComponent();
-	}
 	ImGui::Begin("Jungle Property Window");
 
 	if (SelectedActor)
 	{
-		// 액터 정보 출력
+		// 액터 정보 헤더 출력
 		const char* ActorClassName = SelectedActor->GetClass() ? SelectedActor->GetClass()->GetDisplayName().c_str() : "None";
 		ImGui::Text("Actor Class: %s", ActorClassName);
 		ImGui::Text("Actor UUID: %u", SelectedActor->GetUUID());
 
-		if (SceneComponent)
+		ImGui::Separator();
+
+		// 컴포넌트 계층 트리뷰
+		ImGui::TextDisabled("Components Hierarchy");
+		const auto& Components = SelectedActor->GetAttachedComponents();
+		USceneComponent* RootComp = SelectedActor->GetRootComponent();
+
+		if (RootComp)
 		{
-			// 컴포넌트 정보 출력
-			const char* CompClassName = SceneComponent->GetClass() ? SceneComponent->GetClass()->GetDisplayName().c_str() : "None";
-			ImGui::Text("Root Component: %s", CompClassName);
-			ImGui::Text("Component UUID: %u", SceneComponent->GetUUID());
+			const char* RootName = RootComp->GetClass() ? RootComp->GetClass()->GetDisplayName().c_str() : "RootComponent";
+			ImGui::BulletText("[Root] %s (ID: %u)", RootName, RootComp->GetUUID());
+		}
+
+		for (USceneComponent* Comp : Components)
+		{
+			if (!Comp || Comp == RootComp)
+			{
+				continue;
+			}
+			const char* SubName = Comp->GetClass() ? Comp->GetClass()->GetDisplayName().c_str() : "SubComponent";
+			ImGui::Indent(15.0f);
+			ImGui::BulletText("└── [Sub] %s (ID: %u)", SubName, Comp->GetUUID());
+			ImGui::Unindent(15.0f);
 		}
 
 		ImGui::Separator();
 
-		if (SceneComponent)
+		// 각 컴포넌트별 상세 속성 섹션
+		for (size_t i = 0; i < Components.size(); ++i)
 		{
-			ImGui::DragFloat3("Translation", &Editor.SelectedTransform.Location.X, 0.01f);
-			if (ImGui::DragFloat3("Rotation (deg)", &Editor.SelectedEulerDegDisplay.X, 0.5f))
+			USceneComponent* Comp = Components[i];
+			if (!Comp)
 			{
-				Editor.SelectedTransform.Rotation = FQuaternion::FromEulerXYZDeg(Editor.SelectedEulerDegDisplay);
+				continue;
 			}
-			ImGui::DragFloat3("Scale", &Editor.SelectedTransform.Scale3D.X, 0.01f);
+
+			bool bIsRoot = (Comp == RootComp);
+			const char* CompTypeName = Comp->GetClass() ? Comp->GetClass()->GetDisplayName().c_str() : "Component";
+			std::string SectionTitle = (bIsRoot ? "[Root] " : "[Sub] ") + std::string(CompTypeName) + " (ID: " + std::to_string(Comp->GetUUID()) + ")###CompHeader_" + std::to_string(Comp->GetUUID());
+
+			if (ImGui::CollapsingHeader(SectionTitle.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				ImGui::PushID(Comp);
+
+				// 트랜스폼 편집
+				ImGui::TextDisabled("Transform");
+				if (bIsRoot)
+				{
+					// 루트 컴포넌트 트랜스폼은 에디터 기즈모와 동기화
+					ImGui::DragFloat3("Translation", &Editor.SelectedTransform.Location.X, 0.01f);
+					if (ImGui::DragFloat3("Rotation (deg)", &Editor.SelectedEulerDegDisplay.X, 0.5f))
+					{
+						Editor.SelectedTransform.Rotation = FQuaternion::FromEulerXYZDeg(Editor.SelectedEulerDegDisplay);
+					}
+					ImGui::DragFloat3("Scale", &Editor.SelectedTransform.Scale3D.X, 0.01f);
+				}
+				else
+				{
+					// 서브 컴포넌트 상대 트랜스폼 편집
+					FTransform& RelTransform = Comp->GetRelativeTransform();
+					ImGui::DragFloat3("Rel Location", &RelTransform.Location.X, 0.01f);
+
+					FVector RelEuler = RelTransform.Rotation.ToEulerXYZDeg();
+					if (ImGui::DragFloat3("Rel Rotation (deg)", &RelEuler.X, 0.5f))
+					{
+						RelTransform.Rotation = FQuaternion::FromEulerXYZDeg(RelEuler);
+					}
+					ImGui::DragFloat3("Rel Scale", &RelTransform.Scale3D.X, 0.01f);
+				}
+
+				// 컴포넌트별 고유 속성 편집
+				if (auto* LightComp = Comp->Cast<USpotLightComponent>())
+				{
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.3f, 1.0f), "Spot Light Settings");
+
+					FVector LightCol = LightComp->GetLightColor();
+					if (ImGui::ColorEdit3("Light Color", &LightCol.X))
+					{
+						LightComp->SetLightColor(LightCol);
+					}
+
+					float LightIntensity = LightComp->GetIntensity();
+					if (ImGui::DragFloat("Intensity", &LightIntensity, 0.05f, 0.0f, 50.0f))
+					{
+						LightComp->SetIntensity(LightIntensity);
+					}
+
+					float SpotAngle = LightComp->GetSpotAngle();
+					if (ImGui::SliderFloat("Spot Angle", &SpotAngle, 1.0f, 89.0f))
+					{
+						LightComp->SetSpotAngle(SpotAngle);
+					}
+
+					float LightRange = LightComp->GetRange();
+					if (ImGui::DragFloat("Range", &LightRange, 0.1f, 0.1f, 100.0f))
+					{
+						LightComp->SetRange(LightRange);
+					}
+				}
+				else if (auto* PrimComp = Comp->Cast<UPrimitiveComponent>())
+				{
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Primitive Settings");
+
+					FVector CurrentColor = PrimComp->GetColor();
+					if (ImGui::ColorEdit3("Color", &CurrentColor.X))
+					{
+						PrimComp->SetColor(CurrentColor);
+						if (bIsRoot)
+						{
+							SelectedActor->SetColor(CurrentColor);
+						}
+					}
+				}
+				else if (auto* TextComp = Comp->Cast<UTextComponent>())
+				{
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Text Settings");
+
+					static char Buffer[128] = "Hello Jungle!";
+					if (ImGui::InputText("Text Content", Buffer, sizeof(Buffer), ImGuiInputTextFlags_EnterReturnsTrue))
+					{
+						TextComp->SetText(Buffer);
+					}
+				}
+
+				ImGui::PopID();
+				ImGui::Spacing();
+			}
 		}
 	}
 	else

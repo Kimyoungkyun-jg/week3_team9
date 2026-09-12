@@ -98,7 +98,7 @@ void USceneComponent::SetRelativeTransform(const FTransform& RelativeTransform)
     this->RelativeTransform = RelativeTransform;
 }
 
-FTransform USceneComponent::GetGlobalTransform() //나중에 부모 rootcomponent world좌표 써야됨
+FTransform USceneComponent::GetGlobalTransform() const //나중에 부모 rootcomponent world좌표 써야됨
 {
     if (SceneOwner)
     {

@@ -5,6 +5,8 @@
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
+#include "Runtime/CoreUObject/USpotLightComponent.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/FRayCastingManager.h"
@@ -16,6 +18,7 @@
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
+#include "Runtime/CoreUObject/UTextComponent.h"
 
 void FEditorApplication::Initialize_ImguiWin32DX11(
     HWND &Window, ID3D11Device *Device, ID3D11DeviceContext *Context) {
@@ -23,28 +26,15 @@ void FEditorApplication::Initialize_ImguiWin32DX11(
 }
 
 void FEditorApplication::Initialize_Runtime(
-    FRenderResourceLibrary *RendererLibrary, USceneManager *SceneManager,
+    USceneManager *SceneManager,
     FRenderView *RenderView) {
   this->RenderView = RenderView;
   this->SceneManager = SceneManager;
   this->CurrentScene = SceneManager->CurrentScene;
 
 
-  Editor.Initialize(RendererLibrary, SceneManager);
+  Editor.Initialize(SceneManager);
 
-	//UCubeComp* CubeComp = NewObject<UCubeComp>();
-	//FTransform& CubeTransform = CubeComp->GetRelativeTransform();
-	//CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-	//CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-	//CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-
- // AActor *Cube =
- //     CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
- //                                  FVector(0.5f, 0.5f, 0.5f)   // Scale
- //     );
-
- // Cube->SetRootComponent(CubeComp);
-  
 
 
   //UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
@@ -57,7 +47,11 @@ void FEditorApplication::Initialize_Runtime(
   //    CurrentScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
   //        FVector(0.5f, 0.5f, 0.5f)   // Scale
   //    );
-
+  AActor* Spotlight =
+      CurrentScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f),
+          FVector(10.0f, 10.0f, 10.0f)
+      );
+  Spotlight->CreateRootComponent(USpotLightComponent::StaticClass());
 
   //BillBoard->SetRootComponent(BillBoardComp);
 
@@ -103,6 +97,7 @@ void FEditorApplication::BeginFrame() { ImguiManager.NewFrame(); }
 void FEditorApplication::Tick(float DeltaTime) {
   ToolBar.Process(Editor, ConsoleWindow, ControlPanelWindow, PropertyWindow);
   EditorViewportWindow.Process(Editor, DeltaTime);
+  WorldOutliner.Process(Editor);
   ControlPanelWindow.Process(Editor);
   PropertyWindow.Process(Editor);
   ConsoleWindow.Process(Editor);
@@ -116,6 +111,7 @@ void FEditorApplication::Render() {
   for (auto &EditorViewport : EditorViewports) {
     if (RenderView) {
       RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
+      RenderView->GetRenderer().UpdateLightConstants(Editor.GlobalLight); //globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
@@ -150,8 +146,27 @@ void FEditorApplication::Render() {
         // AABB 그리기
         USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
         UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-        if (PrimComp && PrimComp->GetMesh())
+        if (PrimComp && PrimComp->GetMesh() && PrimComp->IsA<USpotLightComponent>())
         {
+                auto Mesh = PrimComp->GetMesh();
+                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+                const auto& Positions = Mesh->GetPositions();
+                const auto& Indices = Mesh->GetIndices();
+                const FVector4 WireColor{ 1.0f, 1.0f, 0.0f, 1.0f }; // 노란색 선
+                // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
+                for (size_t i = 0; i + 2 < Indices.size(); i += 3)
+                {
+                    FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
+                    FVector B = ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
+                    FVector C = ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
+                    RenderView->RenderLine(A, B, WireColor);
+                    RenderView->RenderLine(B, C, WireColor);
+                    RenderView->RenderLine(C, A, WireColor);
+                }
+        }
+        else if (PrimComp && PrimComp->GetMesh())
+        {
+            // AABB 그리기
             const FMesh& Mesh = *PrimComp->GetMesh();
             const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
             FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
@@ -191,11 +206,5 @@ void FEditorApplication::OnWindowSize(UINT Width, UINT Height) {
 }
 
 void FEditorApplication::CollectGarbage() {
-  FGarbageCollector::Get().CollectGarbage(
-      [this](const FReferenceCollector &Collector) {
-        AActor *SelectedActor = Editor.GetSelectedActor();
-
-        if (SelectedActor != nullptr && !Collector.bIsReferenced(SelectedActor))
-          Editor.ClearSelectionForGC();
-      });
+  FGarbageCollector::Get().CollectGarbage();
 }

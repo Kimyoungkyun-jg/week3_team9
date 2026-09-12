@@ -188,6 +188,19 @@ void AActor::Update(float DeltaTime) {
   }
 }
 
+void AActor::SetColor(const FVector& InColor) {
+  if (auto* PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
+    PrimComp->SetColor(InColor);
+  }
+}
+
+FVector AActor::GetColor() const {
+  if (auto* PrimComp = RootComponent ? RootComponent->Cast<UPrimitiveComponent>() : nullptr) {
+    return PrimComp->GetColor();
+  }
+  return FVector{1.0f, 1.0f, 1.0f};
+}
+
 void AActor::EndPlay() {
   if (!bHasBegunPlay) { return; }
 
@@ -205,4 +218,12 @@ void AActor::Unregister() {
     if (*It) { (*It)->Unregister(); }
   }
   Owner = nullptr;
+}
+
+void AActor::Destroy() {
+  if (Owner) {
+    Owner->DestroyActor(this);
+    return;
+  }
+  DestroyObject(this);
 }

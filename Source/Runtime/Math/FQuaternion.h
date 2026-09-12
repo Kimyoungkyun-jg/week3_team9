@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "FVector.h"
 #include "FMatrix.h"
@@ -158,5 +158,11 @@ struct FQuaternion
 		return FVector(rx, ry, rz);
 	}
 
-
+	// 디그리 단위 오일러 각도 반환
+	FVector ToEulerXYZDeg() const
+	{
+		constexpr float RadToDeg = 180.0f / 3.14159265358979f;
+		FVector Rad = GetEulerXYZ();
+		return FVector(Rad.X * RadToDeg, Rad.Y * RadToDeg, Rad.Z * RadToDeg);
+	}
 };

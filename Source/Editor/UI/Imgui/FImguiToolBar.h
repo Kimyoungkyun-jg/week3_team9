@@ -9,4 +9,7 @@ public:
 	void Process(FEditor& Editor, FImguiConsoleWindow& ConsoleWindow,
 		FImguiControlPanelWindow& ControlPanelWindow,
 		FImguiPropertyWindow& PropertyWindow);
+
+	FString ToNarrow(const wchar_t* Wide);
+	bool PickSceneFile(FString& OutPath, bool bSave);
 };

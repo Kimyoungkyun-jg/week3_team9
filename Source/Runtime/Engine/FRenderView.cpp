@@ -12,19 +12,33 @@ FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
 void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered, bool bHighlighted) {
 	if (!Rendered || !Rendered->GetMesh() || !Rendered->GetMaterial()) { return; }
+	Renderer.SetViewportUV(TopLeftUV, LengthUV);
 
   // TODO: 렌더뷰가 렌더러 구현을 알게 해서 여기서 V, P 따로 받고
   // 월드축변환행렬을 곱하거나, 렌더러쪽 UpdateObjectConstants를 Draw함수 안에
   // 숨긴뒤 인수로 M, V, P와 월드축을 받게 하면 렌더뷰도 렌더러 구현 모름
   const FMatrix VP = Camera.CreateViewProjectionMatrix();
+  const FMatrix World = Rendered->GetRenderMatrix(Camera);
 
   FObjectConstants Constants;
+  Constants.MVP = World * VP;
+  Constants.World = World;
     if (auto* BBcomp = Rendered->Cast<UBillBoardComp>()) 
     {
         BBcomp->CalculateRotate(Camera, Constants);//빌보드일때 바라보는 계산
         BBcomp->UpdateUVinfo(Constants);
     }
-    
+    Constants.ColorOverride = Rendered->GetColor();
+    Constants.ColorOverrideAmount = Rendered->GetColorAmount();
+    if (bHighlighted) {
+        if (Constants.ColorOverrideAmount > 0.0f) {
+            Constants.ColorOverride = Constants.ColorOverride * 0.7f + FVector{ 0.3f, 0.3f, 0.3f };
+        } else {
+            Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
+            Constants.ColorOverrideAmount = 0.5f;
+        }
+    }
+
     Renderer.Draw(*Rendered->GetMesh(), *Rendered->GetMaterial(), Constants);
 }
 

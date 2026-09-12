@@ -15,8 +15,10 @@ float4 MainPS(PS_INPUT Input) : SV_Target
     Input.UV.x = 1 - Input.UV.x;
     float4 Sampled = DiffuseTexture.Sample(DiffuseSampler, Input.UV);
 
-    // 투명 영역 제거
+    // 알파가 없거나 검은색인 영역 제거
     clip(Sampled.a - 0.1f);
+    clip(max(Sampled.r, max(Sampled.g, Sampled.b)) - 0.05f);
+
     // 정점 색상 반영
     float3 TintedColor = Sampled.rgb * Input.Color.rgb;
     

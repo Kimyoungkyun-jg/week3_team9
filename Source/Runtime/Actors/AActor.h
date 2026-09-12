@@ -33,6 +33,7 @@ public:
 
 	void CreateRootComponent(UClass* ClassType);
 	USceneComponent* GetRootComponent() const { return RootComponent; }
+	const TArray<USceneComponent*>& GetAttachedComponents() const { return AttachedComp; }
 
 
 	FTransform GetTransform() const { return RootComponent ? RootComponent->GetRelativeTransform() : FTransform{}; }
@@ -47,6 +48,9 @@ public:
 
 	[[nodiscard]] bool IsRegistered() const { return Owner != nullptr; }
 	[[nodiscard]] bool HasBegunPlay() const { return bHasBegunPlay; }
+
+	virtual void SetColor(const FVector& InColor);
+	virtual FVector GetColor() const;
 
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
 

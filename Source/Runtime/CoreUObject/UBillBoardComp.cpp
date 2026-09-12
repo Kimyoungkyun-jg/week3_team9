@@ -2,7 +2,11 @@
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/UScene.h"
 #include "Runtime/Engine/FArchive.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
+#include "Runtime/Core/Log.h"
 #include "UClass.h"
+#include <algorithm>
+#include <cctype>
 
 IMPLEMENT_UCLASS(UBillBoardComp, UPrimitiveComponent)
 UCLASS_META(UBillBoardComp, DisplayName, "BillBoard")
@@ -10,8 +14,12 @@ UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 
 void UBillBoardComp::Register(UScene& InScene) {
   FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial("Textured") : nullptr);
+  if (!GetMesh()) {
+    SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
+  }
+  if (!GetMaterial()) {
+    SetMaterial(Resources ? Resources->GetMaterial("Textured") : nullptr);
+  }
   Super::Register(InScene);
 }
 
@@ -62,4 +70,30 @@ void UBillBoardComp::CalculateRotate(const FCamera& Camera, FObjectConstants& In
     const FMatrix Proj = Camera.GetProjectionMatrix();
 
     InputConstant.MVP = InputConstant.MVP * View* Proj;
+}
+
+void UBillBoardComp::SetTexture(FString Texture)
+{
+    std::transform(Texture.begin(), Texture.end(), Texture.begin(),
+        [](unsigned char Character) { return static_cast<char>(std::tolower(Character)); });
+
+    auto& Resources = FRenderResourceLibrary::Get();
+    auto NewTexture = Resources.GetTexture(Texture);
+    if (!NewTexture)
+    {
+        UE_LOG("There is no such texture");
+        return;
+    }
+
+    auto MaterialInstance = TSharedPtr<FMaterial>(new FMaterial());
+    if (GetMaterial())
+    {
+        MaterialInstance->SetPipeLine(GetMaterial()->GetPipeline());
+    }
+    else
+    {
+        MaterialInstance->SetPipeLine(Resources.GetPipeline(EBuiltinPipeline::Textured));
+    }
+    MaterialInstance->SetTexture(NewTexture);
+    SetMaterial(MaterialInstance);
 }

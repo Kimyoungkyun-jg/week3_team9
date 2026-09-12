@@ -172,6 +172,15 @@
     <ClCompile Include="Source\Runtime\Actors\AActor.cpp">
       <Filter>Source\Runtime\Actors</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ACubeActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ACylinderActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ASphereActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
@@ -214,6 +223,9 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\USpotLightComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Core\FNamePool.cpp">
       <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
@@ -244,6 +256,15 @@
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Actors\AActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ACubeActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ACylinderActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ASphereActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h">
@@ -375,6 +396,9 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\USpotLightComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.h">
       <Filter>Source\Editor\UI\Imgui</Filter>
     </ClInclude>
@@ -440,6 +464,9 @@
     <FxCompile Include="Shader\GridPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Shader\SpotlightPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
     <FxCompile Include="Shader\GridVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
@@ -454,5 +481,47 @@
     <None Include="Shader\Constants.hlsli">
       <Filter>Shader</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h">
+      <Filter>Source\Editor\UI\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\FFont.h">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\FLineBatcher.h">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiToolBar.h">
+      <Filter>Source\Editor\UI\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Engine\ShowFlags.h">
+      <Filter>Source\Runtime\Engine</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shader\TexturedPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\TextPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp">
+      <Filter>Source\Editor\UI\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Rendering\FFont.cpp">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Rendering\FLineBatcher.cpp">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

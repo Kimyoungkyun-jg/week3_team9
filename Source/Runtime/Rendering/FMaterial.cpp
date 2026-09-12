@@ -16,45 +16,23 @@ void FMaterial::SetTexture(const TSharedPtr<FTexture>& InTexture)
     Texture = InTexture;
 }
 
+
 bool FMaterial::SetTextureByName(const FString& InTextureName)
 {
-    if (!ResourceLibrary)
+    auto& lib = FRenderResourceLibrary::Get();
+    
+    FString LowerKey = InTextureName;
+    std::transform(LowerKey.begin(), LowerKey.end(), LowerKey.begin(), ::tolower);
+
+    auto it = lib.GetTexture(LowerKey);
+    if (it == nullptr)
     {
-        UE_LOG("[Material] Resource library is null. Texture '%s' cannot be found.", InTextureName.c_str());
+        UE_LOG("[Material] Texture '%s' not found in texture map.", LowerKey.c_str());
         return false;
     }
 
-    return SetTextureByName(InTextureName, *ResourceLibrary);
-}
-
-bool FMaterial::SetTextureByName(const FString& InTextureName, const FRenderResourceLibrary& InLibrary)
-{
-    return SetTextureByName(InTextureName, InLibrary.AllTextureMap);
-}
-
-bool FMaterial::SetTextureByName(const FString& InTextureName, const TMap<FString, TSharedPtr<FTexture>>& InTextureMap)
-{
-    // 원본 키로 검색
-    auto it = InTextureMap.find(InTextureName);
-    if (it != InTextureMap.end() && it->second)
-    {
-        SetTexture(it->second);
-        return true;
-    }
-
-    // 소문자 키로 검색
-    FString LowerKey = InTextureName;
-    std::transform(LowerKey.begin(), LowerKey.end(), LowerKey.begin(), ::tolower);
-    it = InTextureMap.find(LowerKey);
-    if (it != InTextureMap.end() && it->second)
-    {
-        SetTexture(it->second);
-        return true;
-    }
-
-    // 텍스처 미존재 로그 출력
-    UE_LOG("[Material] Texture '%s' not found in texture map.", InTextureName.c_str());
-    return false;
+    SetTexture(it);
+    return true;
 }
 
 void FMaterial::BindResources(ID3D11DeviceContext& Context) const
