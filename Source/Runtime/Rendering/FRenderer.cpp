@@ -4,21 +4,24 @@
 #include "FMesh.h"
 #include "FRenderPipeline.h"
 #include "Runtime/Core/PointerTypes.h"
+#include "Runtime/Rendering/FTexture.h"
 #include "ShaderConstants.h"
 #include "Vertices.h"
 #include <Windows.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
-#include "Runtime/Rendering/FTexture.h"
+
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
       !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers() ||
-      !InitializeGridConstantBuffers() || !InitializePipeLines()) {
+      !InitializePipeLines()) {
     Shutdown();
     return false;
   }
+
+  LineBatcher.Initialize(Device.Get()); // batch line
 
   return true;
 }
@@ -29,9 +32,11 @@ void FRenderer::Shutdown() {
     Context->Flush();
   }
 
+  LineBatcher.Shutdown();
+
   AllPipelineMap.clear();
-  ObjectConstantBuffer.Reset();
-  GridConstantBuffer.Reset();
+  b0ConstantBuffer.Reset();
+  FrameConstantBuffer.Reset();
 
   BackBufferRTV.Reset();
   DepthStencilView.Reset();
@@ -70,50 +75,48 @@ void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV) {
   Context->PSSetConstantBuffers(1, 1, FrameConstantBuffer.GetAddressOf());
 };
 
-void FRenderer::Draw(const FMesh &Mesh, const FMaterial &Material,
-                     const FObjectConstants &ObjectConstants) 
-{
-  UpdateObjectConstants(ObjectConstants);
-
-
-  TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
-  if (CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
-    Pipeline = GetPipeline(EBuiltinPipeline::Simple_Wireframe);
-  }
-
-  if (Pipeline) {
-    Pipeline->Bind(*Context.Get());
-  }
-
-  Material.BindResources(*Context.Get());
-  Mesh.BindResources(*Context.Get());
-
-  Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-
-  if (Mesh.HasIndices()) {
-    Context->DrawIndexed(Mesh.IndexCount, 0, 0);
-  } else {
-    Context->Draw(Mesh.VertexCount, 0);
-  }
-}
-
-void FRenderer::DrawGrid(const FMesh &Mesh, const FMaterial &Material,
-                         const FGridConstants &GridConstants) {
-  UpdateGridConstants(GridConstants);
-  const auto &Pipeline = Material.Pipeline;
-
-  Pipeline->Bind(*Context.Get());
-  Material.BindResources(*Context.Get());
-  Mesh.BindResources(*Context.Get());
-
-  Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-
-  if (Mesh.HasIndices()) {
-    Context->DrawIndexed(Mesh.IndexCount, 0, 0);
-  } else {
-    Context->Draw(Mesh.VertexCount, 0);
-  }
-}
+//void FRenderer::Draw(const FMesh &Mesh, const FMaterial &Material,
+//                     const FObjectConstants &ObjectConstants) {
+//  UpdateObjectConstants(ObjectConstants);
+//
+//  TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
+//  if (CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
+//    Pipeline = GetPipeline(EBuiltinPipeline::Simple_Wireframe);
+//  }
+//
+//  if (Pipeline) {
+//    Pipeline->Bind(*Context.Get());
+//  }
+//
+//  Material.BindResources(*Context.Get());
+//  Mesh.BindResources(*Context.Get());
+//
+//  Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+//
+//  if (Mesh.HasIndices()) {
+//    Context->DrawIndexed(Mesh.IndexCount, 0, 0);
+//  } else {
+//    Context->Draw(Mesh.VertexCount, 0);
+//  }
+//}
+//
+//void FRenderer::DrawGrid(const FMesh &Mesh, const FMaterial &Material,
+//                         const FGridConstants &GridConstants) {
+//  UpdateGridConstants(GridConstants);
+//  const auto &Pipeline = Material.Pipeline;
+//
+//  Pipeline->Bind(*Context.Get());
+//  Material.BindResources(*Context.Get());
+//  Mesh.BindResources(*Context.Get());
+//
+//  Context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+//
+//  if (Mesh.HasIndices()) {
+//    Context->DrawIndexed(Mesh.IndexCount, 0, 0);
+//  } else {
+//    Context->Draw(Mesh.VertexCount, 0);
+//  }
+//}
 
 void FRenderer::ClearDepth() {
   Context->ClearDepthStencilView(
@@ -133,6 +136,10 @@ void FRenderer::OnWindowSize(UINT Width, UINT Height) {
   Viewport.Height = static_cast<float>(Height);
 
   InitializeBackBufferAndDepthStencil();
+}
+
+void FRenderer::FlushLineBatch(const FMatrix &ViewProjection) {
+  LineBatcher.Flush(*Context.Get(), *this, ViewProjection);
 }
 
 TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
@@ -198,7 +205,7 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST
                                 : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-	Mesh->LocalBounds = FAxisAlignedBoundingBox{ *Mesh.get()};
+  Mesh->LocalBounds = FAxisAlignedBoundingBox{*Mesh.get()};
   return Mesh;
 }
 
@@ -220,8 +227,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   Pipeline->desc = Desc;
 
   Microsoft::WRL::ComPtr<ID3DBlob> Blob;
-  HRESULT Result =
-      D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
+  HRESULT Result = D3DReadFileToBlob(Desc.VertexShaderFileName.c_str(), &Blob);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -235,8 +241,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
 
   Result = Device->CreateInputLayout(
       FVertexLayouts::Layout, FVertexLayouts::NumElements,
-      Blob->GetBufferPointer(), Blob->GetBufferSize(),
-      &Pipeline->InputLayout);
+      Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -246,9 +251,9 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  Result = Device->CreatePixelShader(Blob->GetBufferPointer(),
-                                     Blob->GetBufferSize(), nullptr,
-                                     &Pipeline->PixelShader);
+  Result =
+      Device->CreatePixelShader(Blob->GetBufferPointer(), Blob->GetBufferSize(),
+                                nullptr, &Pipeline->PixelShader);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -262,7 +267,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   };
 
   Result = Device->CreateRasterizerState(&RasterizerDesc,
-                                        &Pipeline->RasterizerState);
+                                         &Pipeline->RasterizerState);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -274,7 +279,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   };
 
   Result = Device->CreateDepthStencilState(&DepthStencilDesc,
-                                          &Pipeline->DepthStencilState);
+                                           &Pipeline->DepthStencilState);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -296,42 +301,41 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   return Pipeline;
 }
 
-TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc& desc)
-{
-    auto Texture = TSharedPtr<FTexture>{ new FTexture() };
+TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
+  auto Texture = TSharedPtr<FTexture>{new FTexture()};
 
-    D3D11_TEXTURE2D_DESC TextureDesc = {
-        .Width = desc.Width,
-        .Height = desc.Height,
-        .MipLevels = 1u,
-        .ArraySize = 1u,
-        .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-        .SampleDesc = {.Count = 1u },
-        .Usage = D3D11_USAGE_DEFAULT,
-        .BindFlags = D3D11_BIND_SHADER_RESOURCE,
-    };
+  D3D11_TEXTURE2D_DESC TextureDesc = {
+      .Width = desc.Width,
+      .Height = desc.Height,
+      .MipLevels = 1u,
+      .ArraySize = 1u,
+      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+      .SampleDesc = {.Count = 1u},
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+  };
 
-    D3D11_SUBRESOURCE_DATA InitialData = {
-        .pSysMem = desc.PixelData,
-        .SysMemPitch = desc.RowPitch,
-    };
+  D3D11_SUBRESOURCE_DATA InitialData = {
+      .pSysMem = desc.PixelData,
+      .SysMemPitch = desc.RowPitch,
+  };
 
-    HRESULT Result = Device->CreateTexture2D(&TextureDesc, &InitialData, &Texture->Texture2D);
-    if (FAILED(Result))
-    {
-        return nullptr;
-    }
+  HRESULT Result =
+      Device->CreateTexture2D(&TextureDesc, &InitialData, &Texture->Texture2D);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
 
-    Result = Device->CreateShaderResourceView(Texture->Texture2D.Get(), nullptr, &Texture->TextureSRV);
-    if (FAILED(Result))
-    {
-        return nullptr;
-    }
+  Result = Device->CreateShaderResourceView(Texture->Texture2D.Get(), nullptr,
+                                            &Texture->TextureSRV);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
 
-    Texture->Width = desc.Width;
-    Texture->Height = desc.Height;
+  Texture->Width = desc.Width;
+  Texture->Height = desc.Height;
 
-    return Texture;
+  return Texture;
 }
 
 TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
@@ -502,16 +506,18 @@ bool FRenderer::InitializeBackBufferAndDepthStencil() {
   return true;
 }
 
-bool FRenderer::InitializeConstantBuffers() {
-  D3D11_BUFFER_DESC ObjectConstantBufferDesc = {
-      .ByteWidth = sizeof(FObjectConstants),
+bool FRenderer::InitializeConstantBuffers()
+{
+  // b0를 쓰는 모든 상수 타입이 공유하는 버퍼.
+  // 가장 큰 구조체보다 크게 잡아두고, 초과 여부는 UpdateBuffer의 static_assert가 잡는다.
+  D3D11_BUFFER_DESC b0Desc = {
+      .ByteWidth = ConstantBufferSize,
       .Usage = D3D11_USAGE_DYNAMIC,
       .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
       .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
   };
 
-  HRESULT Result = Device->CreateBuffer(&ObjectConstantBufferDesc, nullptr,
-                                        &ObjectConstantBuffer);
+  HRESULT Result = Device->CreateBuffer(&b0Desc, nullptr, &b0ConstantBuffer);
   if (FAILED(Result)) {
     return false;
   }
@@ -531,58 +537,57 @@ bool FRenderer::InitializeConstantBuffers() {
   return true;
 }
 
-
-bool FRenderer::InitializeGridConstantBuffers() {
-  D3D11_BUFFER_DESC GridConstantBufferDesc = {
-      .ByteWidth = sizeof(FGridConstants),
-      .Usage = D3D11_USAGE_DYNAMIC,
-      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-      .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-  };
-
-  HRESULT Result = Device->CreateBuffer(&GridConstantBufferDesc, nullptr,
-                                        &GridConstantBuffer);
-  if (FAILED(Result)) {
-    return false;
-  }
-
-  return true;
-}
-
-void FRenderer::UpdateObjectConstants(const FObjectConstants &Constants) {
-  static const FMatrix UnrealClipToD3DClip{
-      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-
-  // 언리얼 Clip -> D3D Clip 좌표 변환
-  FObjectConstants ShaderConstants = Constants;
-  ShaderConstants.MVP *= UnrealClipToD3DClip;
-
-  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-  Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-               &MappedResource);
-  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-  Context->Unmap(ObjectConstantBuffer.Get(), 0);
-
-  Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-  Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-}
-
-void FRenderer::UpdateGridConstants(const FGridConstants &Constants) {
-  static const FMatrix UnrealClipToD3DClip{
-      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-
-  // 언리얼 Clip -> D3D Clip 좌표 변환
-  FGridConstants ShaderConstants = Constants;
-  ShaderConstants.MVP *= UnrealClipToD3DClip;
-
-  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-  Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-               &MappedResource);
-  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-  Context->Unmap(GridConstantBuffer.Get(), 0);
-
-  Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-  Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-}
+//bool FRenderer::InitializeGridConstantBuffers() {
+//  D3D11_BUFFER_DESC GridConstantBufferDesc = {
+//      .ByteWidth = sizeof(FGridConstants),
+//      .Usage = D3D11_USAGE_DYNAMIC,
+//      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+//      .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+//  };
+//
+//  HRESULT Result = Device->CreateBuffer(&GridConstantBufferDesc, nullptr,
+//                                        &GridConstantBuffer);
+//  if (FAILED(Result)) {
+//    return false;
+//  }
+//
+//  return true;
+//}
+//
+//void FRenderer::UpdateObjectConstants(const FObjectConstants &Constants) {
+//  static const FMatrix UnrealClipToD3DClip{
+//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
+//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
+//
+//  // 언리얼 Clip -> D3D Clip 좌표 변환
+//  FObjectConstants ShaderConstants = Constants;
+//  ShaderConstants.MVP *= UnrealClipToD3DClip;
+//
+//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
+//  Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
+//               &MappedResource);
+//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
+//  Context->Unmap(ObjectConstantBuffer.Get(), 0);
+//
+//  Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
+//  Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
+//}
+//
+//void FRenderer::UpdateGridConstants(const FGridConstants &Constants) {
+//  static const FMatrix UnrealClipToD3DClip{
+//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
+//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
+//
+//  // 언리얼 Clip -> D3D Clip 좌표 변환
+//  FGridConstants ShaderConstants = Constants;
+//  ShaderConstants.MVP *= UnrealClipToD3DClip;
+//
+//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
+//  Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
+//               &MappedResource);
+//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
+//  Context->Unmap(GridConstantBuffer.Get(), 0);
+//
+//  Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
+//  Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
+//}

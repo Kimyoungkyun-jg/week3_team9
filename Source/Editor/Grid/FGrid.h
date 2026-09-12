@@ -12,12 +12,16 @@ class FGrid
 private:
 	TSharedPtr<FMesh> GridMesh;
 	TSharedPtr<FMaterial> GridMaterial;
+	
 	TSharedPtr<FMesh> LineMesh;
 	TSharedPtr<FMaterial> LineMaterial;
 	float CellSize = 1.0f;
 
 public:
 	void Draw(FRenderer& Renderer, const FCamera& Camera);
+
+	void DrawLine(FRenderer& Renderer, const FCamera& Camera);
+
 	void Initialize(FRenderResourceLibrary& RenderResources);
 
 	float GetCellSize() const { return CellSize; }
