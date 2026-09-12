@@ -18,7 +18,7 @@ protected:
   virtual void Deserialize(const FArchive& Archive);
 
 public:
-	void Initialize(UObject* Context = nullptr) override;
+	void Register(UScene& InScene) override;
 	// 빌보드 회전 계산
 	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
 

@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 #include <filesystem>
-#include "ThirdParty/Json/json.hpp"
+#include "ThirdParty/Json/nlohmann/json.hpp"
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/Engine/FArchive.h"
 #include "Runtime/CoreUObject/FUObjectArray.h"
@@ -74,6 +74,7 @@ void USceneManager::LoadScene(const FString& path)
 	FArchive SceneArchive = Archive.GetArchive("Scene");
 
 	UScene* Scene = NewObject<UScene>();
+	Scene->Initialize();
 	Scene->SetRenderResourceLibrary(ResourceLibrary);
 	Scene->Deserialize(SceneArchive);
 
@@ -84,10 +85,18 @@ void USceneManager::SetScene(UScene* scene)
 {
 	if (scene == nullptr) { return; }
 	if (scene == CurrentScene) { return; }
+	scene->Initialize();
 	scene->SetRenderResourceLibrary(ResourceLibrary);
 
-	if (CurrentScene) { DestroyObject(CurrentScene); }
+	if (CurrentScene)
+	{
+		CurrentScene->EndPlay();
+		CurrentScene->Deactivate();
+		DestroyObject(CurrentScene);
+	}
 	CurrentScene = scene;
+	CurrentScene->Activate();
+	CurrentScene->BeginPlay();
 
 	//FGarbageCollector& GarbageCollector = FGarbageCollector::Get();
 	//if (scene != nullptr) GarbageCollector.AddRoot(scene);

@@ -17,8 +17,18 @@ TArray<UPrimitiveComponent*> UScene::GetRenderComponents() const
 	return RenderComponents;
 }
 
+void UScene::Initialize()
+{
+	if (bInitialized) { return; }
+	Super::Initialize();
+	bInitialized = true;
+}
+
 void UScene::Release()
 {
+	if (bHasBegunPlay) { EndPlay(); }
+	if (bActive) { Deactivate(); }
+
 	while (!Actors.empty())
 	{
 		AActor* Actor = Actors.back();
@@ -28,8 +38,64 @@ void UScene::Release()
 
 	RenderComponents.clear();
 	RenderResourceLibrary = nullptr;
+	bInitialized = false;
 
 	Super::Release();
+}
+
+void UScene::Activate()
+{
+	if (bActive) { return; }
+
+	for (AActor* Actor : Actors)
+	{
+		if (Actor) { Actor->Register(*this); }
+	}
+	bActive = true;
+}
+
+void UScene::Deactivate()
+{
+	if (!bActive) { return; }
+	if (bHasBegunPlay) { EndPlay(); }
+
+	for (auto It = Actors.rbegin(); It != Actors.rend(); ++It)
+	{
+		if (*It) { (*It)->Unregister(); }
+	}
+	bActive = false;
+}
+
+void UScene::BeginPlay()
+{
+	if (!bActive || bHasBegunPlay) { return; }
+
+	bHasBegunPlay = true;
+	for (AActor* Actor : Actors)
+	{
+		if (Actor) { Actor->BeginPlay(); }
+	}
+}
+
+void UScene::Update(float DeltaTime)
+{
+	if (!bHasBegunPlay) { return; }
+
+	for (AActor* Actor : Actors)
+	{
+		if (Actor) { Actor->Update(DeltaTime); }
+	}
+}
+
+void UScene::EndPlay()
+{
+	if (!bHasBegunPlay) { return; }
+
+	for (auto It = Actors.rbegin(); It != Actors.rend(); ++It)
+	{
+		if (*It) { (*It)->EndPlay(); }
+	}
+	bHasBegunPlay = false;
 }
 
 void UScene::SetRenderResourceLibrary(FRenderResourceLibrary* InRenderResourceLibrary)
@@ -73,7 +139,11 @@ void UScene::Deserialize(const FArchive& Archive)
 		if (ClassType == nullptr) { continue; }
 
 		AActor* Actor = SpawnActor(ClassType);
+		if (!Actor) { continue; }
 		Actor->Deserialize(Item);
+
+		if (bActive) { Actor->Register(*this); }
+		if (bHasBegunPlay) { Actor->BeginPlay(); }
 	}
 }
 
@@ -119,8 +189,14 @@ void UScene::DestroyActor(AActor* Actor)
 
 AActor* UScene::SpawnActor(UClass* ClassType)
 {
-	AActor* Actor = NewObject(ClassType)->Cast<AActor>();
-	Actor->Initialize(this);
+	UObject* Object = NewObject(ClassType);
+	AActor* Actor = Object->Cast<AActor>();
+	if (!Actor)
+	{
+		DestroyObject(Object);
+		return nullptr;
+	}
+	Actor->Initialize();
 
 	Actors.push_back(Actor);
 	return Actor;

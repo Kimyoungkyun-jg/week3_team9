@@ -11,7 +11,7 @@
 #include <type_traits>
 
 
-#include "ThirdParty/Json/json.hpp"
+#include "ThirdParty/Json/nlohmann/json.hpp"
 
 class UScene final : public UObject {
     DECLARE_UCLASS(UScene, UObject)
@@ -19,7 +19,16 @@ class UScene final : public UObject {
 
 public:
 
+  void Initialize() override;
   void Release() override;
+  void Activate();
+  void Deactivate();
+  void BeginPlay();
+  void Update(float DeltaTime);
+  void EndPlay();
+
+  [[nodiscard]] bool IsActive() const { return bActive; }
+  [[nodiscard]] bool HasBegunPlay() const { return bHasBegunPlay; }
 
   // 렌더링 컴포넌트 목록 반환
   [[nodiscard]] TArray<UPrimitiveComponent*> GetRenderComponents() const;
@@ -37,8 +46,23 @@ public:
   TActor *SpawnActor(const FVector &Location, const FVector &Scale,
                      TArgs &&...Args) {
     TActor *Actor = NewObject<TActor>(std::forward<TArgs>(Args)...);
-    Actor->Initialize(this); // 스폰할 때 Scene 컨텍스트를 먼저 설정해야 component 등록 가능
+    Actor->Initialize();
+
+    if (Actor->GetRootComponent()) {
+      FTransform Transform{};
+      Transform.Location = Location;
+      Transform.Scale3D = Scale;
+      Actor->GetRootComponent()->SetRelativeTransform(Transform);
+    }
+
     Actors.push_back(Actor);
+
+    if (bActive) {
+      Actor->Register(*this);
+    }
+    if (bHasBegunPlay) {
+      Actor->BeginPlay();
+    }
     return Actor;
   }
 
@@ -80,4 +104,7 @@ private:
   TMap<UPrimitiveComponent*, size_t> RenderIndices;
 
   FRenderResourceLibrary* RenderResourceLibrary = nullptr;
+  bool bInitialized = false;
+  bool bActive = false;
+  bool bHasBegunPlay = false;
 };

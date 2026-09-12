@@ -11,6 +11,7 @@
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
 void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered, bool bHighlighted) {
+	if (!Rendered || !Rendered->GetMesh() || !Rendered->GetMaterial()) { return; }
 
   // TODO: 렌더뷰가 렌더러 구현을 알게 해서 여기서 V, P 따로 받고
   // 월드축변환행렬을 곱하거나, 렌더러쪽 UpdateObjectConstants를 Draw함수 안에

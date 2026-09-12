@@ -12,5 +12,5 @@ protected:
 	explicit USphereComp() = default;
 
 public:
-	void Initialize(UObject* Context = nullptr) override;
+	void Register(UScene& InScene) override;
 };

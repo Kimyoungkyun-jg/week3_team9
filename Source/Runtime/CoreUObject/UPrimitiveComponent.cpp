@@ -5,14 +5,22 @@
 
 IMPLEMENT_UCLASS(UPrimitiveComponent, USceneComponent)
 
-void UPrimitiveComponent::Initialize(UObject* Context)
+void UPrimitiveComponent::Register(UScene& InScene)
 {
-	Super::Initialize(Context);
+	if (!PrimitiveMesh || !PrimitiveMaterial) { return; }
 
+	Super::Register(InScene);
+	InScene.AddRenderComponent(this);
+}
+
+void UPrimitiveComponent::Unregister()
+{
 	if (Scene)
 	{
-		Scene->AddRenderComponent(this);
+		Scene->RemoveRenderComponent(this);
 	}
+
+	Super::Unregister();
 }
 
 void UPrimitiveComponent::SetRelativeTransform(const FTransform& RelativeTransform)

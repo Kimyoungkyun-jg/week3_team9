@@ -6,9 +6,8 @@
 IMPLEMENT_ROOT_UCLASS(UObject)
 UCLASS_META(UObject, DisplayName, "Object")
 
-void UObject::Initialize(UObject* Context)
+void UObject::Initialize()
 {
-	static_cast<void>(Context);
 }
 
 void UObject::Release()

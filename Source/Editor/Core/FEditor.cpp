@@ -20,11 +20,7 @@ void FEditor::Initialize(FRenderResourceLibrary *RendererLibrary,
 void FEditor::Process() {
   // 씬의 액터 업데이트
   if (SceneManager && SceneManager->CurrentScene) {
-    for (AActor *Actor : SceneManager->CurrentScene->GetActors()) {
-      if (Actor) {
-        Actor->Update(FTimeManager::Get().GetDeltaTime());
-      }
-    }
+    SceneManager->CurrentScene->Update(FTimeManager::Get().GetDeltaTime());
   }
 
   if (SelectedActor) {

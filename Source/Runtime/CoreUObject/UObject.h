@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "UClass.h"
 #include "Runtime/Core/IntTypes.h"
-#include "ThirdParty/Json/json.hpp"
+#include "ThirdParty/Json/nlohmann/json.hpp"
 #include <cstddef>
 #include <new>
 #include <concepts>
@@ -99,7 +99,7 @@ public:
 
 	void SetUUID(uint32 _UUID) { UUID = _UUID; }
 
-	virtual void Initialize(UObject* Context = nullptr);
+	virtual void Initialize();
 	virtual void Release();
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector);

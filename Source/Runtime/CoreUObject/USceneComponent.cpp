@@ -1,6 +1,6 @@
 #include "UClass.h"
 #include "USceneComponent.h"
-#include "ThirdParty/Json/json.hpp"
+#include "ThirdParty/Json/nlohmann/json.hpp"
 #include "UObjectGlobals.h" 
 #include "UPrimitiveComponent.h"
 #include "Runtime/Engine/FArchive.h"
@@ -9,44 +9,59 @@
 
 IMPLEMENT_UCLASS(USceneComponent, UObject)
 
-void USceneComponent::Initialize(UObject* Context)
+void USceneComponent::Initialize()
 {
-    Super::Initialize(Context);
-
-    ActorOwner = nullptr;
-    SceneOwner = nullptr;
+    Super::Initialize();
     Scene = nullptr;
-
-    if (Context == nullptr) { return; }
-
-    if (AActor* Actor = Context->Cast<AActor>())
-    {
-        ActorOwner = Actor;
-        Scene = Actor->GetOwner();
-        return;
-    }
-
-    USceneComponent* Component = Context->Cast<USceneComponent>();
-    if (Component && Component != this)
-    {
-        SceneOwner = Component;
-        ActorOwner = Component->GetActorOwner();
-        Scene = ActorOwner->GetOwner();
-    }
+    bHasBegunPlay = false;
 }
-
 void USceneComponent::Release()
 {
-    if (Scene)
-    {
-        UnregisterComponentFromScene(*Scene);
-    }
+    if (bHasBegunPlay) { EndPlay(); }
+    if (Scene) { Unregister(); }
 
     ActorOwner = nullptr;
     SceneOwner = nullptr;
     Scene = nullptr;
 
     Super::Release();
+}
+
+void USceneComponent::Register(UScene& InScene)
+{
+    if (Scene == &InScene) { return; }
+    if (Scene) { Unregister(); }
+
+    Scene = &InScene;
+}
+
+void USceneComponent::BeginPlay()
+{
+    if (!Scene || bHasBegunPlay) { return; }
+    bHasBegunPlay = true;
+}
+
+void USceneComponent::EndPlay()
+{
+    if (!bHasBegunPlay) { return; }
+    bHasBegunPlay = false;
+}
+
+void USceneComponent::Unregister()
+{
+    if (bHasBegunPlay) { EndPlay(); }
+    Scene = nullptr;
+}
+
+void USceneComponent::SetupAttachment(USceneComponent* InParent)
+{
+    if (InParent == this) { return; }
+
+    SceneOwner = InParent;
+    if (InParent)
+    {
+        ActorOwner = InParent->GetActorOwner();
+    }
 }
 
 void USceneComponent::Serialize(FArchive& Archive) const
@@ -99,27 +114,4 @@ FTransform USceneComponent::GetGlobalTransform() //나중에 부모 rootcomponen
     FTransform ParentWorld = ActorOwner->GetRootComponent()->GetGlobalTransform();
     //부모 트랜스폼 * 내 상대 트랜스폼
     return ParentWorld * RelativeTransform;
-}
-
-void USceneComponent::RegisterComponentWithScene(UScene& Scene)
-{
-	this->Scene = &Scene;
-
-    //자신이 그릴 수 있는 프리미티브라면 씬의 렌더 큐에 자신을 등록
-    if (auto* Prim = this->Cast<UPrimitiveComponent>())
-    {
-        Scene.AddRenderComponent(Prim);
-    }
-}
-
-void USceneComponent::UnregisterComponentFromScene(UScene& Scene)
-{
-    if (auto* Prim = this->Cast<UPrimitiveComponent>())
-    {
-        Scene.RemoveRenderComponent(Prim);
-    }
-	if (this->Scene == &Scene)
-	{
-		this->Scene = nullptr;
-	}
 }

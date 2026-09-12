@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Runtime/Geometry/FTransform.h"
-#include "ThirdParty/Json/json.hpp"
+#include "ThirdParty/Json/nlohmann/json.hpp"
 #include "UObject.h"
 
 
@@ -13,15 +13,25 @@ class USceneComponent : public UObject
 {
 	GENERATED_BODY()
 	DECLARE_UCLASS(USceneComponent, UObject)
+	friend class AActor;
 
 public:
-    virtual void Initialize(UObject* Context = nullptr) override;
+    virtual void Initialize() override;
     virtual void Release() override;
     
     AActor* GetActorOwner() const { return ActorOwner; }
     USceneComponent* GetSceneOwner() const { return SceneOwner; }
 
+    virtual void Register(UScene& InScene);
+    virtual void BeginPlay();
     virtual void Update(float DeltaTime) {}
+    virtual void EndPlay();
+    virtual void Unregister();
+
+    void SetupAttachment(USceneComponent* InParent);
+
+    [[nodiscard]] bool IsRegistered() const { return Scene != nullptr; }
+    [[nodiscard]] bool HasBegunPlay() const { return bHasBegunPlay; }
 
 	virtual void Serialize(FArchive& Archive) const override;
 	virtual void Deserialize(const FArchive& Archive) override;
@@ -37,11 +47,9 @@ public:
 	FTransform GetGlobalTransform();
 	//void SetRelativeTransformFromGlobal(const FTransform& GlobalTransform);
 
-  void RegisterComponentWithScene(UScene &Scene);
-  void UnregisterComponentFromScene(UScene &Scene);
-
 protected:
   AActor* ActorOwner = nullptr;
   USceneComponent* SceneOwner = nullptr;
   UScene* Scene = nullptr;
+  bool bHasBegunPlay = false;
 };

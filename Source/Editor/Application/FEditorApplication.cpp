@@ -150,7 +150,7 @@ void FEditorApplication::Render() {
         // AABB 그리기
         USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
         UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-        if (PrimComp)
+        if (PrimComp && PrimComp->GetMesh())
         {
             const FMesh& Mesh = *PrimComp->GetMesh();
             const FMatrix ModelMatrix = PrimComp->GetModelMatrix();

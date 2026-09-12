@@ -8,12 +8,11 @@ IMPLEMENT_UCLASS(UPlaneComp, UPrimitiveComponent)
 UCLASS_META(UPlaneComp, DisplayName, "Plane")
 UCLASS_META(UPlaneComp, MeshName, "Plane")
 
-void UPlaneComp::Initialize(UObject* Context)
+void UPlaneComp::Register(UScene& InScene)
 {
-	Super::Initialize(Context);
-
-	if (!Scene) { return; }
-	SetMesh(Scene->GetRenderResourceLibrary()->GetMesh("Plane"));
-	SetMaterial(Scene->GetRenderResourceLibrary()->GetMaterial("Simple"));
+	FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
+	SetMesh(Resources ? Resources->GetMesh("Plane") : nullptr);
+	SetMaterial(Resources ? Resources->GetMaterial("Simple") : nullptr);
+	Super::Register(InScene);
 }
 
