@@ -109,10 +109,8 @@ void FEditorApplication::Render() {
                            Editor.GetGrid()); // 그리드 그리기
 
     if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives)) {
-      for (auto &PrimitiveComponent :
-           SceneManager->CurrentScene->GetRenderComponents()) {
-        const bool bSelected =
-            (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
+      for (auto &PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents()) {
+        const bool bSelected = (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
              PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
 
         RenderView->Render(EditorViewport.ViewportCamera,
