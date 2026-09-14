@@ -26,5 +26,5 @@ public:
 private:
 	TSharedPtr<FFont> Font;
 	FString Text = "Hello Jungle World!";
-	TArray<FInstanceData> Instances;
+
 };

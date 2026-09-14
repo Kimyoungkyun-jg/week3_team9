@@ -21,7 +21,7 @@ void UTextInstanceComponent::Register(UScene& InScene)
 		SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
 	}
 	if (!GetMaterial()) {
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Text) : nullptr);
+		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
 	}
 
 	Super::Register(InScene);
@@ -99,5 +99,6 @@ void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, 
 		return;
 	}
 
-	// 렌더러에 인스턴스 배열 전달
+	// 인스턴스 데이터를 렌더러에 전달
+	renderer.AddTextInstanceArray(Instances);
 }

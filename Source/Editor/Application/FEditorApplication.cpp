@@ -18,6 +18,7 @@
 
 
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/TestTextActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
 #include "Runtime/CoreUObject/UTextComponent.h"
@@ -34,6 +35,10 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   this->CurrentScene = SceneManager->CurrentScene;
 
   Editor.Initialize(SceneManager);
+
+  TestTextActor* actor = CurrentScene->SpawnActor<TestTextActor>();
+
+
 
 
   FEditorViewport Viewport;

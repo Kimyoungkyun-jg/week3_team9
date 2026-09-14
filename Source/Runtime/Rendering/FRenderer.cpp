@@ -594,3 +594,68 @@ void FRenderer::UpdateLightConstants(const FLightConstants& Constants)
     Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
     Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
 }
+
+void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances)
+{
+    TextInstanceData.insert(TextInstanceData.end(), Instances.begin(), Instances.end());
+}
+
+void FRenderer::DrawTextInstances(const FCamera& Camera)
+{
+    if (TextInstanceData.empty()) return;
+
+    const UINT InstanceCount = static_cast<UINT>(TextInstanceData.size());
+    const UINT RequiredSize = InstanceCount * sizeof(FInstanceData);
+
+    // 버퍼 크기가 부족하면 재생성
+    if (RequiredSize > TextInstanceBufferSize)
+    {
+        TextInstanceBuffer.Reset();
+
+        D3D11_BUFFER_DESC Desc{};
+        Desc.ByteWidth = RequiredSize;
+        Desc.Usage = D3D11_USAGE_DYNAMIC;
+        Desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+        if (FAILED(Device->CreateBuffer(&Desc, nullptr, &TextInstanceBuffer))) return;
+        TextInstanceBufferSize = RequiredSize;
+    }
+
+    // 인스턴스 데이터 업로드
+    D3D11_MAPPED_SUBRESOURCE MappedResource{};
+    if (FAILED(Context->Map(TextInstanceBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource))) return;
+    std::memcpy(MappedResource.pData, TextInstanceData.data(), RequiredSize);
+    Context->Unmap(TextInstanceBuffer.Get(), 0);
+
+    // 상수 버퍼 업데이트
+    FObjectConstants SC;
+    SC.MVP = Camera.CreateViewProjectionMatrix();
+    UpdateBuffer(SC);
+
+    TSharedPtr<FMaterial> Material = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Text);
+
+    // 파이프라인 바인딩
+    TSharedPtr<FRenderPipeline> Pipeline = Material->GetPipeline();
+    if (Pipeline)
+    {
+        Pipeline->Bind(*Context.Get());
+    }
+
+    //Todo-static::class 받아서 임시 객체를 만들던 뭔가 해야될듯
+    Material->BindResources(*Context.Get()); 
+    FRenderResourceLibrary::Get().GetTextMesh()->BindResources(*Context.Get());
+
+    // 슬롯1에 인스턴스 버퍼 바인딩
+    UINT Stride = sizeof(FInstanceData);
+    UINT Offset = 0;
+    Context->IASetVertexBuffers(1, 1, TextInstanceBuffer.GetAddressOf(), &Stride, &Offset);
+
+
+    Context->DrawInstanced(4, InstanceCount, 0, 0);
+}
+
+void FRenderer::ClearTextInstances()
+{
+    TextInstanceData.clear();
+}

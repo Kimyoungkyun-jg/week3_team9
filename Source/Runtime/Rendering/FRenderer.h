@@ -10,6 +10,7 @@
 #include "Runtime/Math/FVector2.h"
 #include "Runtime/Rendering/FLineBatcher.h"
 #include "ShaderConstants.h"
+#include "Vertices.h"
 
 #include <Windows.h>
 #include <d3d11.h>
@@ -18,6 +19,7 @@
 
 class FTexture;
 struct FTextureDesc;
+struct FCamera;
 
 inline FWString GetExecutableDirectory() {
   wchar_t Buffer[256];
@@ -70,6 +72,11 @@ public:
 
   void UpdateLightConstants(const FLightConstants &Constants);
 
+  // 텍스트 인스턴싱
+  void AddTextInstanceArray(const TArray<FInstanceData> &Instances);
+  void DrawTextInstances(const FCamera& Camera);
+  void ClearTextInstances();
+
 private:
   bool InitializeDeviceAndSwapChain(HWND Window);
   bool InitializeBackBufferAndDepthStencil();
@@ -96,11 +103,20 @@ private:
   // b2에 할당되는 lightbuffer
   Microsoft::WRL::ComPtr<ID3D11Buffer> LightConstantBuffer;
 
+
+
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> EditorViewPortRTV;
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> EditorViewPortSRV;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
 
+  // 텍스트 인스턴싱 버퍼
+  TArray<FInstanceData> TextInstanceData;
+  Microsoft::WRL::ComPtr<ID3D11Buffer> TextInstanceBuffer;
+  UINT TextInstanceBufferSize = 0;
+
   EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
+
+
 
 public:
   // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
