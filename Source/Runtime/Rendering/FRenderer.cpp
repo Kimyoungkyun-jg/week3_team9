@@ -589,8 +589,17 @@ bool FRenderer::InitializeConstantBuffers()
   return true;
 }
 
-void FRenderer::UpdateLightConstants(const FLightConstants& Constants)
+void FRenderer::UpdateLightConstants(FLightConstants& Constants, const EViewModeIndex InMode)
 {
+    if (InMode == EViewModeIndex::VMI_Unlit)
+    {
+        Constants.Intensity = 0;
+    }
+    else
+    {
+        Constants.Intensity = 1.0f;
+    }
+
     Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
     Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
 }

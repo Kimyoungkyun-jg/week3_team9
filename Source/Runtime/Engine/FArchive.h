@@ -48,6 +48,9 @@ public:
 	FString GetString(const FString& Key) const;
 	void SetString(const FString& Key, const FString& Value);
 
+	FWString GetWString(const FString& Key) const;
+	void SetWString(const FString& Key, const FWString& Value);
+
 	bool IsNull(const FString& Key) const;
 	void SetNull(const FString& Key);
 

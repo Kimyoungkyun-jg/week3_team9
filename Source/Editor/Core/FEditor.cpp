@@ -128,7 +128,7 @@ void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
 
         USceneComponent* RootComponent = NewActor->GetRootComponent();
         RootComponent->SetRelativeTransform(Transform);
-
+        NewActor->BeginPlay();
         SelectActor(NewActor);
     }
 }

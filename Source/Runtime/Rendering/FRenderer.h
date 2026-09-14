@@ -71,7 +71,7 @@ public:
 
   FLineBatcher &GetLineBatcher() { return LineBatcher; }
 
-  void UpdateLightConstants(const FLightConstants &Constants);
+  void UpdateLightConstants(FLightConstants &Constants, const EViewModeIndex InMode);
 
   // 텍스트 인스턴싱
   void AddTextInstanceArray(const TArray<FInstanceData>& Instances);

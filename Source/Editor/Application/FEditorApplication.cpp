@@ -36,7 +36,10 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
 
   Editor.Initialize(SceneManager);
 
-  TestTextActor* actor = CurrentScene->SpawnActor<TestTextActor>();
+  
+
+  TestTextActor* actor1 = CurrentScene->SpawnActor<TestTextActor>();
+  TestTextActor* actor2 = CurrentScene->SpawnActor<TestTextActor>();
 
 
 
@@ -94,33 +97,37 @@ void FEditorApplication::Render() {
   for (auto &EditorViewport : EditorViewports) {
     if (RenderView) {
       RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
-      RenderView->GetRenderer().UpdateLightConstants(
-          Editor.GlobalLight); // globallgiht udpate
+      RenderView->GetRenderer().UpdateLightConstants(Editor.GlobalLight, EditorViewport.ViewMode); // globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives))
+    for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
     {
-        for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
+        if (!PrimitiveComponent) continue;
+
+        if (!EditorViewport.HasShowFlag(PrimitiveComponent->GetShowFlag()))
         {
-            bool bSelected = true;
-
-            if (!PrimitiveComponent) { bSelected = false; }
-            else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
-            else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
-
-            RenderView->Render
-            (
-                EditorViewport.ViewportCamera,
-                EditorViewport.TopLeftUV,
-                EditorViewport.LengthUV,
-                PrimitiveComponent,
-                bSelected
-            );
+            continue;
         }
+
+
+        bool bSelected = true;
+
+        if (!PrimitiveComponent) { bSelected = false; }
+        else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
+        else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
+
+        RenderView->Render
+        (
+            EditorViewport.ViewportCamera,
+            EditorViewport.TopLeftUV,
+            EditorViewport.LengthUV,
+            PrimitiveComponent,
+            bSelected
+        );
     }
 
 

@@ -31,6 +31,11 @@ void UTextInstanceComponent::Register(UScene& InScene)
 
 }
 
+void UTextInstanceComponent::Update(float delta)
+{
+    RebuildTextMesh();
+}
+
 void UTextInstanceComponent::RebuildTextMesh() {
     
     
@@ -81,9 +86,9 @@ void UTextInstanceComponent::RebuildTextMesh() {
         float centerZ = (tv[0].z + tv[2].z) * 0.5f;
        
        
+        // 글자별 순수 로컬 변환 (크기 * 위치)
         FMatrix CharMatrix = FMatrix::MakeScale(FVector(1.0f, charWidth, charHeight))
-            * FMatrix::MakeTranslation(FVector(0.0f, centerY, centerZ))
-            * ComponentWorld;
+            * FMatrix::MakeTranslation(FVector(0.0f, centerY, centerZ));
 
         FInstanceData Data;
         Data.Word = CharMatrix;
@@ -103,6 +108,34 @@ void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, 
 		return;
 	}
 
-	// 인스턴스 데이터를 렌더러에 전달
-	renderer.AddTextInstanceArray(Instances);
+
+    const FTransform G = GetGlobalTransform();
+    FVector ToCameraXY = Camera.Position - G.Location;
+    ToCameraXY.Z = 0.0f;
+    FMatrix Rotation = FMatrix::GetIdentity();
+    if (ToCameraXY.SizeSquared() >= 1e-8f)
+    {
+
+        const FVector Forward = -ToCameraXY / ToCameraXY.Size();
+        const FVector WorldUp{ 0.0f, 0.0f, 1.0f };
+        FVector Right = WorldUp.Cross(Forward);
+        if (Right.SizeSquared() < 1e-8f) {
+            Right = FVector{ 0.0f, 1.0f, 0.0f };
+        }
+        Right = Right / Right.Size();
+        const FVector Up = Forward.Cross(Right);
+        Rotation = FMatrix{ Forward, Right, Up, FVector{ 0.0f, 0.0f, 0.0f } };
+    }
+    // 최종 빌보드 월드 행렬
+    const FMatrix BillboardWorld = FMatrix::MakeScale(G.Scale3D)
+        * Rotation
+        * FMatrix::MakeTranslation(G.Location);
+
+    TArray<FInstanceData> RenderInstances = Instances;
+    for (auto& Instance : RenderInstances)
+    {
+        Instance.Word = Instance.Word * BillboardWorld;
+    }
+
+	renderer.AddTextInstanceArray(RenderInstances);
 }

@@ -19,6 +19,8 @@ public:
   void Register(UScene& Scene) override;
   void RebuildTextMesh();
 
+  void Serialize(FArchive& Archive) const override;
+  virtual void Deserialize(const FArchive& Archive) override;
 private:
   TSharedPtr<FFont> Font;
   FWString Text = L"안녕하세요!";

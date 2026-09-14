@@ -2,6 +2,7 @@
 #include "Runtime/Engine/UScene.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/FRenderer.h"
+#include "Runtime/Engine/FArchive.h"
 #include "UClass.h"
 
 IMPLEMENT_UCLASS(UTextComponent, UBillBoardComp)
@@ -112,6 +113,34 @@ void UTextComponent::RebuildTextMesh() {
         // 신규 메쉬 생성
         SetMesh(Renderer->CreateDynamicMesh(MeshData));
     }
+}
+
+void UTextComponent::Serialize(FArchive& Archive) const
+{
+    Super::Serialize(Archive);
+
+    Archive.SetWString("Text", Text);
+}
+
+void UTextComponent::Deserialize(const FArchive& Archive)
+{
+    Super::Deserialize(Archive);
+
+    if (!Archive.IsNull("Text"))
+    {
+        Text = Archive.GetWString("Text");
+    }
+
+    // 폰트 유효성 확인
+    if (!Font)
+    {
+        Font = MakeShared<FFont>();
+        FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
+        Font->Deserialize(Path);
+    }
+
+    // 텍스트 메쉬 재생성
+    RebuildTextMesh();
 }
 
 

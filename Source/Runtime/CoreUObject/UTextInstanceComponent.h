@@ -10,6 +10,7 @@ class UTextInstanceComponent : public UInstancePrimitiveComponent
 
 public:
 	void Register(UScene& InScene) override;
+	void Update(float delta) override;
 
 	void SetText(const FWString& InText) {
 		Text = InText;
@@ -19,9 +20,13 @@ public:
 	[[nodiscard]] const FWString& GetText() const { return Text; }
 	void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
 
+
+
 	void RebuildTextMesh();
 
 	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) override;
+
+	virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_BillboardText; }
 
 private:
 	TSharedPtr<FFont> Font;

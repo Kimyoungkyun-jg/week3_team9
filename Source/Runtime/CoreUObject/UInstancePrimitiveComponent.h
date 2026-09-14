@@ -11,7 +11,6 @@ class UInstancePrimitiveComponent : public UPrimitiveComponent {
   DECLARE_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
 
-
 public:
 	TArray<FInstanceData> Instances;
 };

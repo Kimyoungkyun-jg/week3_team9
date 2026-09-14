@@ -377,6 +377,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.cpp" />
     <ClCompile Include="Source\Runtime\Actors\TestTextActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.h" />
@@ -470,6 +471,7 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
     <ClInclude Include="Source\Runtime\Actors\TestTextActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h" />
+    <ClInclude Include="Source\Runtime\Actors\AAnimatedBillboardActor.h" />
     <ClInclude Include="Source\ThirdParty\mINI\ini.h" />
   </ItemGroup>
   <ItemGroup>
