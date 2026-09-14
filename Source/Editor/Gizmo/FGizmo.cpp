@@ -15,10 +15,11 @@
 void FGizmo::Initialize()
 {
 	auto& RenderResources = FRenderResourceLibrary::Get();
-	ArrowMesh = RenderResources.GetMesh("Arrow");
-	CircleMesh = RenderResources.GetMesh("Circle");
-	RotationGizmoMesh = RenderResources.GetMesh("RotationGizmo");
-	SquareArrowMesh = RenderResources.GetMesh("SquareArrow");
+	ArrowMesh = RenderResources.GetMesh(EMeshID::Arrow);
+	CircleMesh = RenderResources.GetMesh(EMeshID::Circle);
+	RotationGizmoMesh = RenderResources.GetMesh(EMeshID::RotGizmo);
+	SquareArrowMesh = RenderResources.GetMesh(EMeshID::SquareArrow);
+
 	Material = RenderResources.GetMaterial(EMaterialID::Simple);
 	RotationGizmoMaterial = RenderResources.GetMaterial(EMaterialID::RotGizmo);
 }

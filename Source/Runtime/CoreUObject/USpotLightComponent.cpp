@@ -12,7 +12,7 @@ void USpotLightComponent::Register(UScene& Scene)
 {
 	// 원뿔 메시 및 스포트라이트 머티리얼 장착
 	auto& ResLib = FRenderResourceLibrary::Get();
-	SetMesh(ResLib.GetMesh("SpotlightCone"));
+	SetMesh(ResLib.GetMesh(EMeshID::SpotlightCone));
 	SetMaterial(ResLib.GetMaterial(EMaterialID::Spotlight));
 	Super::Register(Scene);
 }

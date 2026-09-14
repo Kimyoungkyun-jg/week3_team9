@@ -18,6 +18,7 @@
 
 
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/AInstancingActor.h"
 #include "Runtime/Actors/TestTextActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
@@ -37,10 +38,8 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   Editor.Initialize(SceneManager);
 
   
-
-  TestTextActor* actor1 = CurrentScene->SpawnActor<TestTextActor>();
-  TestTextActor* actor2 = CurrentScene->SpawnActor<TestTextActor>();
-
+  AInstancingActor* actor = CurrentScene->SpawnActor<AInstancingActor>();
+  
 
 
 

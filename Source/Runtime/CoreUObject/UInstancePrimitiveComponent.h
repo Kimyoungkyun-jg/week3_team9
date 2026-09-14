@@ -12,5 +12,8 @@ class UInstancePrimitiveComponent : public UPrimitiveComponent {
 
 
 public:
+	void Register(UScene& Scene) override;
+	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) override;
+
 	TArray<FInstanceData> Instances;
 };

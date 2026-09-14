@@ -35,12 +35,11 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EPipelineID::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
     {EPipelineID::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
     {EPipelineID::Grid, L"GridVS.cso", L"GridPS.cso"},
-    {EPipelineID::RotationGizmo, L"RotationGizmoVS.cso",
-     L"RotationGizmoPS.cso"},
-    {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false,
-     D3D11_CULL_NONE, true},
+    {EPipelineID::RotationGizmo, L"RotationGizmoVS.cso",L"RotationGizmoPS.cso"},
+    {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
     {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
-    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, true},
+    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true,D3D11_CULL_BACK, false, true},
+    {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, true},
 };
 
 // 머티리얼 정보 엔트리
@@ -53,12 +52,13 @@ struct FMaterialEntry {
 // 기본 머티리얼 테이블
 constexpr FMaterialEntry materialTable[] = {
     {EMaterialID::Simple, EPipelineID::Simple_Solid},
-    {EMaterialID::Grid,  EPipelineID::Grid},
-    {EMaterialID::RotGizmo,  EPipelineID::RotationGizmo},
+    {EMaterialID::Grid, EPipelineID::Grid},
+    {EMaterialID::RotGizmo, EPipelineID::RotationGizmo},
     {EMaterialID::Spotlight, EPipelineID::Spotlight},
-    {EMaterialID::Text,  EPipelineID::Text, "maplestorybold"},
-    {EMaterialID::Textured,  EPipelineID::Textured, "uv-test"},
-    {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "maplestorybold" },
+    {EMaterialID::Text, EPipelineID::Text, "maplestorybold"},
+    {EMaterialID::Textured, EPipelineID::Textured, "uv-test"},
+    {EMaterialID::Instance_Text, EPipelineID::Instance_Text, "maplestorybold"},
+    {EMaterialID::Instance_Simple, EPipelineID::Instance_Simple},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -134,7 +134,8 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
 
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
-  if (!InitializePipelines(Renderer) //파이프라인을 먼저 생성해야 뒤에 material 할당가능
+  if (!InitializePipelines(
+          Renderer) // 파이프라인을 먼저 생성해야 뒤에 material 할당가능
       || !CreateCubeMesh(Renderer) ||
       !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
       !CreateConeMesh(Renderer) || !CreateSpotlightConeMesh(Renderer) ||
@@ -142,7 +143,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
-      !CreateRectMesh(Renderer) ||!CreateTextures(Renderer) || !InitializeMaterials(Renderer)) {
+      !CreateRectMesh(Renderer) || !CreateTextures(Renderer) ||
+      !InitializeMaterials(Renderer) || !CreateInstancingArrayMap()) {
     return false;
   }
 
@@ -160,8 +162,8 @@ bool FRenderResourceLibrary::CreateCubeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(std::size(CubeIndices)),
   };
 
-  RegisterMesh("Cube", Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap["Cube"] != nullptr;
+  RegisterMesh(EMeshID::Cube, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::Cube] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
@@ -267,8 +269,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("Cylinder", Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap["Cylinder"] != nullptr;
+  RegisterMesh(EMeshID::Cylinder, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::Cylinder] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
@@ -355,8 +357,8 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap["Cone"] != nullptr;
+  RegisterMesh(EMeshID::Cone, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::Cone] != nullptr;
 }
 
 // 스포트라이트 전용 열린 원뿔 메쉬 생성
@@ -423,8 +425,8 @@ bool FRenderResourceLibrary::CreateSpotlightConeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("SpotlightCone", Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap["SpotlightCone"] != nullptr;
+  RegisterMesh(EMeshID::SpotlightCone, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::SpotlightCone] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
@@ -542,8 +544,8 @@ bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("Arrow", Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap["Arrow"] != nullptr;
+  RegisterMesh(EMeshID::Arrow, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::Arrow] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCircleMesh(FRenderer &Renderer) {
@@ -603,8 +605,8 @@ bool FRenderResourceLibrary::CreateCircleMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("Circle", Renderer.CreateMesh(Desc));
-  return AllMeshMap["Circle"] != nullptr;
+  RegisterMesh(EMeshID::Circle, Renderer.CreateMesh(Desc));
+  return AllMeshMap[EMeshID::Circle] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer &Renderer) {
@@ -673,8 +675,8 @@ bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("RotationGizmo", Renderer.CreateMesh(Desc));
-  return AllMeshMap["RotationGizmo"] != nullptr;
+  RegisterMesh(EMeshID::RotGizmo, Renderer.CreateMesh(Desc));
+  return AllMeshMap[EMeshID::RotGizmo] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
@@ -725,8 +727,8 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("SquareArrow", Renderer.CreateMesh(Desc));
-  return AllMeshMap["SquareArrow"] != nullptr;
+  RegisterMesh(EMeshID::SquareArrow, Renderer.CreateMesh(Desc));
+  return AllMeshMap[EMeshID::SquareArrow] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
@@ -756,8 +758,8 @@ bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("Grid", Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap["Grid"] != nullptr;
+  RegisterMesh(EMeshID::Grid, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::Grid] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSphereMesh(FRenderer &Renderer) {
@@ -771,8 +773,8 @@ bool FRenderResourceLibrary::CreateSphereMesh(FRenderer &Renderer) {
       .VertexCount = static_cast<uint32>(Vertices.size()),
   };
 
-  RegisterMesh("Sphere", Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap["Sphere"] != nullptr;
+  RegisterMesh(EMeshID::Sphere, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::Sphere] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
@@ -782,8 +784,8 @@ bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
                  .VertexCount = static_cast<uint32>(std::size(LineVertices)),
                  .bIsLine = true};
 
-  RegisterMesh("Line", Renderer.CreateMesh(Desc));
-  return AllMeshMap["Line"] != nullptr;
+  RegisterMesh(EMeshID::Line, Renderer.CreateMesh(Desc));
+  return AllMeshMap[EMeshID::Line] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
@@ -794,8 +796,8 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
       .VertexCount = static_cast<uint32>(std::size(PlaneVertices)),
   };
 
-  RegisterMesh("Plane", Renderer.CreateMesh(Desc));
-  return AllMeshMap["Plane"] != nullptr;
+  RegisterMesh(EMeshID::Plane, Renderer.CreateMesh(Desc));
+  return AllMeshMap[EMeshID::Plane] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
@@ -822,11 +824,16 @@ bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh("Rect", Renderer.CreateMesh(MeshDesc));
-  if (AllMeshMap["Rect"]) {
-    AllMeshMap["Rectangle"] = AllMeshMap["Rect"];
-  }
-  return AllMeshMap["Rect"] != nullptr;
+  RegisterMesh(EMeshID::Rect, Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[EMeshID::Rect] != nullptr;
+}
+
+bool FRenderResourceLibrary::CreateInstancingArrayMap() {
+  AllInstancingArrayMap.clear();
+  // 기본 배치 키 등록
+  AllInstancingArrayMap[{EMaterialID::Instance_Text, EMeshID::Rect}] = {};
+  AllInstancingArrayMap[{EMaterialID::Instance_Simple, EMeshID::Cube}] = {};
+  return true;
 }
 
 bool FRenderResourceLibrary::InitializeMaterials(FRenderer &Renderer) {
@@ -910,11 +917,10 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
   return true;
 }
 
-
 TSharedPtr<FMesh>
-FRenderResourceLibrary::GetOrCreateMesh(const FString &name,
+FRenderResourceLibrary::GetOrCreateMesh(const EMeshID &ID,
                                         const TArray<FVertexData> &vertices) {
-  auto it = AllMeshMap.find(name);
+  auto it = AllMeshMap.find(ID);
   if (it != AllMeshMap.end())
     return it->second;
 
@@ -926,7 +932,7 @@ FRenderResourceLibrary::GetOrCreateMesh(const FString &name,
   TSharedPtr<FMesh> newMesh =
       RendererRef ? RendererRef->CreateMesh(Desc) : nullptr;
   if (newMesh) {
-    AllMeshMap[name] = newMesh;
+    AllMeshMap[ID] = newMesh;
   }
   return newMesh;
 }

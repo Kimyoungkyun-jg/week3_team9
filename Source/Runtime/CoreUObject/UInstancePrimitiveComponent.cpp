@@ -6,3 +6,31 @@
 #include "UClass.h"
 
 IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
+
+void UInstancePrimitiveComponent::Register(UScene& Scene)
+{
+	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
+	SetMesh(Resources ? Resources->GetMesh(EMeshID::Cube) : nullptr);
+	SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Simple) : nullptr);
+
+	Super::Register(Scene);
+}
+
+void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted)
+{
+	FMatrix WorldMatrix = GetGlobalTransform().ToMatrix();
+	const auto& Positions = GetMesh()->GetPositions();
+	TArray<FVector> WorldPositions;
+	
+	WorldPositions.reserve(Positions.size());
+	for (const FVector& LocalPos : Positions)
+	{
+		// 정점 좌표 변환 (W = 1.0f 기준)
+		FVector WorldPos = WorldMatrix.TransformPointRow(LocalPos);
+		FMatrix PosMatrix = FMatrix::MakeTranslation(WorldPos);
+		Instances.push_back(FInstanceData{ PosMatrix });
+	}
+
+
+	renderer.AddTextInstanceArray(Instances, GetMesh()->MeshId, GetMaterial()->MaterialId);
+}
