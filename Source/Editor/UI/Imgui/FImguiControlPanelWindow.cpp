@@ -6,6 +6,7 @@
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/Core/FString.h"
 #include "Runtime/Engine/ShowFlags.h"
+#include "Editor/Core/EditorConstant.h"
 #include <Windows.h>
 #include <ShlObj.h>
 #include <filesystem>
@@ -42,23 +43,38 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::Text("Live UObjects : %llu, UObject Memory: %llu bytes (%.2f KiB)", static_cast<unsigned long long>(Count), static_cast<unsigned long long>(Bytes), static_cast<double>(Bytes) / 1024.0);
     ImGui::Separator();
 
-    // ---------------- 프리미티브 스폰 ----------------
-    static int primitive = 0;
-    const char* primitives[] = { "Cube", "Cylinder", "Sphere", "Billboard", "Spotlight"};
+    // ---------------- 액터 스폰 ----------------
+    static UClass* SelectedActorClass = EditorConstant::SpawnableActors[0];
+    const char* PreviewValue = SelectedActorClass->GetUClassName().c_str();
+    
     ImGui::SetNextItemWidth(180.0f);
-    ImGui::Combo("##Primitive", &primitive, primitives, IM_ARRAYSIZE(primitives));
+    if (ImGui::BeginCombo("##Actor", PreviewValue))
+    {
+        for (const auto Item : EditorConstant::SpawnableActors)
+        {
+            const bool bIsSelected = SelectedActorClass == Item;
+            const char* ItemDisplayName = Item->GetUClassName().c_str();
+            if (ImGui::Selectable(ItemDisplayName, bIsSelected))
+            {
+                SelectedActorClass = Item;
+            }
+
+            if (bIsSelected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
     ImGui::SameLine();
-    ImGui::Text("Primitive");
+    ImGui::Text("Actor");
 
     static int spawnCount = 1;
 
     if (ImGui::Button("Spawn"))
     {
         const int Count = (spawnCount < 1) ? 1 : spawnCount;
-        for (int i = 0; i < Count; ++i)
-        {
-            Editor.SpawnPrimitive(static_cast<EEditorPrimitiveType>(primitive));
-        }
+        Editor.SpawnActorToCurrentScene(SelectedActorClass, Count);
     }
 
 
@@ -131,12 +147,19 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
                 bOrthographic ? EProjectionType::Orthographic : EProjectionType::Perspective;
         }
 
-        float CameraSensitivity = Editor.GetCameraSensitivity();
+        float CameraSensitivity = Editor.State.GetCameraSensitivity();
         ImGui::SetNextItemWidth(180.0f);
         ImGui::DragFloat("##Sensitivity", &CameraSensitivity, 0.1f, 0.2f, 2.0f, "%.1f");
         ImGui::SameLine();
         ImGui::Text("Sensitivity");
-        Editor.SetCameraSensitivity(CameraSensitivity);
+        Editor.State.SetCameraSensitivity(CameraSensitivity);
+
+        float CameraSpeed = Editor.State.GetCameraSpeed();
+        ImGui::SetNextItemWidth(180.0f);
+        ImGui::DragFloat("##Speed", &CameraSpeed, 1.0f, 1.0f, 100.0f, "%.1f");
+        ImGui::SameLine();
+        ImGui::Text("Speed");
+        Editor.State.SetCameraSpeed(CameraSpeed);
 
         ImGui::SetNextItemWidth(180.0f);
         ImGui::DragFloat("##FOV", &Camera.Projection.FOV, 0.1f, 1.0f, 179.0f, "%.1f");
@@ -144,19 +167,26 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         ImGui::Text("FOV");
 
 
+        FVector CameraLocation = Editor.State.GetCameraLocation();
         ImGui::SetNextItemWidth(180.0f);
-        ImGui::DragFloat3("##CameraLocation", &Camera.Position.X, 0.05f, 0.0f, 0.0f, "%.3f");
+        ImGui::DragFloat3("##CameraLocation", &CameraLocation.X, 0.05f, 0.0f, 0.0f, "%.3f");
         ImGui::SameLine();
         ImGui::Text("Camera Location");
+        Editor.State.SetCameraLocation(CameraLocation);
+
 
     
-        float Rotation[3] = { 0.0f, Camera.Pitch, Camera.Yaw };
-        ImGui::SetNextItemWidth(180.0f);
-        if (ImGui::DragFloat3("##CameraRotation", Rotation, 0.5f, 0.0f, 0.0f, "%.2f"))
+        FVector CameraRotation
         {
-
-            Camera.Pitch = Rotation[1];
-            Camera.Yaw = Rotation[2];
+            0.0f,
+            Editor.State.GetCameraPitch(),
+            Editor.State.GetCameraYaw(),
+        };
+        ImGui::SetNextItemWidth(180.0f);
+        if (ImGui::DragFloat3("##CameraRotation", &CameraRotation.X, 0.5f, 0.0f, 0.0f, "%.2f"))
+        {
+            Camera.Pitch = CameraRotation[1];
+            Camera.Yaw = CameraRotation[2];
         }
         ImGui::SameLine();
         ImGui::Text("Camera Rotation");

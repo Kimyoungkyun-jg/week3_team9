@@ -3,6 +3,7 @@
 #include "Editor/EditorViewport/FEditorViewport.h"
 #include "Editor/Gizmo/FGizmo.h"
 #include "Editor/Grid/FGrid.h"
+#include "Editor/Core/FEditorState.h"
 #include "Runtime/Core/IntTypes.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/CoreUObject/UObject.h"
@@ -10,7 +11,6 @@
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/Engine/USceneManager.h"
 #include "Runtime/Rendering/ShaderConstants.h"
-
 
 enum class EEditorPrimitiveType : uint8 {
   Cube,
@@ -20,12 +20,16 @@ enum class EEditorPrimitiveType : uint8 {
   Spotlight,
 };
 
-class FEditor final {
+class FEditor {
 public:
   FTransform SelectedTransform;
   FVector SelectedEulerDegDisplay;
 
+  // TODO: 이건 Scene에 들어가야함. 아마 아래와 같은 컴포넌트가 부착된 액터로 들어가야할 것
+  // https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UDirectionalLightComponent
   FLightConstants GlobalLight;
+
+  FEditorState State;
 
 public:
   void Initialize(USceneManager *SceneManager);
@@ -53,7 +57,7 @@ public:
   [[nodiscard]] UScene *GetCurrentScene() const {
     return SceneManager ? SceneManager->CurrentScene : nullptr;
   }
-  UPrimitiveComponent *SpawnPrimitive(EEditorPrimitiveType Type);
+  void SpawnActorToCurrentScene(UClass* Type, int Count = 1);
   // 피킹 등에서 현재 씬의 렌더링 대상 컴포넌트가 필요할 때 사용
   [[nodiscard]] TArray<UPrimitiveComponent *> GetPrimitiveComponents() const;
   FGizmo &GetGizmo() { return Gizmo; }
@@ -62,17 +66,11 @@ public:
 
   void ClearSelectionForGC();
 
-  float GetCameraSensitivity() const { return CameraSensitivity; }
-  void SetCameraSensitivity(float Value);
-
 private:
   USceneManager *SceneManager =
       nullptr; // 씬을 다중으로 가질 수 있도록 구조개선 가능-이경우 에디터쪽에
                // 클래스를 추가해 씬과 FEditorViewport들을 연관
   TArray<FEditorViewport> EditorViewports;
-
-  // TODO: 이게 여기에 있으면 안됨... 구조 리팩토링 할 것..
-  float CameraSensitivity = 0.5f;
 
   FGizmo Gizmo;
   FGrid Grid;

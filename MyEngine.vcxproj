@@ -263,7 +263,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Editor\Application\FEditorApplication.cpp" />
+    <ClCompile Include="Source\Editor\Core\FConfigArchive.cpp" />
     <ClCompile Include="Source\Editor\Core\FEditor.cpp" />
+    <ClCompile Include="Source\Editor\Core\FEditorState.cpp" />
     <ClCompile Include="Source\Editor\EditorViewport\FEditorViewport.cpp" />
     <ClCompile Include="Source\Editor\Gizmo\FGizmo.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.cpp" />
@@ -276,6 +278,7 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Runtime\Actors\ABillboardActor.cpp" />
     <ClCompile Include="Source\Runtime\Actors\ASpotlightActor.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\ATextRenderActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FUObjectArray.cpp" />
@@ -378,7 +381,10 @@
   <ItemGroup>
     <ClInclude Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.h" />
     <ClInclude Include="Source\Editor\Application\FEditorApplication.h" />
+    <ClInclude Include="Source\Editor\Core\EditorConstant.h" />
+    <ClInclude Include="Source\Editor\Core\FConfigArchive.h" />
     <ClInclude Include="Source\Editor\Core\FEditor.h" />
+    <ClInclude Include="Source\Editor\Core\FEditorState.h" />
     <ClInclude Include="Source\Editor\Gizmo\FGizmo.h" />
     <ClInclude Include="Source\Editor\EditorViewport\FEditorViewport.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.h" />
@@ -390,6 +396,7 @@
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h" />
     <ClInclude Include="Source\Runtime\Actors\ABillboardActor.h" />
     <ClInclude Include="Source\Runtime\Actors\ASpotlightActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ATextRenderActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FClassIdSet.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
@@ -463,6 +470,7 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
     <ClInclude Include="Source\Runtime\Actors\TestTextActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h" />
+    <ClInclude Include="Source\ThirdParty\mINI\ini.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
@@ -490,6 +498,10 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\MsdfTextPS.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\TextPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>

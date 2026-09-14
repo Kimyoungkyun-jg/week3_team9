@@ -130,8 +130,10 @@ void FEditorApplication::Render() {
         // AABB 그리기
         USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
         UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-        if (PrimComp && PrimComp->GetMesh() && PrimComp->IsA<USpotLightComponent>())
+        if (PrimComp && PrimComp->GetMesh())
         {
+            if (PrimComp->IsA<USpotLightComponent>())
+            {
                 auto Mesh = PrimComp->GetMesh();
                 const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
                 const auto& Positions = Mesh->GetPositions();
@@ -147,14 +149,15 @@ void FEditorApplication::Render() {
                     RenderView->RenderLine(B, C, WireColor);
                     RenderView->RenderLine(C, A, WireColor);
                 }
-        }
-        else if (PrimComp && PrimComp->GetMesh())
-        {
-            // AABB 그리기
-            const FMesh& Mesh = *PrimComp->GetMesh();
-            const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-            FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-            RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+            }
+            else
+            {
+                // AABB 그리기
+                const FMesh& Mesh = *PrimComp->GetMesh();
+                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+                FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+                RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+            }
         }
     }
 

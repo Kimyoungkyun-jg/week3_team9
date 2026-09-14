@@ -8,3 +8,6 @@ Intermediate/
 
 # Dear ImGui
 imgui.ini
+
+# Editor Config
+editor.ini

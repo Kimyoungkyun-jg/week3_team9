@@ -29,6 +29,7 @@ inline FWString GetExecutableDirectory() {
 
 #include "Runtime/Engine/ShowFlags.h"
 
+
 class FRenderer final {
 public:
   bool Initialize(HWND Window);
