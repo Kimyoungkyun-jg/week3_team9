@@ -24,8 +24,6 @@ protected:
 	virtual void Serialize(FArchive& Archive) const override;
 	virtual void Deserialize(const FArchive& Archive) override;
 
-	void SetRootComponent(USceneComponent* InRootComponent); //root 입력받으면서 동시에 AttachedComp에 제일 먼저 넣기
-
 public:
 	void Initialize() override;
 	void Release() override;

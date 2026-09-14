@@ -8,8 +8,7 @@ UCLASS_META(ACubeActor, DisplayName, "Cube Actor")
 ACubeActor::ACubeActor()
 {
 	// 기본 큐브 컴포넌트 장착
-	UCubeComp* CubeComp = NewObject<UCubeComp>();
-	SetRootComponent(CubeComp);
+	CreateRootComponent(UCubeComp::StaticClass());
 	SetColor(FVector{ 1.0f, 1.0f, 1.0f });
 }
 

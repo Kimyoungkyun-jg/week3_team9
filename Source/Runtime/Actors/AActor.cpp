@@ -133,30 +133,6 @@ void AActor::CreateRootComponent(UClass* ClassType)
     if (bHasBegunPlay) { RootComponent->BeginPlay(); }
 }
 
-void AActor::SetRootComponent(USceneComponent *InRootComponent) {
-    if (RootComponent == InRootComponent) { return; }
-
-    // 기존 루트 컴포넌트가 있었다면 정리 및 트랜스폼 보관
-    if (RootComponent) {
-        if (RootComponent->HasBegunPlay()) { RootComponent->EndPlay(); }
-        if (RootComponent->IsRegistered()) { RootComponent->Unregister(); }
-        
-        std::erase(AttachedComp, RootComponent); // 액터 참조 목록에서 제거
-    }
-
-    // 새 루트 컴포넌트 장착
-    RootComponent = InRootComponent;
-    if (RootComponent) {
-        RootComponent->ActorOwner = this;
-        RootComponent->SetupAttachment(nullptr);
-        AttachedComp.push_back(RootComponent);
-        InRootComponent->Initialize();
-        
-        if (Owner) { RootComponent->Register(*Owner); }
-        if (bHasBegunPlay) { RootComponent->BeginPlay(); }
-    }
-}
-
 void AActor::AddComponent(USceneComponent *Addcomp) {
   if (Addcomp == nullptr) {
     return;

@@ -8,8 +8,7 @@ UCLASS_META(ASphereActor, DisplayName, "Sphere Actor")
 ASphereActor::ASphereActor()
 {
 	// 기본 구체 컴포넌트 장착
-	USphereComp* SphereComp = NewObject<USphereComp>();
-	SetRootComponent(SphereComp);
+	CreateRootComponent(USphereComp::StaticClass());
 	SetColor(FVector{ 1.0f, 1.0f, 1.0f });
 }
 
