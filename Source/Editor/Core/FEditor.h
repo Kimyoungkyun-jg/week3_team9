@@ -16,6 +16,7 @@ enum class EEditorPrimitiveType : uint8 {
   Cylinder,
   Sphere,
   Billboard,
+  Spotlight,
 };
 
 class FEditor final {

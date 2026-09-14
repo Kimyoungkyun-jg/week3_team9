@@ -275,6 +275,7 @@
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Runtime\Actors\ABillboardActor.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\ASpotlightActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FUObjectArray.cpp" />
@@ -384,6 +385,7 @@
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiToolBar.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h" />
     <ClInclude Include="Source\Runtime\Actors\ABillboardActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ASpotlightActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FClassIdSet.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />

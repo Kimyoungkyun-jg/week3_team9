@@ -44,7 +44,7 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
 
     // ---------------- 프리미티브 스폰 ----------------
     static int primitive = 0;
-    const char* primitives[] = { "Cube", "Cylinder", "Sphere", "Billboard"};
+    const char* primitives[] = { "Cube", "Cylinder", "Sphere", "Billboard", "Spotlight"};
     ImGui::SetNextItemWidth(180.0f);
     ImGui::Combo("##Primitive", &primitive, primitives, IM_ARRAYSIZE(primitives));
     ImGui::SameLine();

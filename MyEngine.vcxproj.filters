@@ -232,6 +232,15 @@
     <ClCompile Include="Source\Runtime\Core\FName.cpp">
       <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ABillboardActor.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Engine\FArchive.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ASpotlightActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
@@ -452,6 +461,11 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\FName.h">
       <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ABillboardActor.h" />
+    <ClInclude Include="Source\Runtime\Engine\FArchive.h" />
+    <ClInclude Include="Source\Runtime\Actors\ASpotlightActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
