@@ -267,6 +267,7 @@
     <ClCompile Include="Source\Editor\EditorViewport\FEditorViewport.cpp" />
     <ClCompile Include="Source\Editor\Gizmo\FGizmo.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.cpp" />
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiContentsDrawer.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiControlPanelWindow.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiManager.cpp" />
@@ -378,6 +379,7 @@
     <ClInclude Include="Source\Editor\Core\FEditor.h" />
     <ClInclude Include="Source\Editor\Gizmo\FGizmo.h" />
     <ClInclude Include="Source\Editor\EditorViewport\FEditorViewport.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiContentsDrawer.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiControlPanelWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiManager.h" />
