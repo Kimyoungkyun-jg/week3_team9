@@ -9,11 +9,11 @@ class UTextComponent : public UBillBoardComp {
   DECLARE_UCLASS(UTextComponent, UBillBoardComp)
 
 public:
-  void SetText(const FString &InText) {
+  void SetText(const FWString &InText) {
     Text = InText;
     RebuildTextMesh();
   }
-  [[nodiscard]] const FString &GetText() const { return Text; }
+  [[nodiscard]] const FWString &GetText() const { return Text; }
   void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
 
   void Register(UScene& Scene) override;
@@ -21,7 +21,7 @@ public:
 
 private:
   TSharedPtr<FFont> Font;
-  FString Text = "Hello Jungle World!";
+  FWString Text = L"안녕하세요!";
 
   FMeshDesc MeshData;
 };
