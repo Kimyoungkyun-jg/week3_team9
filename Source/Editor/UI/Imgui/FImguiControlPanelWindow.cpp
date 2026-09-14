@@ -147,12 +147,19 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
                 bOrthographic ? EProjectionType::Orthographic : EProjectionType::Perspective;
         }
 
-        float CameraSensitivity = Editor.GetCameraSensitivity();
+        float CameraSensitivity = Editor.State.GetCameraSensitivity();
         ImGui::SetNextItemWidth(180.0f);
         ImGui::DragFloat("##Sensitivity", &CameraSensitivity, 0.1f, 0.2f, 2.0f, "%.1f");
         ImGui::SameLine();
         ImGui::Text("Sensitivity");
-        Editor.SetCameraSensitivity(CameraSensitivity);
+        Editor.State.SetCameraSensitivity(CameraSensitivity);
+
+        float CameraSpeed = Editor.State.GetCameraSpeed();
+        ImGui::SetNextItemWidth(180.0f);
+        ImGui::DragFloat("##Speed", &CameraSpeed, 1.0f, 1.0f, 100.0f, "%.1f");
+        ImGui::SameLine();
+        ImGui::Text("Speed");
+        Editor.State.SetCameraSpeed(CameraSpeed);
 
         ImGui::SetNextItemWidth(180.0f);
         ImGui::DragFloat("##FOV", &Camera.Projection.FOV, 0.1f, 1.0f, 179.0f, "%.1f");
@@ -160,19 +167,26 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         ImGui::Text("FOV");
 
 
+        FVector CameraLocation = Editor.State.GetCameraLocation();
         ImGui::SetNextItemWidth(180.0f);
-        ImGui::DragFloat3("##CameraLocation", &Camera.Position.X, 0.05f, 0.0f, 0.0f, "%.3f");
+        ImGui::DragFloat3("##CameraLocation", &CameraLocation.X, 0.05f, 0.0f, 0.0f, "%.3f");
         ImGui::SameLine();
         ImGui::Text("Camera Location");
+        Editor.State.SetCameraLocation(CameraLocation);
+
 
     
-        float Rotation[3] = { 0.0f, Camera.Pitch, Camera.Yaw };
-        ImGui::SetNextItemWidth(180.0f);
-        if (ImGui::DragFloat3("##CameraRotation", Rotation, 0.5f, 0.0f, 0.0f, "%.2f"))
+        FVector CameraRotation
         {
-
-            Camera.Pitch = Rotation[1];
-            Camera.Yaw = Rotation[2];
+            0.0f,
+            Editor.State.GetCameraPitch(),
+            Editor.State.GetCameraYaw(),
+        };
+        ImGui::SetNextItemWidth(180.0f);
+        if (ImGui::DragFloat3("##CameraRotation", &CameraRotation.X, 0.5f, 0.0f, 0.0f, "%.2f"))
+        {
+            Camera.Pitch = CameraRotation[1];
+            Camera.Yaw = CameraRotation[2];
         }
         ImGui::SameLine();
         ImGui::Text("Camera Rotation");
