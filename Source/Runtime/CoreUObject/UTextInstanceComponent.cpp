@@ -22,7 +22,7 @@ void UTextInstanceComponent::Register(UScene& InScene)
 		SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
 	}
 	if (!GetMaterial()) {
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
+		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Billboard) : nullptr);
 	}
 
 	RebuildTextMesh();
@@ -92,9 +92,10 @@ void UTextInstanceComponent::RebuildTextMesh() {
 
         FInstanceData Data;
         Data.Word = CharMatrix;
+        Data.Model = FMatrix::GetIdentity();
         Data.Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
-        Data.UV = FVector2(CharInfo.width, CharInfo.height); // UV 크기
-        Data.UVOffset = FVector2(tv[0].u, tv[0].v);          // UV 시작점
+        Data.UV = FVector2(CharInfo.width, CharInfo.height);
+        Data.UVOffset = FVector2(tv[0].u, tv[0].v);
        
         Instances.push_back(Data);
         prevAdvance += CharInfo.advance;
@@ -102,7 +103,7 @@ void UTextInstanceComponent::RebuildTextMesh() {
 }
 
 
-void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted)
+void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) 
 {
 	if (!GetMesh() || !GetMaterial() || Instances.empty()) {
 		return;

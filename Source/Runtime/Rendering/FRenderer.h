@@ -9,6 +9,7 @@
 #include "Runtime/Core/TMap.h"
 #include "Runtime/Math/FVector2.h"
 #include "Runtime/Rendering/FLineBatcher.h"
+#include "Runtime/Core/IntTypes.h"
 #include "ShaderConstants.h"
 #include "Vertices.h"
 
@@ -123,8 +124,8 @@ public:
   // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
   template <typename TConstants>
   void Draw(const FMesh &Mesh, const FMaterial &Material,
-            const TConstants &Constants, bool bApplyViewMode = true) {
-    UpdateBuffer(Constants);
+            const TConstants &Constants, uint32 Slot = 0, bool bApplyViewMode = true) {
+    UpdateBuffer(Constants, Slot);
 
     TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
     if (bApplyViewMode && CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
@@ -148,7 +149,7 @@ private:
   // 어느 상수 타입이든 b0 버퍼 하나에 써 넣는다.
   // 크기가 맞는지는 컴파일 타임에 검사한다.
   template <typename TConstants>
-  void UpdateBuffer(const TConstants &Constants) {
+  void UpdateBuffer(const TConstants &Constants, uint32 Slot = 0u) {
     static_assert(sizeof(TConstants) <= ConstantBufferSize);
     static_assert(sizeof(TConstants) % 16 == 0);
 
@@ -162,6 +163,15 @@ private:
       ShaderConstants.MVP *= UnrealClipToD3DClip;
     }
 
+    // 언리얼 Clip -> D3D Clip 좌표 변환.
+    // MVP를 가진 상수 타입에만 적용한다(없는 타입은 그대로 통과).
+    if constexpr (requires { ShaderConstants.VP; }) {
+      static const FMatrix UnrealClipToD3DClip{
+          FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
+          FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
+      ShaderConstants.VP *= UnrealClipToD3DClip;
+    }
+
     D3D11_MAPPED_SUBRESOURCE Mapped{};
     if (FAILED(Context->Map(b0ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD,
                             0, &Mapped))) {
@@ -170,7 +180,7 @@ private:
     std::memcpy(Mapped.pData, &ShaderConstants, sizeof(TConstants));
     Context->Unmap(b0ConstantBuffer.Get(), 0);
 
-    Context->VSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
-    Context->PSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
+    Context->VSSetConstantBuffers(Slot, 1u, b0ConstantBuffer.GetAddressOf());
+    Context->PSSetConstantBuffers(Slot, 1u, b0ConstantBuffer.GetAddressOf());
   }
 };

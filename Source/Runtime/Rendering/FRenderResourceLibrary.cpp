@@ -41,6 +41,8 @@ constexpr FPipelineEntry pipelineTable[] = {
      D3D11_CULL_NONE, true},
     {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
     {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, true},
+    {EPipelineID::Billboard, L"BillboardVS.cso", L"TexturedPS.cso" },
+    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, true },
 };
 
 // 머티리얼 정보 엔트리
@@ -59,6 +61,8 @@ constexpr FMaterialEntry materialTable[] = {
     {EMaterialID::Text,  EPipelineID::Text, "maplestorybold"},
     {EMaterialID::Textured,  EPipelineID::Textured, "uv-test"},
     {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "maplestorybold" },
+    {EMaterialID::Billboard,  EPipelineID::Billboard, "uv-test"},
+    {EMaterialID::Instance_Billboard,  EPipelineID::Instance_Billboard, "maplestorybold"},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {

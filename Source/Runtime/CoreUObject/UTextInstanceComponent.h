@@ -2,11 +2,12 @@
 
 #include "UInstancePrimitiveComponent.h"
 #include "Runtime/Rendering/FFont.h"
+#include "Runtime/CoreUObject/UBillBoardComp.h"
 
-class UTextInstanceComponent : public UInstancePrimitiveComponent
+class UTextInstanceComponent : public UBillBoardComp
 {
 	GENERATED_BODY()
-	DECLARE_UCLASS(UTextInstanceComponent, UInstancePrimitiveComponent)
+	DECLARE_UCLASS(UTextInstanceComponent, UBillBoardComp)
 
 public:
 	void Register(UScene& InScene) override;
@@ -31,5 +32,7 @@ public:
 private:
 	TSharedPtr<FFont> Font;
 	FWString Text = L"Hello Jungle World!";
+
+	TArray<FInstanceData> Instances;
 
 };

@@ -29,6 +29,8 @@ enum class EPipelineID : uint8 {
   Spotlight,
   Text,
   Instance_Text,
+  Billboard,
+  Instance_Billboard,
 };
 
 enum class EMaterialID : uint8
@@ -40,6 +42,8 @@ enum class EMaterialID : uint8
     Text,
     Textured,
     Instance_Text,
+    Billboard,
+    Instance_Billboard,
 };
 
 class FRenderResourceLibrary final {
