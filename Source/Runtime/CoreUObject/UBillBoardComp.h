@@ -1,57 +1,39 @@
 #pragma once
-#include "UPrimitiveComponent.h"
 #include "Runtime/Engine/FCamera.h"
 #include "Runtime/Math/FQuaternion.h"
 #include "Runtime/Rendering/ShaderConstants.h"
-
-
-
+#include "UPrimitiveComponent.h"
 
 class UScene;
-class UBillBoardComp : public UPrimitiveComponent
-{
-	DECLARE_UCLASS(UBillBoardComp, UPrimitiveComponent)
-	GENERATED_BODY()
+class FArchive;
+
+class UBillBoardComp : public UPrimitiveComponent {
+  DECLARE_UCLASS(UBillBoardComp, UPrimitiveComponent)
+  GENERATED_BODY()
 
 protected:
-	explicit UBillBoardComp() = default;
+  explicit UBillBoardComp() = default;
+
+  virtual void Serialize(FArchive& Archive) const;
+  virtual void Deserialize(const FArchive& Archive);
+
+  // 텍스처 좌표 속성
+  FVector2 UVScale{1.0f, 1.0f};
+  FVector2 UVOffset{0.0f, 0.0f};
+
 public:
-	void OnRegister(UScene& Scene) override;
-
-    FMatrix GetRenderMatrix(const FCamera& Camera) const override
-    {
-        static const FVector WorldUp{ 0.0f, 0.0f, 1.0f };   // Z-up 기준
-
-        const FVector ToCamera = Camera.Position - RelativeTransform.Location;
-
-        // 카메라가 빌보드 바로 위/아래면 외적이 영벡터가 되어 터진다
-        FVector Forward = ToCamera / ToCamera.Size();
-        FVector Right = WorldUp.Cross(Forward);
-        if (Right.SizeSquared() < 1e-6f) {
-            Right = FVector{ 0.0f, 1.0f, 0.0f };   // 대체 축
-        }
-        Right = Right / Right.Size();
-
-        const FVector Up = Forward.Cross(Right);   // 이미 단위벡터 (직교하는 단위벡터의 외적)
-
-        // 행 = "로컬 축이 월드의 어디로 가는가"
-        // 쿼드가 YZ 평면(로컬 X가 법선)이면: X→Forward, Y→Right, Z→Up
-        const FMatrix Rotation{ Right, Up, Forward, FVector{ 0.0f, 0.0f, 0.0f } };
-
-        return FMatrix::MakeScale(RelativeTransform.Scale3D)
-            * Rotation
-            * FMatrix::MakeTranslation(RelativeTransform.Location);
-    }
+	void Register(UScene& InScene) override;
 	// 빌보드 회전 계산
 	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
 
-    virtual void UpdateUVinfo(FObjectConstants& InputConstant) {};
+  // 빌보드 렌더링
+  void Render(FRenderer &renderer, const FCamera &Camera,
+              const bool &bHighlighted) override;
 
+  virtual void SetTexture(FString texture); // 원본 머터리얼을 건드리지 않고
+                                            // instance로 생성해서 사용
 private:
-	// 시선 회전 보간용 쿼터니언
-	FQuaternion CurrentRotation = FQuaternion::Identity();
-    
-    FVector2 UVScale{ 1.0f, 1.0f };
-    FVector2 UVOffset{ 0.0f, 0.0f };
-
+  // 시선 회전 보간용 쿼터니언
+  FQuaternion CurrentRotation = FQuaternion::Identity();
 };
+

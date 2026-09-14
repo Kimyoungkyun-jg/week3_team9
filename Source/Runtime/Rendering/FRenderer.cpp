@@ -1,4 +1,5 @@
 #include "FRenderer.h"
+#include "FRenderResourceLibrary.h"
 
 #include "FMaterial.h"
 #include "FMesh.h"
@@ -15,8 +16,7 @@
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
-      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers() ||
-      !InitializePipeLines()) {
+      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers()) {
     Shutdown();
     return false;
   }
@@ -34,7 +34,6 @@ void FRenderer::Shutdown() {
 
   LineBatcher.Shutdown();
 
-  AllPipelineMap.clear();
   b0ConstantBuffer.Reset();
   FrameConstantBuffer.Reset();
 
@@ -209,7 +208,7 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   return Mesh;
 }
 
-TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) {
+TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) { 
     if (!Desc.VertexData || Desc.VertexCount == 0 || Desc.VertexDataSize == 0 ||
         Desc.VertexStride == 0) {
         return nullptr;
@@ -237,6 +236,7 @@ TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) {
     }
     Mesh->VertexCount = Desc.VertexCount;
     Mesh->VertexStride = Desc.VertexStride;
+    Mesh->VertexBufferSize = Desc.VertexDataSize;
 
     if (Desc.IndexCount > 0 && Desc.IndexData) {
         D3D11_BUFFER_DESC IndexBufferDesc = {
@@ -256,6 +256,7 @@ TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) {
         }
     }
     Mesh->IndexCount = Desc.IndexCount;
+    Mesh->IndexBufferSize = Desc.IndexDataSize;
 
     const auto* vertices = static_cast<const FVertexData*>(Desc.VertexData);
 
@@ -330,7 +331,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
       .FillMode = (RenderMode == EViewModeIndex::VMI_Wireframe)
                       ? D3D11_FILL_WIREFRAME
                       : D3D11_FILL_SOLID,
-      .CullMode = D3D11_CULL_BACK,
+      .CullMode = Desc.CullMode,
       .FrontCounterClockwise = false,
   };
 
@@ -342,12 +343,38 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
 
   D3D11_DEPTH_STENCIL_DESC DepthStencilDesc{
       .DepthEnable = Desc.bEnableDepthTest,
-      .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
+      .DepthWriteMask = Desc.bEnableDepthWrite ? D3D11_DEPTH_WRITE_MASK_ALL
+                                               : D3D11_DEPTH_WRITE_MASK_ZERO,
       .DepthFunc = D3D11_COMPARISON_LESS,
   };
 
   Result = Device->CreateDepthStencilState(&DepthStencilDesc,
                                            &Pipeline->DepthStencilState);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  // 블렌드 상태 생성
+  D3D11_BLEND_DESC BlendDesc{};
+  BlendDesc.AlphaToCoverageEnable = false;
+  BlendDesc.IndependentBlendEnable = false;
+  auto &RenderTargetBlend = BlendDesc.RenderTarget[0];
+
+  if (Desc.bAdditiveBlend) {
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_ZERO;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+  } else {
+    RenderTargetBlend.BlendEnable = false;
+    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+  }
+
+  Result = Device->CreateBlendState(&BlendDesc, &Pipeline->BlendState);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -407,80 +434,7 @@ TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
 }
 
 TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
-  auto it = AllPipelineMap.find(Id);
-  if (it != AllPipelineMap.end()) {
-    return it->second;
-  }
-  return nullptr;
-}
-
-bool FRenderer::CreateSolidWireframePipeline() {
-  const FWString Path = GetExecutableDirectory();
-  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
-  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
-
-  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-    return false;
-  }
-
-  FRenderPipelineDesc Desc = {
-      .VertexShaderFileName = VsPath,
-      .PixelShaderFileName = PsPath,
-      .bEnableDepthTest = true,
-  };
-
-  // 솔리드 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> SolidPipeline =
-      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
-  if (SolidPipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
-  }
-
-  // 와이어프레임 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> WireframePipeline =
-      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
-  if (WireframePipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
-  }
-
-  return SolidPipeline != nullptr && WireframePipeline != nullptr;
-}
-
-bool FRenderer::InitializePipeLines() {
-  // 솔리드 및 와이어프레임 파이프라인 개별 생성
-  CreateSolidWireframePipeline();
-
-  const FWString Path = GetExecutableDirectory();
-
-  for (const FPipelineEntry &Entry : pipelineTable) {
-    // 이미 등록된 경우 건너뜀
-    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
-      continue;
-    }
-
-    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
-    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
-
-    // 셰이더 파일 미존재 시 건너뜀
-    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-      continue;
-    }
-
-    FRenderPipelineDesc PipelineDesc = {
-        .VertexShaderFileName = VsPath,
-        .PixelShaderFileName = PsPath,
-        .bEnableDepthTest = true,
-    };
-
-    TSharedPtr<FRenderPipeline> Pipeline =
-        CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
-    if (!Pipeline) {
-      return false;
-    }
-
-    AllPipelineMap[Entry.Id] = Pipeline;
-  }
-  return true;
+  return FRenderResourceLibrary::Get().GetPipeline(Id);
 }
 
 bool FRenderer::InitializeDeviceAndSwapChain(HWND Window) {
@@ -598,64 +552,35 @@ bool FRenderer::InitializeConstantBuffers()
 
   Result = Device->CreateBuffer(&FrameConstantBufferDesc, nullptr,
                                 &FrameConstantBuffer);
+
+
   if (FAILED(Result)) {
-    return false;
+      return false;
   }
+
+  D3D11_BUFFER_DESC lightbufferDesc = {
+      .ByteWidth = sizeof(FLightConstants),
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+  };
+
+
+
+  Result = Device->CreateBuffer(&lightbufferDesc, nullptr, &LightConstantBuffer);
+
+  if (FAILED(Result)) {
+      return false;
+  }
+
+
+
+
 
   return true;
 }
 
-//bool FRenderer::InitializeGridConstantBuffers() {
-//  D3D11_BUFFER_DESC GridConstantBufferDesc = {
-//      .ByteWidth = sizeof(FGridConstants),
-//      .Usage = D3D11_USAGE_DYNAMIC,
-//      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-//      .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-//  };
-//
-//  HRESULT Result = Device->CreateBuffer(&GridConstantBufferDesc, nullptr,
-//                                        &GridConstantBuffer);
-//  if (FAILED(Result)) {
-//    return false;
-//  }
-//
-//  return true;
-//}
-//
-//void FRenderer::UpdateObjectConstants(const FObjectConstants &Constants) {
-//  static const FMatrix UnrealClipToD3DClip{
-//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-//
-//  // 언리얼 Clip -> D3D Clip 좌표 변환
-//  FObjectConstants ShaderConstants = Constants;
-//  ShaderConstants.MVP *= UnrealClipToD3DClip;
-//
-//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-//  Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-//               &MappedResource);
-//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-//  Context->Unmap(ObjectConstantBuffer.Get(), 0);
-//
-//  Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-//  Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-//}
-//
-//void FRenderer::UpdateGridConstants(const FGridConstants &Constants) {
-//  static const FMatrix UnrealClipToD3DClip{
-//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-//
-//  // 언리얼 Clip -> D3D Clip 좌표 변환
-//  FGridConstants ShaderConstants = Constants;
-//  ShaderConstants.MVP *= UnrealClipToD3DClip;
-//
-//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-//  Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-//               &MappedResource);
-//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-//  Context->Unmap(GridConstantBuffer.Get(), 0);
-//
-//  Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-//  Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-//}
+void FRenderer::UpdateLightConstants(const FLightConstants& Constants)
+{
+    Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
+    Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
+}

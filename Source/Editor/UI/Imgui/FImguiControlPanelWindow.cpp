@@ -23,7 +23,7 @@ namespace
         std::filesystem::path Path = UserPath;
         CoTaskMemFree(UserPath);
 
-        Path /= "GameTechLabWeek2";
+        Path /= "week3_team9";
         Path /= "SceneData";
         Path /= FString(SceneName) + ".Scene";
 
@@ -44,7 +44,7 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
 
     // ---------------- 프리미티브 스폰 ----------------
     static int primitive = 0;
-    const char* primitives[] = { "Cube", "Cylinder", "Sphere" };
+    const char* primitives[] = { "Cube", "Cylinder", "Sphere", "Billboard", "Spotlight"};
     ImGui::SetNextItemWidth(180.0f);
     ImGui::Combo("##Primitive", &primitive, primitives, IM_ARRAYSIZE(primitives));
     ImGui::SameLine();
@@ -115,25 +115,6 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         ImGui::Text("Show Flags");
     }
 
-    //씬 저장, 로드
-    static char sceneName[128] = "Default";
-    ImGui::SetNextItemWidth(180.0f);
-    ImGui::InputText("##SceneName", sceneName, IM_ARRAYSIZE(sceneName));
-    ImGui::SameLine();
-    ImGui::Text("Scene Name");
-
-    if (ImGui::Button("New scene"))
-    {
-        Editor.NewScene();
-    }
-    if (ImGui::Button("Save scene"))
-    {
-        Editor.SaveScene(MakeScenePath(sceneName));
-    }
-    if (ImGui::Button("Load scene"))
-    {
-        Editor.LoadScene(MakeScenePath(sceneName));
-    }
 
     ImGui::Separator();
 
@@ -150,6 +131,12 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
                 bOrthographic ? EProjectionType::Orthographic : EProjectionType::Perspective;
         }
 
+        float CameraSensitivity = Editor.GetCameraSensitivity();
+        ImGui::SetNextItemWidth(180.0f);
+        ImGui::DragFloat("##Sensitivity", &CameraSensitivity, 0.1f, 0.2f, 2.0f, "%.1f");
+        ImGui::SameLine();
+        ImGui::Text("Sensitivity");
+        Editor.SetCameraSensitivity(CameraSensitivity);
 
         ImGui::SetNextItemWidth(180.0f);
         ImGui::DragFloat("##FOV", &Camera.Projection.FOV, 0.1f, 1.0f, 179.0f, "%.1f");
@@ -174,6 +161,72 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         ImGui::SameLine();
         ImGui::Text("Camera Rotation");
     }
+
+    ImGui::Separator();
+
+    ImGui::SeparatorText("Sun Light Control");
+
+    // 엑스축 조명 방향 설정
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.85f, 0.22f, 0.22f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.95f, 0.32f, 0.32f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.75f, 0.15f, 0.15f, 1.0f));
+    ImGui::Button("X", ImVec2(22.0f, 0.0f));
+    ImGui::PopStyleColor(3);
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.85f, 0.22f, 0.22f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(1.0f, 0.35f, 0.35f, 1.0f));
+    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SliderFloat("##LightDirX", &Editor.GlobalLight.LightDirection.X, -1.0f, 1.0f, "%.2f");
+    ImGui::PopStyleColor(2);
+    ImGui::SameLine();
+    ImGui::Text("Light Dir X (Forward/Back)");
+
+    // 와이축 조명 방향 설정
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.22f, 0.75f, 0.22f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.32f, 0.85f, 0.32f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.65f, 0.15f, 1.0f));
+    ImGui::Button("Y", ImVec2(22.0f, 0.0f));
+    ImGui::PopStyleColor(3);
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.22f, 0.75f, 0.22f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(0.35f, 0.95f, 0.35f, 1.0f));
+    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SliderFloat("##LightDirY", &Editor.GlobalLight.LightDirection.Y, -1.0f, 1.0f, "%.2f");
+    ImGui::PopStyleColor(2);
+    ImGui::SameLine();
+    ImGui::Text("Light Dir Y (Right/Left)");
+
+    // 제트축 조명 방향 설정
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.45f, 0.95f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.35f, 0.55f, 1.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.18f, 0.35f, 0.85f, 1.0f));
+    ImGui::Button("Z", ImVec2(22.0f, 0.0f));
+    ImGui::PopStyleColor(3);
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.25f, 0.45f, 0.95f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, ImVec4(0.4f, 0.6f, 1.0f, 1.0f));
+    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SliderFloat("##LightDirZ", &Editor.GlobalLight.LightDirection.Z, -1.0f, 1.0f, "%.2f");
+    ImGui::PopStyleColor(2);
+    ImGui::SameLine();
+    ImGui::Text("Light Dir Z (Up/Down)");
+
+    ImGui::SetNextItemWidth(180.0f);
+    ImGui::ColorEdit3("##LightColor", &Editor.GlobalLight.LightColor.X);
+    ImGui::SameLine();
+    ImGui::Text("Color");
+
+    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SliderFloat("##LightIntensity", &Editor.GlobalLight.Intensity, 0.0f, 5.0f, "%.2f");
+    ImGui::SameLine();
+    ImGui::Text("Intensity");
+
+    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SliderFloat("##LightAmbient", &Editor.GlobalLight.AmbientIntensity, 0.0f, 1.0f, "%.2f");
+    ImGui::SameLine();
+    ImGui::Text("Ambient");
+
+
 
     ImGui::End();
 }

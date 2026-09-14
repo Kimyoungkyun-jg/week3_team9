@@ -2,12 +2,20 @@
 
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
-#include "Runtime/CoreUObject/UCubeComp.h"
+#include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
+#include "Runtime/CoreUObject/USpotLightComponent.h"
+#include "Runtime/CoreUObject/UTextComponent.h"
 #include "Runtime/Engine/FRayCastingManager.h"
+#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
+#include "Runtime/Math/FMatrix.h"
+#include "Runtime/Rendering/FMesh.h"
 #include <Windows.h>
+
 
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
@@ -19,59 +27,14 @@ void FEditorApplication::Initialize_ImguiWin32DX11(
   ImguiManager.Initialize_ImplWin32DX11(Window, Device, Context);
 }
 
-void FEditorApplication::Initialize_Runtime(
-    FRenderResourceLibrary *RendererLibrary, USceneManager *SceneManager,
-    FRenderView *RenderView) {
+void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
+                                            FRenderView *RenderView) {
   this->RenderView = RenderView;
   this->SceneManager = SceneManager;
-  this->curScene = SceneManager->CurrentScene;
+  this->CurrentScene = SceneManager->CurrentScene;
 
+  Editor.Initialize(SceneManager);
 
-  Editor.Initialize(RendererLibrary, SceneManager);
-
-	//UCubeComp* CubeComp = NewObject<UCubeComp>();
-	//FTransform& CubeTransform = CubeComp->GetRelativeTransform();
-	//CubeTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-	//CubeTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-	//CubeTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-
- // AActor *Cube =
- //     curScene->SpawnActor<AActor>(FVector(1.0f, 1.0f, 0.25f), // Location
- //                                  FVector(0.5f, 0.5f, 0.5f)   // Scale
- //     );
-
- // Cube->SetRootComponent(CubeComp);
-  
-
-
-  UBillBoardComp* BillBoardComp = NewObject<UBillBoardComp>();
-  FTransform& BillBoardTransform = BillBoardComp->GetRelativeTransform();
-  BillBoardTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-  BillBoardTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-  BillBoardTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-
-  AActor* BillBoard =
-      curScene->SpawnActor<AActor>(FVector(10.0f, 1.0f, 0.25f), // Location
-          FVector(0.5f, 0.5f, 0.5f)   // Scale
-      );
-
-  UTextComponent* TextComp = NewObject<UTextComponent>();
-  FTransform& TextTransform = TextComp->GetRelativeTransform();
-  TextTransform.Location = FVector{ 1.0f, 1.0f, 0.25f };
-  TextTransform.Rotation = FQuaternion::FromEulerXYZDeg(FVector{ 0.5f, 0.5f, 0.5f });
-  TextTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
-  
-  AActor* TextActor =
-      curScene->SpawnActor<AActor>(FVector(0.0f, 10.0f, 0.25f), // Location
-          FVector(0.5f, 0.5f, 0.5f)   // Scale
-      );
-
-
-  BillBoard->SetRootComponent(BillBoardComp);
-  TextActor->SetRootComponent(TextComp);
-
-
-  //Editor.SelectActor(Cube);
 
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
@@ -112,6 +75,7 @@ void FEditorApplication::BeginFrame() { ImguiManager.NewFrame(); }
 void FEditorApplication::Tick(float DeltaTime) {
   ToolBar.Process(Editor, ConsoleWindow, ControlPanelWindow, PropertyWindow);
   EditorViewportWindow.Process(Editor, DeltaTime);
+  WorldOutliner.Process(Editor);
   ControlPanelWindow.Process(Editor);
   PropertyWindow.Process(Editor);
   ConsoleWindow.Process(Editor);
@@ -125,31 +89,76 @@ void FEditorApplication::Render() {
   for (auto &EditorViewport : EditorViewports) {
     if (RenderView) {
       RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
+      RenderView->GetRenderer().UpdateLightConstants(
+          Editor.GlobalLight); // globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives)) {
-      for (auto &PrimitiveComponent :
-           SceneManager->CurrentScene->GetRenderComponents()) {
-        const bool bSelected =
-            (PrimitiveComponent && PrimitiveComponent->GetOwner() &&
-             PrimitiveComponent->GetOwner() == Editor.GetSelectedActor());
+    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives))
+    {
+        for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
+        {
+            bool bSelected = true;
 
-        RenderView->Render(EditorViewport.ViewportCamera,
-                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                           PrimitiveComponent, bSelected);
-      }
+            if (!PrimitiveComponent) { bSelected = false; }
+            else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
+            else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
+
+            RenderView->Render
+            (
+                EditorViewport.ViewportCamera,
+                EditorViewport.TopLeftUV,
+                EditorViewport.LengthUV,
+                PrimitiveComponent,
+                bSelected
+            );
+        }
+    }
+
+
+
+    if (Editor.ObjectSelected())
+    {
+        // AABB 그리기
+        USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
+        UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+        if (PrimComp && PrimComp->GetMesh() && PrimComp->IsA<USpotLightComponent>())
+        {
+                auto Mesh = PrimComp->GetMesh();
+                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+                const auto& Positions = Mesh->GetPositions();
+                const auto& Indices = Mesh->GetIndices();
+                const FVector4 WireColor{ 1.0f, 1.0f, 0.0f, 1.0f }; // 노란색 선
+                // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
+                for (size_t i = 0; i + 2 < Indices.size(); i += 3)
+                {
+                    FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
+                    FVector B = ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
+                    FVector C = ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
+                    RenderView->RenderLine(A, B, WireColor);
+                    RenderView->RenderLine(B, C, WireColor);
+                    RenderView->RenderLine(C, A, WireColor);
+                }
+        }
+        else if (PrimComp && PrimComp->GetMesh())
+        {
+            // AABB 그리기
+            const FMesh& Mesh = *PrimComp->GetMesh();
+            const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+            FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+            RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+        }
     }
 
     RenderView->GetRenderer().FlushLineBatch(
-        EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
-    ); //line batch 일괄 flush
+        EditorViewport.ViewportCamera
+            .CreateViewProjectionMatrix()); // line batch 일괄 flush
 
-    if (Editor.ObjectSelected()) // 기즈모 그리기
-    {
+    if (Editor.ObjectSelected()) {
+      // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
@@ -173,11 +182,5 @@ void FEditorApplication::OnWindowSize(UINT Width, UINT Height) {
 }
 
 void FEditorApplication::CollectGarbage() {
-  FGarbageCollector::Get().CollectGarbage(
-      [this](const FReferenceCollector &Collector) {
-        AActor *SelectedActor = Editor.GetSelectedActor();
-
-        if (SelectedActor != nullptr && !Collector.bIsReferenced(SelectedActor))
-          Editor.ClearSelectionForGC();
-      });
+  FGarbageCollector::Get().CollectGarbage();
 }

@@ -1,6 +1,12 @@
 ﻿#include "FUObjectArray.h"
 
+#include <algorithm>
 #include <cassert>
+
+void FUObjectArray::SetNextUUID(uint32 UUID)
+{
+	NextUUID = UUID;
+}
 
 void FUObjectArray::AddObject(UObject* Object)
 {
@@ -25,6 +31,15 @@ void FUObjectArray::RemoveObject(UObject* Object)
 void FUObjectArray::DestroyObject(UObject* Object) {
 	if (Object == nullptr) return;
 
+	Object->Release();
 	RemoveObject(Object);
 	delete Object; // 오버라이드해서 통계 구현 필요
+}
+
+bool FUObjectArray::IsValid(const UObject* Object, uint32 UUID) const
+{
+	if (Object == nullptr || UUID == 0) return false;
+
+	const auto It = std::find(Objects.begin(), Objects.end(), Object);
+	return It != Objects.end() && (*It)->UUID == UUID;
 }

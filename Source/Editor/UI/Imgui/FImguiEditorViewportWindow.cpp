@@ -98,6 +98,8 @@ void FImguiEditorViewportWindow::Process(FEditor &Editor, float DeltaTime) {
       Gizmo.HoveredHandle = EGizmoHandle::None;
     }
 
+    CameraController.CameraRotateSpeed = Editor.GetCameraSensitivity();
+
     if (bFocused) {
       FCamera &Camera = ActiveViewport->ViewportCamera;
       CameraController.UpdateMouseInput(Camera);
@@ -172,9 +174,9 @@ void FImguiEditorViewportWindow::HandlePicking(
 
   if (bHit) {
     // 충돌 컴포넌트의 소유 액터 선택
-    if (HitComponent && HitComponent->GetOwner()) {
+    if (HitComponent && HitComponent->GetActorOwner()) {
 
-        AActor* OwnerActor = HitComponent->GetOwner();
+        AActor* OwnerActor = HitComponent->GetActorOwner();
         Editor.SelectActor(OwnerActor);
         // 클래스 이름 및 UUID 조회
         const char* ActorClass = OwnerActor->GetClass() ? OwnerActor->GetClass()->GetDisplayName().c_str() : "Unknown";

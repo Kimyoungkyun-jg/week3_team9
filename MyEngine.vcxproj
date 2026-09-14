@@ -272,16 +272,24 @@
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiManager.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiToolBar.cpp" />
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\ABillboardActor.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\ASpotlightActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FReferenceCollector.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\FUObjectArray.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UBillBoardComp.cpp" />
+    <ClCompile Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UClass.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UConeComp.cpp" />
+    <ClCompile Include="Source\Runtime\CoreUObject\USpotLightComponent.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCylinderComp.cpp" />
     <ClCompile Include="Source\Runtime\Actors\AActor.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\ACubeActor.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\ACylinderActor.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\ASphereActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UPlaneComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UPrimitiveComponent.cpp" />
@@ -290,6 +298,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\USphereComp.cpp" />
     <ClCompile Include="Source\Runtime\Core\FName.cpp" />
     <ClCompile Include="Source\Runtime\Core\FNamePool.cpp" />
+    <ClCompile Include="Source\Runtime\Engine\FArchive.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FRayCastingManager.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FRenderView.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FTimeManager.cpp" />
@@ -373,16 +382,25 @@
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiManager.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiEditorViewportWindow.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiToolBar.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h" />
+    <ClInclude Include="Source\Runtime\Actors\ABillboardActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ASpotlightActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FClassIdSet.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FUObjectArray.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UBillBoardComp.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\UAnimatedBillboardComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UClass.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h" />
+    <ClInclude Include="Source\Runtime\CoreUObject\USpotLightComponent.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCubeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCylinderComp.h" />
     <ClInclude Include="Source\Runtime\Actors\AActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ACubeActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ACylinderActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ASphereActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObjectGlobals.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h" />
@@ -396,6 +414,7 @@
     <ClInclude Include="Source\Runtime\Core\PointerTypes.h" />
     <ClInclude Include="Source\Runtime\Core\TArray.h" />
     <ClInclude Include="Source\Runtime\Core\IntTypes.h" />
+    <ClInclude Include="Source\Runtime\Engine\FArchive.h" />
     <ClInclude Include="Source\Runtime\Engine\FCameraProjection.h" />
     <ClInclude Include="Source\Editor\Grid\FGrid.h" />
     <ClInclude Include="Source\Runtime\Engine\FRenderView.h" />
@@ -436,6 +455,7 @@
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_textedit.h" />
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_truetype.h" />
     <ClInclude Include="Source\ThirdParty\Json\json.hpp" />
+    <ClInclude Include="Source\ThirdParty\Json\nlohmann\json.hpp" />
     <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
   </ItemGroup>
   <ItemGroup>
@@ -507,6 +527,12 @@
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
+    <FxCompile Include="Shader\SpotlightPS.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="Shader\GridVS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainVS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
@@ -542,5 +568,8 @@
       <Command>if exist "$(SolutionDir)Textures" xcopy /Y /D /I /E "$(SolutionDir)Textures" "$(OutDir)Textures\"</Command>
       <Message>Copying textures to output directory...</Message>
     </PostBuildEvent>
+    <ClCompile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Runtime/Core/Log.h</ForcedIncludeFiles>
+    </ClCompile>
   </ItemDefinitionGroup>
 </Project>

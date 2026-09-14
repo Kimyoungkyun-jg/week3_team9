@@ -1,5 +1,10 @@
 #include "FEditor.h"
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/ACubeActor.h"
+#include "Runtime/Actors/ASphereActor.h"
+#include "Runtime/Actors/ACylinderActor.h"
+#include "Runtime/Actors/ABillboardActor.h"
+#include "Runtime/Actors/ASpotlightActor.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObject.h"
@@ -9,22 +14,20 @@
 #include <numbers>
 
 
-void FEditor::Initialize(FRenderResourceLibrary *RendererLibrary,
-                         USceneManager *SceneManager) {
-  Gizmo.Initialize(*RendererLibrary);
-  Grid.Initialize(*RendererLibrary);
-  this->RendererLibrary = RendererLibrary;
+void FEditor::Initialize(USceneManager *SceneManager) {
+  Gizmo.Initialize();
+  Grid.Initialize();
   this->SceneManager = SceneManager;
+}
+
+FRenderResourceLibrary *FEditor::GetRendererLibrary() {
+  return &FRenderResourceLibrary::Get();
 }
 
 void FEditor::Process() {
   // 씬의 액터 업데이트
   if (SceneManager && SceneManager->CurrentScene) {
-    for (AActor *Actor : SceneManager->CurrentScene->GetActors()) {
-      if (Actor) {
-        Actor->Update(FTimeManager::Get().GetDeltaTime());
-      }
-    }
+    SceneManager->CurrentScene->Update(FTimeManager::Get().GetDeltaTime());
   }
 
   if (SelectedActor) {
@@ -34,12 +37,14 @@ void FEditor::Process() {
 
 void FEditor::NewScene() {
   SelectedActor = nullptr;
-  SceneManager->SetScene(NewObject<UScene>(*RendererLibrary));
+  SceneManager->SetScene(NewObject<UScene>());
 }
 
 void FEditor::SaveScene(const FString &Path) { SceneManager->SaveScene(Path); }
 
-void FEditor::LoadScene(const FString &Path) {
+void FEditor::LoadScene(const FString &Path) 
+{
+
   // 씬 로드
   SceneManager->LoadScene(Path);
   SelectedActor = nullptr;
@@ -100,44 +105,45 @@ void FEditor::ClearSelectionForGC() {
   Gizmo.HoveredHandle = EGizmoHandle::None;
 }
 
-UPrimitiveComponent *FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
+void FEditor::SetCameraSensitivity(float Value)
+{
+    CameraSensitivity = Value;
+}
+
+UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
   if (!SceneManager || !SceneManager->CurrentScene) {
-    return nullptr;
-  }
-
-  UPrimitiveComponent *Component = nullptr;
-  switch (Type) {
-  case EEditorPrimitiveType::Cube:
-    Component = NewObject<UCubeComp>();
-    break;
-  case EEditorPrimitiveType::Cylinder:
-    Component = NewObject<UCylinderComp>();
-    break;
-  case EEditorPrimitiveType::Sphere:
-    Component = NewObject<USphereComp>();
-    break;
-  }
-
-  if (!Component) {
     return nullptr;
   }
 
   // 오프셋 적용
   static int SpawnSerial = 0;
   const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
-  FTransform Transform
-  {
-      FVector{Offset, 0.0f, 0.0f},
-      FQuaternion::Identity(),
-      FVector{0.5f, 0.5f, 0.5f},
-  };
+  const FVector SpawnLoc{ Offset, 0.0f, 0.0f };
+  const FVector SpawnScale{ 0.5f, 0.5f, 0.5f };
 
-  Component->SetRelativeTransform(Transform);
+  AActor* NewActor = nullptr;
+  switch (Type) {
+  case EEditorPrimitiveType::Cube:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ACubeActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Cylinder:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ACylinderActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Sphere:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ASphereActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Billboard:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ABillboardActor>(SpawnLoc, SpawnScale);
+    break;
+  case EEditorPrimitiveType::Spotlight:
+    NewActor = SceneManager->CurrentScene->SpawnActor<ASpotlightActor>(SpawnLoc, SpawnScale);
+    break;
+  }
 
-  // 액터를 스폰하고 컴포넌트를 루트로 장착
-  AActor *NewActor = SceneManager->CurrentScene->SpawnActor<AActor>();
-  NewActor->SetRootComponent(Component);
+  if (!NewActor) {
+    return nullptr;
+  }
 
   SelectActor(NewActor);
-  return Component;
+  return NewActor->GetRootComponent() ? NewActor->GetRootComponent()->Cast<UPrimitiveComponent>() : nullptr;
 }

@@ -5,17 +5,37 @@
 #include <wrl/client.h>
 #include "Runtime/Core/FString.h"
 
+#include "Runtime/Core/IntTypes.h"
+
+// 내장 파이프라인 종류
+enum class EBuiltinPipeline : uint8 {
+  Simple_Solid,
+  Simple_Wireframe,
+  Textured,
+  Grid,
+  RotationGizmo,
+  Count,
+  Spotlight,
+  Text
+};
+
 struct FRenderPipelineDesc {
   FWString VertexShaderFileName;
   FWString PixelShaderFileName;
   bool bEnableDepthTest = true;
+  bool bEnableDepthWrite = true;               //기본 불투명
+  D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;  //기본 뒷면 제거
+  bool bAdditiveBlend = false;                 //기본 불투명
 
   bool operator==(const FRenderPipelineDesc &) const = default;
 };
 
+class FRenderResourceLibrary;
+
 class FRenderPipeline final {
   friend class FRenderer;
   friend class FLineBatcher;
+  friend class FRenderResourceLibrary;
 
 public:
   [[nodiscard]] FRenderPipelineDesc GetPipelineDesc() const { return desc; }
@@ -32,4 +52,5 @@ private:
   Microsoft::WRL::ComPtr<ID3D11RasterizerState> RasterizerState;
   Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthStencilState;
   Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState;
+  Microsoft::WRL::ComPtr<ID3D11BlendState> BlendState;
 };

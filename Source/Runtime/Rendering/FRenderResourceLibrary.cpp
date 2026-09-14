@@ -2,32 +2,128 @@
 #include "Vertices.h"
 
 #include "FRenderer.h"
+#include "FTexture.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Geometry/Sphere.h"
 #include "Runtime/Math/FVector.h"
 #include "Runtime/Rendering/FRenderer.h"
 #include <cmath>
 #include <numbers>
-#include "FTexture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "ThirdParty/stb/stb_image.h"
 
+FRenderResourceLibrary &FRenderResourceLibrary::Get() {
+  static FRenderResourceLibrary Instance;
+  return Instance;
+}
+
+// 파이프라인 정보 엔트리
+struct FPipelineEntry {
+  EBuiltinPipeline Id;
+  const wchar_t *VertexShader;
+  const wchar_t *PixelShader;
+  bool bDepthWrite = true;
+  D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;
+  bool bAdditiveBlend = false;
+};
+
+// 기본 파이프라인 테이블
+constexpr FPipelineEntry pipelineTable[] = {
+    {EBuiltinPipeline::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
+    {EBuiltinPipeline::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
+    {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
+    {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
+    {EBuiltinPipeline::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
+    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"TextPS.cso"},
+};
+
+bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
+  const FWString Path = GetExecutableDirectory();
+  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
+  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
+
+  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+    return false;
+  }
+
+  FRenderPipelineDesc Desc = {
+      .VertexShaderFileName = VsPath,
+      .PixelShaderFileName = PsPath,
+      .bEnableDepthTest = true,
+  };
+
+  // 솔리드 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> SolidPipeline =
+      Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
+  if (SolidPipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
+  }
+
+  // 와이어프레임 파이프라인 생성 및 등록
+  TSharedPtr<FRenderPipeline> WireframePipeline =
+      Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
+  if (WireframePipeline) {
+    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
+  }
+
+  return SolidPipeline != nullptr && WireframePipeline != nullptr;
+}
+
+bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
+  // 솔리드 및 와이어프레임 파이프라인 개별 생성
+  CreateSolidWireframePipeline(Renderer);
+
+  const FWString Path = GetExecutableDirectory();
+
+  for (const FPipelineEntry &Entry : pipelineTable) {
+    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
+      continue;
+    }
+
+    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
+    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
+
+    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
+      continue;
+    }
+
+    FRenderPipelineDesc PipelineDesc = {
+        .VertexShaderFileName = VsPath,
+        .PixelShaderFileName = PsPath,
+        .bEnableDepthTest = true,
+        .bEnableDepthWrite = Entry.bDepthWrite,
+        .CullMode = Entry.CullMode,
+        .bAdditiveBlend = Entry.bAdditiveBlend,
+    };
+
+    TSharedPtr<FRenderPipeline> Pipeline =
+        Renderer.CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
+    if (!Pipeline) {
+      return false;
+    }
+
+    AllPipelineMap[Entry.Id] = Pipeline;
+  }
+  return true;
+}
+
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
-  if (!CreateCubeMesh(Renderer) ||
+  if (!InitializePipelines(Renderer) || !CreateCubeMesh(Renderer) ||
       !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
-      !CreateConeMesh(Renderer) || !CreateArrowMesh(Renderer) ||
-      !CreateCircleMesh(Renderer) || !CreateRotationGizmoMesh(Renderer) ||
-      !CreateSquareArrowMesh(Renderer) || !CreateGridMesh(Renderer) ||
-      !CreateSphereMesh(Renderer) || !CreateLineMesh(Renderer) ||
-      !CreatePlaneMesh(Renderer) || !CreateRectMesh(Renderer) ||
+      !CreateConeMesh(Renderer) || !CreateSpotlightConeMesh(Renderer) ||
+      !CreateArrowMesh(Renderer) || !CreateCircleMesh(Renderer) ||
+      !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
+      !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
+      !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
+      !CreateRectMesh(Renderer) || !CreateTextMesh(Renderer) ||
       !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
       !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
-      !CreateTexturedMaterial(Renderer) || !CreateTextMesh(Renderer) ||
-      !CreateTextMaterial(Renderer) || !CreateKorTextMesh(Renderer) ||
-      !CreateKorTextMaterial(Renderer)) {
+      !CreateTexturedMaterial(Renderer) ||
+      !CreateTextMesh(Renderer) || !CreateTextMaterial(Renderer) ||
+      !CreateSpotlightMaterial(Renderer)) {
     return false;
   }
 
@@ -65,61 +161,63 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
   const float HalfH = Height * 0.5f;
 
   const uint32 TopCenterIndex = static_cast<uint32>(Vertices.size());
-  Vertices.push_back({0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
-                      0.0f, 1.0f, 0.0f});
+  Vertices.push_back({0.0f, 0.0f, HalfH, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
+                      0.0f, 0.0f, 1.0f});
 
   const uint32 TopRingStart = static_cast<uint32>(Vertices.size());
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
-    Vertices.push_back({TopRadius * std::cos(Theta), HalfH,
-                        TopRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
-                        0.5f + 0.5f * std::cos(Theta),
-                        0.5f + 0.5f * std::sin(Theta), 0.0f, 1.0f, 0.0f});
+    Vertices.push_back({TopRadius * std::cos(Theta),
+                        TopRadius * std::sin(Theta), HalfH, 0.0f, 0.0f, 1.0f,
+                        1.0f, 0.5f + 0.5f * std::cos(Theta),
+                        0.5f + 0.5f * std::sin(Theta), 0.0f, 0.0f, 1.0f});
   }
 
   const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
-  Vertices.push_back({0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
-                      0.0f, -1.0f, 0.0f});
+  Vertices.push_back({0.0f, 0.0f, -HalfH, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
+                      0.0f, 0.0f, -1.0f});
 
   const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
-    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
-                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
-                        0.5f + 0.5f * std::cos(Theta),
-                        0.5f + 0.5f * std::sin(Theta), 0.0f, -1.0f, 0.0f});
+    Vertices.push_back({BottomRadius * std::cos(Theta),
+                        BottomRadius * std::sin(Theta), -HalfH, 0.0f, 0.0f,
+                        1.0f, 1.0f, 0.5f + 0.5f * std::cos(Theta),
+                        0.5f + 0.5f * std::sin(Theta), 0.0f, 0.0f, -1.0f});
   }
 
   const uint32 SideTopStart = static_cast<uint32>(Vertices.size());
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
-    Vertices.push_back({TopRadius * std::cos(Theta), HalfH,
-                        TopRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+    Vertices.push_back({TopRadius * std::cos(Theta),
+                        TopRadius * std::sin(Theta), HalfH, 0.0f, 0.0f, 1.0f,
+                        1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
-                        0.0f, std::cos(Theta), 0.0f, std::sin(Theta)});
+                        0.0f, std::cos(Theta), std::sin(Theta), 0.0f});
   }
 
   const uint32 SideBottomStart = static_cast<uint32>(Vertices.size());
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
-    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
-                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+    Vertices.push_back({BottomRadius * std::cos(Theta),
+                        BottomRadius * std::sin(Theta), -HalfH, 0.0f, 0.0f,
+                        1.0f, 1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
-                        1.0f, std::cos(Theta), 0.0f, std::sin(Theta)});
+                        1.0f, std::cos(Theta), std::sin(Theta), 0.0f});
   }
 
   for (uint32 i = 0; i < SliceCount; ++i) {
     const uint32 Next = (i + 1) % SliceCount;
     Indices.push_back(TopCenterIndex);
-    Indices.push_back(TopRingStart + Next);
     Indices.push_back(TopRingStart + i);
+    Indices.push_back(TopRingStart + Next);
   }
 
   for (uint32 i = 0; i < SliceCount; ++i) {
     const uint32 Next = (i + 1) % SliceCount;
     Indices.push_back(BottomCenterIndex);
-    Indices.push_back(BottomRingStart + i);
     Indices.push_back(BottomRingStart + Next);
+    Indices.push_back(BottomRingStart + i);
   }
 
   for (uint32 i = 0; i < SliceCount; ++i) {
@@ -131,12 +229,12 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
     const uint32 BR = SideBottomStart + Next;
 
     Indices.push_back(BL);
-    Indices.push_back(TL);
     Indices.push_back(BR);
+    Indices.push_back(TL);
 
     Indices.push_back(BR);
-    Indices.push_back(TL);
     Indices.push_back(TR);
+    Indices.push_back(TL);
   }
 
   FMeshDesc MeshDesc{
@@ -157,49 +255,67 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
 bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
   constexpr float BottomRadius = 0.5f;
   constexpr float Height = 1.0f;
-  constexpr uint32 SliceCount = 24;
+  constexpr uint32 SliceCount = 48;
   constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
   const float DTheta = TAU / static_cast<float>(SliceCount);
 
   TArray<FVertexData> Vertices;
   TArray<uint32> Indices;
 
-  Vertices.reserve(SliceCount * 2 + 2);
-  Indices.reserve(SliceCount * 6);
-
   const float HalfH = Height * 0.5f;
+  const float SlantLen =
+      std::sqrt(Height * Height + BottomRadius * BottomRadius);
+  const float NormalFactor = Height / SlantLen;
+  const float NormalZ = BottomRadius / SlantLen;
 
-  const uint32 ApexIndex = static_cast<uint32>(Vertices.size());
-  Vertices.push_back({0.0f, HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.0f,
-                      0.0f, 1.0f, 0.0f});
-
-  const uint32 SideBaseStart = static_cast<uint32>(Vertices.size());
+  // 옆면 정점 생성
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
-    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
-                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
+    const float NextTheta = static_cast<float>(i + 1) * DTheta;
+    const float MidTheta = (Theta + NextTheta) * 0.5f;
+
+    const float ApexNx = NormalFactor * std::cos(MidTheta);
+    const float ApexNy = NormalFactor * std::sin(MidTheta);
+
+    const uint32 ApexIdx = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({0.0f, 0.0f, HalfH, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.0f,
+                        ApexNx, ApexNy, NormalZ});
+
+    const float BaseNx1 = NormalFactor * std::cos(Theta);
+    const float BaseNy1 = NormalFactor * std::sin(Theta);
+    const uint32 BaseIdx1 = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({BottomRadius * std::cos(Theta),
+                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f,
+                        1.0f, 1.0f,
                         static_cast<float>(i) / static_cast<float>(SliceCount),
-                        1.0f, std::cos(Theta), 0.0f, std::sin(Theta)});
+                        1.0f, BaseNx1, BaseNy1, NormalZ});
+
+    const float BaseNx2 = NormalFactor * std::cos(NextTheta);
+    const float BaseNy2 = NormalFactor * std::sin(NextTheta);
+    const uint32 BaseIdx2 = static_cast<uint32>(Vertices.size());
+    Vertices.push_back(
+        {BottomRadius * std::cos(NextTheta), BottomRadius * std::sin(NextTheta),
+         -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
+         static_cast<float>(i + 1) / static_cast<float>(SliceCount), 1.0f,
+         BaseNx2, BaseNy2, NormalZ});
+
+    Indices.push_back(ApexIdx);
+    Indices.push_back(BaseIdx2);
+    Indices.push_back(BaseIdx1);
   }
 
+  // 밑면 뚜껑 정점 생성
   const uint32 BottomCenterIndex = static_cast<uint32>(Vertices.size());
-  Vertices.push_back({0.0f, -HalfH, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f, 0.5f,
-                      0.0f, -1.0f, 0.0f});
+  Vertices.push_back({0.0f, 0.0f, -HalfH, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.2f,
+                      0.0f, 0.0f, -1.0f});
 
   const uint32 BottomRingStart = static_cast<uint32>(Vertices.size());
   for (uint32 i = 0; i < SliceCount; ++i) {
     const float Theta = static_cast<float>(i) * DTheta;
-    Vertices.push_back({BottomRadius * std::cos(Theta), -HalfH,
-                        BottomRadius * std::sin(Theta), 0.0f, 0.0f, 1.0f, 1.0f,
-                        0.5f + 0.5f * std::cos(Theta),
-                        0.5f + 0.5f * std::sin(Theta), 0.0f, -1.0f, 0.0f});
-  }
-
-  for (uint32 i = 0; i < SliceCount; ++i) {
-    const uint32 Next = (i + 1) % SliceCount;
-    Indices.push_back(ApexIndex);
-    Indices.push_back(SideBaseStart + Next);
-    Indices.push_back(SideBaseStart + i);
+    const float U = static_cast<float>(i) / static_cast<float>(SliceCount);
+    Vertices.push_back({BottomRadius * std::cos(Theta),
+                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f,
+                        1.0f, 1.0f, U, 1.0f, 0.0f, 0.0f, -1.0f});
   }
 
   for (uint32 i = 0; i < SliceCount; ++i) {
@@ -222,6 +338,75 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
 
   ConeMesh = RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
   return ConeMesh != nullptr;
+}
+
+// 스포트라이트 전용 열린 원뿔 메쉬 생성
+bool FRenderResourceLibrary::CreateSpotlightConeMesh(FRenderer &Renderer) {
+  constexpr float BottomRadius = 0.5f;
+  constexpr float Height = 1.0f;
+  constexpr uint32 SliceCount = 48;
+  constexpr float TAU = std::numbers::pi_v<float> * 2.0f;
+  const float DTheta = TAU / static_cast<float>(SliceCount);
+
+  TArray<FVertexData> Vertices;
+  TArray<uint32> Indices;
+
+  const float HalfH = Height * 0.5f;
+  const float SlantLen =
+      std::sqrt(Height * Height + BottomRadius * BottomRadius);
+  const float NormalFactor = Height / SlantLen;
+  const float NormalZ = BottomRadius / SlantLen;
+
+  // 옆면 정점만 생성하고 밑면 뚜껑은 생성하지 않음
+  for (uint32 i = 0; i < SliceCount; ++i) {
+    const float Theta = static_cast<float>(i) * DTheta;
+    const float NextTheta = static_cast<float>(i + 1) * DTheta;
+    const float MidTheta = (Theta + NextTheta) * 0.5f;
+
+    const float ApexNx = NormalFactor * std::cos(MidTheta);
+    const float ApexNy = NormalFactor * std::sin(MidTheta);
+
+    const uint32 ApexIdx = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({0.0f, 0.0f, HalfH, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f, 0.0f,
+                        ApexNx, ApexNy, NormalZ});
+
+    const float BaseNx1 = NormalFactor * std::cos(Theta);
+    const float BaseNy1 = NormalFactor * std::sin(Theta);
+    const uint32 BaseIdx1 = static_cast<uint32>(Vertices.size());
+    Vertices.push_back({BottomRadius * std::cos(Theta),
+                        BottomRadius * std::sin(Theta), -HalfH, 1.0f, 1.0f,
+                        1.0f, 1.0f,
+                        static_cast<float>(i) / static_cast<float>(SliceCount),
+                        1.0f, BaseNx1, BaseNy1, NormalZ});
+
+    const float BaseNx2 = NormalFactor * std::cos(NextTheta);
+    const float BaseNy2 = NormalFactor * std::sin(NextTheta);
+    const uint32 BaseIdx2 = static_cast<uint32>(Vertices.size());
+    Vertices.push_back(
+        {BottomRadius * std::cos(NextTheta), BottomRadius * std::sin(NextTheta),
+         -HalfH, 1.0f, 1.0f, 1.0f, 1.0f,
+         static_cast<float>(i + 1) / static_cast<float>(SliceCount), 1.0f,
+         BaseNx2, BaseNy2, NormalZ});
+
+    Indices.push_back(ApexIdx);
+    Indices.push_back(BaseIdx2);
+    Indices.push_back(BaseIdx1);
+  }
+
+  FMeshDesc MeshDesc{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size()),
+  };
+
+  SpotlightConeMesh =
+      RegisterMesh("SpotlightCone", Renderer.CreateMesh(MeshDesc));
+  return SpotlightConeMesh != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
@@ -494,7 +679,7 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
                         v.g, v.b, v.a, v.u, v.v, v.nx, v.ny, v.nz});
   }
 
-  for (const auto &Index : CubeIndices) {
+  for (const auto &Index : ColoredCubeIndices) {
     Indices.push_back(Index);
   }
 
@@ -507,7 +692,7 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
                         v.nz});
   }
 
-  for (const auto &Index : CubeIndices) {
+  for (const auto &Index : ColoredCubeIndices) {
     Indices.push_back(Index + 8u);
   }
 
@@ -598,17 +783,15 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
 bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
   // 사각형 정점 배열
   const TArray<FVertexData> Vertices = {
-      {0.0f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
-      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+       0.0f},
   };
 
   // 양면 인덱스 배열
-  const TArray<uint32> Indices = {
-      0, 1, 2, 0, 2, 3,
-      0, 2, 1, 0, 3, 2
-  };
+  const TArray<uint32> Indices = {0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2};
 
   FMeshDesc MeshDesc{
       .VertexData = Vertices.data(),
@@ -640,8 +823,7 @@ bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
   SimpleMaterial = RegisterMaterial("Simple", Renderer.CreateMaterial(Desc));
 
   if (SimpleMaterial) {
-    SimpleMaterial->SetPipeLine(
-        Renderer.GetPipeline(EBuiltinPipeline::Simple_Solid));
+    SimpleMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Simple_Solid));
     return true;
   } else {
     return false;
@@ -663,7 +845,7 @@ bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
   }
 
   TSharedPtr<FRenderPipeline> Pipeline =
-      Renderer.GetPipeline(EBuiltinPipeline::Textured);
+      GetPipeline(EBuiltinPipeline::Textured);
   if (!Pipeline) {
     // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
     return false;
@@ -671,7 +853,33 @@ bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
   Material->SetPipeLine(Pipeline);
 
   // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-  Material->SetTexture(GetTexture("sandclock"));
+  Material->SetTexture(GetTexture("uv-test"));
+
+  return true;
+}
+
+// 스포트라이트 머티리얼 초기화
+bool FRenderResourceLibrary::CreateSpotlightMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
+
+  FMaterialDesc Desc = {
+      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+      .PixelShaderFileName = Path + L"/Shader/SpotlightPS.cso",
+  };
+
+  SpotlightMaterial =
+      RegisterMaterial("Spotlight", Renderer.CreateMaterial(Desc));
+  if (!SpotlightMaterial) {
+    return false;
+  }
+
+  TSharedPtr<FRenderPipeline> Pipeline =
+      GetPipeline(EBuiltinPipeline::Spotlight);
+  if (!Pipeline) {
+    return false;
+  }
+  // 파이프라인 지정
+  SpotlightMaterial->SetPipeLine(Pipeline);
 
   return true;
 }
@@ -687,7 +895,7 @@ bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
   GridMaterial = RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
 
   if (GridMaterial) {
-    GridMaterial->SetPipeLine(Renderer.GetPipeline(EBuiltinPipeline::Grid));
+    GridMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Grid));
     return true;
   } else {
     return false;
@@ -702,60 +910,129 @@ bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
       .PixelShaderFileName = Path + L"/Shader/RotationGizmoPS.cso",
   };
 
-  RotationGizmoMaterial = RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
+  RotationGizmoMaterial =
+      RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
 
   if (RotationGizmoMaterial) {
     RotationGizmoMaterial->SetPipeLine(
-        Renderer.GetPipeline(EBuiltinPipeline::RotationGizmo));
+        GetPipeline(EBuiltinPipeline::RotationGizmo));
     return true;
   } else {
     return false;
   }
 }
 
-bool FRenderResourceLibrary::CreateTextures(FRenderer& Renderer)
-{
-    const std::filesystem::path Root = std::filesystem::path(GetExecutableDirectory()) / L"Textures";
-    if (!std::filesystem::exists(Root))
-    {
-        return true;   // 폴더가 없는 건 실패가 아님
+bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
+  const std::filesystem::path ExeDir(GetExecutableDirectory());
+  const std::filesystem::path ProjectRoot =
+      ExeDir.parent_path().parent_path().parent_path();
+
+  TArray<std::filesystem::path> SearchRoots = {
+      ProjectRoot / L"Textures",
+      std::filesystem::current_path() / L"Textures",
+      ExeDir / L"Textures",
+  };
+
+  for (const auto &Root : SearchRoots) {
+    std::error_code Ec;
+    if (!std::filesystem::exists(Root, Ec)) {
+      continue;
     }
 
-    for (const auto& Entry : std::filesystem::recursive_directory_iterator(Root))
-    {
-        if (!Entry.is_regular_file()) continue;
+    for (const auto &Entry :
+         std::filesystem::recursive_directory_iterator(Root, Ec)) {
+      if (!Entry.is_regular_file(Ec))
+        continue;
 
-        FWString Ext = Entry.path().extension().wstring();
-        std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
-        if (Ext != L".png" && Ext != L".jpg") continue;
+      FWString Ext = Entry.path().extension().wstring();
+      std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+      if (Ext != L".png" && Ext != L".jpg" && Ext != L".jpeg")
+        continue;
 
-        // 확장자 제거는 stem()이 해줌
-        FString KeyWide = Entry.path().stem().string();          // "icon"
-        std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(), ::tolower);
+      // 확장자 제거
+      FString KeyWide = Entry.path().stem().string();
+      std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
+                     ::tolower);
 
-        int W = 0, H = 0, ChannelsInFile = 0;
-        unsigned char* Pixels = stbi_load(
-            Entry.path().string().c_str(),   
-            &W, &H, &ChannelsInFile, 4);   
-        if (!Pixels) continue;
+      // 이미 로드된 텍스처 건너뜀
+      if (AllTextureMap.find(KeyWide) != AllTextureMap.end()) {
+        continue;
+      }
 
-        FTextureDesc Desc{
-            .PixelData = Pixels,
-            .Width = static_cast<uint32>(W),
-            .Height = static_cast<uint32>(H),
-            .RowPitch = static_cast<uint32>(W) * 4u,
-        };
+      int W = 0, H = 0, ChannelsInFile = 0;
+      unsigned char *Pixels =
+          stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
+      if (!Pixels)
+        continue;
 
-        TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
-        stbi_image_free(Pixels);
+      FTextureDesc Desc{
+          .PixelData = Pixels,
+          .Width = static_cast<uint32>(W),
+          .Height = static_cast<uint32>(H),
+          .RowPitch = static_cast<uint32>(W) * 4u,
+      };
 
-        if (!Texture) continue;   // 실패한 텍스처는 맵에 넣지 않는다
+      TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
+      stbi_image_free(Pixels);
 
-        RegisterTexture(KeyWide, Texture);
+      if (!Texture)
+        continue;
+
+      RegisterTexture(KeyWide, Texture);
     }
+  }
 
-    return true;
+  return true;
 }
+//
+//bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer &Renderer,
+//                                                  FString &textureName) {
+//
+//  return false;
+//}
+//
+//bool FRenderResourceLibrary::CreateTextMesh(FRenderer &Renderer) {
+//  TArray<FVertexData> Vertices;
+//  TArray<uint32> Indices;
+//  FFont Font;
+//  Font.Initialize(16);
+//  FString Text{"Welcome To Jungle"}; // 메시 임의 초기값
+//
+//  // TODO: PlaneGenerator 만들어야 함.
+//  FTextVertex plane[4] = {{{0.0f, -0.5f, 0.5f}, 0.0f, 0.0f},
+//                          {{0.0f, 0.5f, 0.5f}, 0.0f, 0.0f},
+//                          {{0.0f, -0.5f, -0.5f}, 0.0f, 0.0f},
+//                          {{0.0f, 0.5f, -0.5f}, 0.0f, 0.0f}};
+//  TArray<uint32> IndexSet = {0, 1, 2, 1, 3, 2, 0, 2, 1, 1, 2, 3};
+//
+//  // 텍스트 가운데 정렬
+//  const float size = 0.55f;
+//  const float totalWidth =
+//      (Text.length() > 0) ? (Text.length() - 1) * size : 0.0f;
+//  const float startOffset = -totalWidth * 0.5f;
+//
+//  for (uint16 i = 0; i < Text.length(); ++i) {
+//    const FCharacterInfo &CharInfo = Font.GetEngCharInfo(Text.at(i));
+//    for (uint16 j = 0; j < 4; ++j) {
+//      FVertexData tv;
+//      float sizeAmount = startOffset + size * i;
+//      tv.x = plane[j].Pos.X;
+//      tv.y = plane[j].Pos.Y + sizeAmount;
+//      tv.z = plane[j].Pos.Z;
+//
+//      bool bIsRight = (j == 1) || (j == 3);
+//      bool bIsBottom = (j == 2) || (j == 3);
+//
+//      float width = (bIsRight) ? CharInfo.width : 0.0f;
+//      float height = (bIsBottom) ? CharInfo.height : 0.0f;
+//      tv.u = CharInfo.u + width;
+//      tv.v = CharInfo.v + height;
+//      Vertices.push_back(tv);
+//    }
+//
+//<<<<<<< HEAD
+//    return true;
+//}
 
 bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& textureName)
 {
@@ -811,152 +1088,151 @@ bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
         }
     }
 
-    // 메시 빌드 추가하기
-    FMeshDesc MeshData{
-        .VertexData = Vertices.data(),
-        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-        .VertexStride = sizeof(FVertexData),
-        .VertexCount = static_cast<uint32>(Vertices.size()),
-        .IndexData = Indices.data(),
-        .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-        .IndexCount = static_cast<uint32>(Indices.size())
-    };
-    
-    TextMesh = RegisterMesh("Text", Renderer.CreateDynamicMesh(MeshData));
-    return TextMesh != nullptr;
+  // 메시 빌드 추가하기
+  FMeshDesc MeshData{
+      .VertexData = Vertices.data(),
+      .VertexDataSize =
+          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+      .VertexStride = sizeof(FVertexData),
+      .VertexCount = static_cast<uint32>(Vertices.size()),
+      .IndexData = Indices.data(),
+      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+      .IndexCount = static_cast<uint32>(Indices.size())};
+
+  TextMesh = RegisterMesh("Text", Renderer.CreateDynamicMesh(MeshData));
+  return TextMesh != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateTextMaterial(FRenderer& Renderer)
-{
-    FWString Path = GetExecutableDirectory();
+bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
+  FWString Path = GetExecutableDirectory();
 
     FMaterialDesc Desc = {
         .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
         .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
     };
 
-    TSharedPtr<FMaterial> Material =
-        RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
-    if (!Material) {
-        return false;
-    }
+  TextMaterial = RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
+  if (!TextMaterial) {
+    return false;
+  }
 
     TSharedPtr<FRenderPipeline> Pipeline =
-        Renderer.GetPipeline(EBuiltinPipeline::Text);
+        GetPipeline(EBuiltinPipeline::Text);
     if (!Pipeline) {
         // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
         return false;
     }
-    Material->SetPipeLine(Pipeline);
+    TextMaterial->SetPipeLine(Pipeline);
 
-    // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-    Material->SetTexture(GetTexture("dejavusansmono"));
+  // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+  TextMaterial->SetTexture(GetTexture("koreanatlas"));
 
-    return true;
+  return true;
 }
 
-bool FRenderResourceLibrary::CreateKorTextMesh(FRenderer& Renderer)
-{
-    TArray<FVertexData> Vertices;
-    TArray<uint32> Indices;
 
-    // Font 로드하는 함수
-    FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
-    FFont Font;
-    Font.Deserialize(Path);
-    FWString Text{ L"안   녕~ 하(Ha) 세 요yoyo" };    // 메시 임의 초기값
-    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
-
-    float prevAdvance = 0.0f;
-    UINT blankCnt = 0;
-    for (uint16 i = 0; i < Text.length(); ++i)
-    {
-        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
-        if (Text.at(i) == L' ') 
-        {   // 공백일 경우 메시를 생성하지 않고 생성할 위치만 반영하기
-            prevAdvance += CharInfo.advance;
-            ++blankCnt;
-            continue;
-        }
-        FVertexData tv[4]{};
-
-        tv[0].x = 0.0f;
-        tv[0].y = CharInfo.planeLeft + prevAdvance;
-        tv[0].z = -CharInfo.planeTop;
-        tv[0].u = CharInfo.u;
-        tv[0].v = CharInfo.v;
-        Vertices.push_back(tv[0]);
-
-        tv[1].x = 0.0f;
-        tv[1].y = CharInfo.planeRight + prevAdvance;
-        tv[1].z = -CharInfo.planeTop;
-        tv[1].u = CharInfo.u + CharInfo.width;
-        tv[1].v = CharInfo.v;
-        Vertices.push_back(tv[1]);
-
-        tv[2].x = 0.0f;
-        tv[2].y = CharInfo.planeLeft + prevAdvance;
-        tv[2].z = -CharInfo.planeBottom;
-        tv[2].u = CharInfo.u;
-        tv[2].v = CharInfo.v + CharInfo.height;
-        Vertices.push_back(tv[2]);
-
-        tv[3].x = 0.0f;
-        tv[3].y = CharInfo.planeRight + prevAdvance;
-        tv[3].z = -CharInfo.planeBottom;
-        tv[3].u = CharInfo.u + CharInfo.width;
-        tv[3].v = CharInfo.v + CharInfo.height;
-        Vertices.push_back(tv[3]);
-
-        prevAdvance += CharInfo.advance;
-        uint32 VertexOffset = (i - blankCnt) * 4;
-        for (uint32 index : IndexSet)
-        {
-            Indices.push_back(index + VertexOffset);
-        }
-    }
-
-    // 메시 빌드 추가하기
-    FMeshDesc MeshData{
-        .VertexData = Vertices.data(),
-        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-        .VertexStride = sizeof(FVertexData),
-        .VertexCount = static_cast<uint32>(Vertices.size()),
-        .IndexData = Indices.data(),
-        .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-        .IndexCount = static_cast<uint32>(Indices.size())
-    };
-
-    KorTextMesh = RegisterMesh("KorText", Renderer.CreateDynamicMesh(MeshData));
-    return KorTextMesh != nullptr;
-}
-
-bool FRenderResourceLibrary::CreateKorTextMaterial(FRenderer& Renderer)
-{
-    FWString Path = GetExecutableDirectory();
-
-    FMaterialDesc Desc = {
-        .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-        .PixelShaderFileName = Path + L"/Shader/MsdfTextPS.cso",
-    };
-
-    TSharedPtr<FMaterial> Material =
-        RegisterMaterial("KorText", Renderer.CreateMaterial(Desc));
-    if (!Material) {
-        return false;
-    }
-
-    TSharedPtr<FRenderPipeline> Pipeline =
-        Renderer.GetPipeline(EBuiltinPipeline::KorText);
-    if (!Pipeline) {
-        // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
-        return false;
-    }
-    Material->SetPipeLine(Pipeline);
-
-    // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-    Material->SetTexture(GetTexture("maplestorybold"));
-
-    return true;
-}
+//bool FRenderResourceLibrary::CreateKorTextMesh(FRenderer& Renderer)
+//{
+//    TArray<FVertexData> Vertices;
+//    TArray<uint32> Indices;
+//
+//    // Font 로드하는 함수
+//    FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
+//    FFont Font;
+//    Font.Deserialize(Path);
+//    FWString Text{ L"안   녕~ 하(Ha) 세 요yoyo" };    // 메시 임의 초기값
+//    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
+//
+//    float prevAdvance = 0.0f;
+//    UINT blankCnt = 0;
+//    for (uint16 i = 0; i < Text.length(); ++i)
+//    {
+//        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
+//        if (Text.at(i) == L' ') 
+//        {   // 공백일 경우 메시를 생성하지 않고 생성할 위치만 반영하기
+//            prevAdvance += CharInfo.advance;
+//            ++blankCnt;
+//            continue;
+//        }
+//        FVertexData tv[4]{};
+//
+//        tv[0].x = 0.0f;
+//        tv[0].y = CharInfo.planeLeft + prevAdvance;
+//        tv[0].z = -CharInfo.planeTop;
+//        tv[0].u = CharInfo.u;
+//        tv[0].v = CharInfo.v;
+//        Vertices.push_back(tv[0]);
+//
+//        tv[1].x = 0.0f;
+//        tv[1].y = CharInfo.planeRight + prevAdvance;
+//        tv[1].z = -CharInfo.planeTop;
+//        tv[1].u = CharInfo.u + CharInfo.width;
+//        tv[1].v = CharInfo.v;
+//        Vertices.push_back(tv[1]);
+//
+//        tv[2].x = 0.0f;
+//        tv[2].y = CharInfo.planeLeft + prevAdvance;
+//        tv[2].z = -CharInfo.planeBottom;
+//        tv[2].u = CharInfo.u;
+//        tv[2].v = CharInfo.v + CharInfo.height;
+//        Vertices.push_back(tv[2]);
+//
+//        tv[3].x = 0.0f;
+//        tv[3].y = CharInfo.planeRight + prevAdvance;
+//        tv[3].z = -CharInfo.planeBottom;
+//        tv[3].u = CharInfo.u + CharInfo.width;
+//        tv[3].v = CharInfo.v + CharInfo.height;
+//        Vertices.push_back(tv[3]);
+//
+//        prevAdvance += CharInfo.advance;
+//        uint32 VertexOffset = (i - blankCnt) * 4;
+//        for (uint32 index : IndexSet)
+//        {
+//            Indices.push_back(index + VertexOffset);
+//        }
+//    }
+//
+//    // 메시 빌드 추가하기
+//    FMeshDesc MeshData{
+//        .VertexData = Vertices.data(),
+//        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+//        .VertexStride = sizeof(FVertexData),
+//        .VertexCount = static_cast<uint32>(Vertices.size()),
+//        .IndexData = Indices.data(),
+//        .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
+//        .IndexCount = static_cast<uint32>(Indices.size())
+//    };
+//
+//    KorTextMesh = RegisterMesh("KorText", Renderer.CreateDynamicMesh(MeshData));
+//    return KorTextMesh != nullptr;
+//}
+//
+//bool FRenderResourceLibrary::CreateKorTextMaterial(FRenderer& Renderer)
+//{
+//    FWString Path = GetExecutableDirectory();
+//
+//    FMaterialDesc Desc = {
+//        .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
+//        .PixelShaderFileName = Path + L"/Shader/MsdfTextPS.cso",
+//    };
+//
+//    TSharedPtr<FMaterial> Material =
+//        RegisterMaterial("KorText", Renderer.CreateMaterial(Desc));
+//    if (!Material) {
+//        return false;
+//    }
+//
+//    TSharedPtr<FRenderPipeline> Pipeline =
+//        Renderer.GetPipeline(EBuiltinPipeline::KorText);
+//    if (!Pipeline) {
+//        // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
+//        return false;
+//    }
+//    Material->SetPipeLine(Pipeline);
+//
+//    // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
+//    Material->SetTexture(GetTexture("maplestorybold"));
+//
+//    return true;
+//}
 
