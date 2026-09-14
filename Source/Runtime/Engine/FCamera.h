@@ -27,12 +27,12 @@ inline FMatrix FCamera::GetRotationMatrix() const
 	return FMatrix::MakeRotation(FVector(0.0f, Pitch, Yaw));
 }
 
-
 inline FMatrix FCamera::GetProjectionMatrix() const
 {
 	// 카메라 투영 행렬 반환
 	return Projection.CreateProjectionMatrix();
 }
+
 inline FMatrix FCamera::CreateViewProjectionMatrix() const
 {
 	const FMatrix InverseRotationMatrix = GetRotationMatrix().Transpose();

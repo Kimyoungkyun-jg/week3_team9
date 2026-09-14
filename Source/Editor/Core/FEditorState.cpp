@@ -2,21 +2,21 @@
 #include "Editor/Core/FConfigArchive.h"
 #include "ThirdParty/mIni/ini.h"
 
-void EditorUtil::WriteStateToFile(FEditorState& State, FStringView FilePath)
+void FEditorState::WriteToFile(FStringView FilePath) const
 {
 	FConfigArchive Archive;
 
 	// Camera
-	Archive.SetFloat("Camera", "Sensitivity", State.CameraSensitivity);
-	Archive.SetFloat("Camera", "Speed", State.CameraSpeed);
-	Archive.SetVector("Camera", "Position", State.CameraPosition);
-	Archive.SetFloat("Camera", "Yaw", State.CameraYaw);
-	Archive.SetFloat("Camera", "Pitch", State.CameraPitch);
+	Archive.SetFloat("Camera", "Sensitivity", CameraSensitivity);
+	Archive.SetFloat("Camera", "Speed", CameraSpeed);
+	Archive.SetVector("Camera", "Location", CameraLocation);
+	Archive.SetFloat("Camera", "Yaw", CameraYaw);
+	Archive.SetFloat("Camera", "Pitch", CameraPitch);
 
 	// Gizmo
-	Archive.SetUInt32("Gizmo", "Mode", State.GizmoMode);
-	Archive.SetUInt32("Gizmo", "Space", State.GizmoSpace);
-	Archive.SetUInt32("Gizmo", "SelectedActor", State.SelectedActor);
+	Archive.SetUInt32("Gizmo", "Mode", GizmoMode);
+	Archive.SetUInt32("Gizmo", "Space", GizmoSpace);
+	Archive.SetUInt32("Gizmo", "SelectedActor", SelectedActor);
 
 	mINI::INIFile File{ FilePath };
 	mINI::INIStructure Structure = Archive.GetConfig();
@@ -24,7 +24,7 @@ void EditorUtil::WriteStateToFile(FEditorState& State, FStringView FilePath)
 	File.write(Structure, true);
 }
 
-void EditorUtil::ReadStateFromFile(FEditorState& State, FStringView FilePath)
+void FEditorState::ReadFromFile(FStringView FilePath)
 {
 	mINI::INIFile File{ FilePath };
 	mINI::INIStructure Structure;
@@ -32,7 +32,7 @@ void EditorUtil::ReadStateFromFile(FEditorState& State, FStringView FilePath)
 	// 파일을 불러오는데 실패하면 기본값 유지
 	if (!File.read(Structure))
 	{
-		UE_LOG("[EditorUtil::ReadStateFromFile] \"%s\" 파일을 불러오는데 실패했습니다.", FilePath);
+		UE_LOG("[FEditorState::ReadFromFile] \"%s\" 파일을 불러오는데 실패했습니다.", FilePath);
 		return;
 	}
 
@@ -42,44 +42,100 @@ void EditorUtil::ReadStateFromFile(FEditorState& State, FStringView FilePath)
 
 	if (!Archive.IsEmpty("Camera", "Sensitivity"))
 	{
-		State.CameraSensitivity = Archive.GetFloat("Camera", "Sensitivity");
+		CameraSensitivity = Archive.GetFloat("Camera", "Sensitivity");
 	}
 
 	if (!Archive.IsEmpty("Camera", "Speed"))
 	{
-		State.CameraSpeed = Archive.GetFloat("Camera", "Speed");
+		CameraSpeed = Archive.GetFloat("Camera", "Speed");
 	}
 
-	if (!Archive.IsEmpty("Camera", "Position"))
+	if (!Archive.IsEmpty("Camera", "Location"))
 	{
-		State.CameraPosition = Archive.GetVector("Camera", "Position");
+		CameraLocation = Archive.GetVector("Camera", "Location");
 	}
 
 	if (!Archive.IsEmpty("Camera", "Yaw"))
 	{
-		State.CameraYaw = Archive.GetFloat("Camera", "Yaw");
+		CameraYaw = Archive.GetFloat("Camera", "Yaw");
 	}
 
 	if (!Archive.IsEmpty("Camera", "Pitch"))
 	{
-		State.CameraPitch = Archive.GetFloat("Camera", "Pitch");
+		CameraPitch = Archive.GetFloat("Camera", "Pitch");
 	}
 
 	// Gizmo
 
 	if (!Archive.IsEmpty("Gizmo", "Mode"))
 	{
-		State.GizmoMode = static_cast<uint8>(Archive.GetUInt32("Gizmo", "Mode"));
+		GizmoMode = static_cast<uint8>(Archive.GetUInt32("Gizmo", "Mode"));
 	}
 
 	if (!Archive.IsEmpty("Gizmo", "Space"))
 	{
-		State.GizmoSpace = static_cast<uint8>(Archive.GetUInt32("Gizmo", "Space"));
+		GizmoSpace = static_cast<uint8>(Archive.GetUInt32("Gizmo", "Space"));
 	}
 
 	if (!Archive.IsEmpty("Gizmo", "SelectedActor"))
 	{
-		State.SelectedActor = Archive.GetUInt32("Gizmo", "SelectedActor");
+		SelectedActor = Archive.GetUInt32("Gizmo", "SelectedActor");
 	}
 
+}
+
+void FEditorState::SetCameraSensitivity(float Value)
+{
+	if (CameraSensitivity == Value) { return; }
+	CameraSensitivity = Value;
+	WriteToFile();
+}
+
+void FEditorState::SetCameraSpeed(float Value)
+{
+	if (CameraSpeed == Value) { return; }
+	CameraSpeed = Value;
+	WriteToFile();
+}
+
+void FEditorState::SetCameraLocation(const FVector& Value)
+{
+	if (CameraLocation == Value) { return; }
+	CameraLocation = Value;
+	WriteToFile();
+}
+
+void FEditorState::SetCameraYaw(float Value)
+{
+	if (CameraYaw == Value) { return; }
+	CameraYaw = Value;
+	WriteToFile();
+}
+
+void FEditorState::SetCameraPitch(float Value)
+{
+	if (CameraPitch == Value) { return; }
+	CameraPitch = Value;
+	WriteToFile();
+}
+
+void FEditorState::SetGizmoMode(uint8 Value)
+{
+	if (GizmoMode == Value) { return; }
+	GizmoMode = Value;
+	WriteToFile();
+}
+
+void FEditorState::SetGizmoSpace(uint8 Value)
+{
+	if (GizmoSpace == Value) { return; }
+	GizmoSpace = Value;
+	WriteToFile();
+}
+
+void FEditorState::SetSelectedActor(uint32 Value)
+{
+	if (SelectedActor == Value) { return; }
+	SelectedActor = Value;
+	WriteToFile();
 }

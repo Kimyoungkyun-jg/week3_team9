@@ -33,7 +33,7 @@ void FGizmo::Draw(FRenderer& Renderer, const FTransform& Transform, const FCamer
 	FMatrix ObjectRotation = GetSpace() == EGizmoSpace::World ? FMatrix::GetIdentity() : Transform.Rotation.ToMatrixRow();
 	FMatrix Translation = FMatrix::MakeTranslation(Transform.Location);
 	FMatrix VP = Camera.CreateViewProjectionMatrix();
-
+	 
 	DrawAxis(Renderer, EGizmoHandle::XAxis, Scale * ObjectRotation * Translation * VP);
 	DrawAxis(Renderer, EGizmoHandle::YAxis, Scale * YAxisRotation * ObjectRotation * Translation * VP);
 	DrawAxis(Renderer, EGizmoHandle::ZAxis, Scale * ZAxisRotation * ObjectRotation * Translation * VP);
