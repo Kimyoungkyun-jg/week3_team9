@@ -374,6 +374,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\Application\FEditorApplication.h" />
+    <ClInclude Include="Source\Editor\Core\EditorConstant.h" />
     <ClInclude Include="Source\Editor\Core\FEditor.h" />
     <ClInclude Include="Source\Editor\Gizmo\FGizmo.h" />
     <ClInclude Include="Source\Editor\EditorViewport\FEditorViewport.h" />

@@ -95,7 +95,6 @@ public:
 
   void DestroyActor(AActor* Actor);
 
-protected:
     AActor* SpawnActor(UClass* ClassType);
 
 private:

@@ -63,11 +63,10 @@ public:											\
 												\
 private:										\
     static UObject* CreateObject();				\
-	static UClass* ClassInfo;					\
+	static inline UClass* ClassInfo = UClass::RegisterToFactory(#ClassName, &ClassName::CreateObject, #ParentClass);	\
 
 #define IMPLEMENT_UCLASS(ClassName, ParentClass)																			\
 UObject* ClassName::CreateObject()		{ return NewObject<ClassName>(); }													\
-UClass* ClassName::ClassInfo			= UClass::RegisterToFactory(#ClassName, &ClassName::CreateObject, #ParentClass);	\
 UClass* ClassName::StaticClass()		{ return ClassInfo; }																\
 UClass* ClassName::GetClass() const		{ return StaticClass(); }															\
 
