@@ -864,22 +864,21 @@ bool FRenderResourceLibrary::CreateKorTextMesh(FRenderer& Renderer)
     FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
     FFont Font;
     Font.Deserialize(Path);
-    FWString Text{ L"안녕하세요" };    // 메시 임의 초기값
+    FWString Text{ L"안   녕~ 하(Ha) 세 요yoyo" };    // 메시 임의 초기값
     TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
 
     float prevAdvance = 0.0f;
+    UINT blankCnt = 0;
     for (uint16 i = 0; i < Text.length(); ++i)
     {
         const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
-        if (Text.at(i) == L' ')
-        {
+        if (Text.at(i) == L' ') 
+        {   // 공백일 경우 메시를 생성하지 않고 생성할 위치만 반영하기
             prevAdvance += CharInfo.advance;
+            ++blankCnt;
             continue;
         }
         FVertexData tv[4]{};
-
-        float Top = -CharInfo.planeTop;
-        float Bot= -CharInfo.planeBottom;
 
         tv[0].x = 0.0f;
         tv[0].y = CharInfo.planeLeft + prevAdvance;
@@ -910,7 +909,7 @@ bool FRenderResourceLibrary::CreateKorTextMesh(FRenderer& Renderer)
         Vertices.push_back(tv[3]);
 
         prevAdvance += CharInfo.advance;
-        uint32 VertexOffset = i * 4;
+        uint32 VertexOffset = (i - blankCnt) * 4;
         for (uint32 index : IndexSet)
         {
             Indices.push_back(index + VertexOffset);
