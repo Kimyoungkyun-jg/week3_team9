@@ -36,7 +36,7 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
     {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
     {EBuiltinPipeline::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
-    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"TextPS.cso"},
+    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -1060,7 +1060,7 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
 
     FMaterialDesc Desc = {
         .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-        .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
+        .PixelShaderFileName = Path + L"/Shader/MsdfTextPS.cso",
     };
 
   TextMaterial = RegisterMaterial("Text", Renderer.CreateMaterial(Desc));

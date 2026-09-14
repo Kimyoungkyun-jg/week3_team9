@@ -211,9 +211,6 @@ private:
   // Text
   bool CreateTextMesh(FRenderer& Renderer);
   bool CreateTextMaterial(FRenderer& Renderer);
-  // Kor
-  bool CreateKorTextMesh(FRenderer& Renderer);
-  bool CreateKorTextMaterial(FRenderer& Renderer);
 
   // 개별 리소스 멤버 변수
   TSharedPtr<FMesh> CubeMesh;
