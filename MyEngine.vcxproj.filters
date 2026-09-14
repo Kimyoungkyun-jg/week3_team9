@@ -241,6 +241,15 @@
     <ClCompile Include="Source\Runtime\Actors\ASpotlightActor.cpp">
       <Filter>Source\Runtime\Actors</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\TestTextActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
@@ -450,6 +459,12 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
     <ClInclude Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.h">
@@ -467,12 +482,18 @@
     <ClInclude Include="Source\Runtime\Actors\ASpotlightActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\TestTextActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\ExampleVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\InstanceVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\GridPS.hlsl">

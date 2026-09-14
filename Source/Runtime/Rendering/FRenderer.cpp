@@ -6,6 +6,7 @@
 #include "FRenderPipeline.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Rendering/FTexture.h"
+#include "Runtime/Engine/FCamera.h"
 #include "ShaderConstants.h"
 #include "Vertices.h"
 #include <Windows.h>
@@ -308,11 +309,20 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  Result = Device->CreateInputLayout(
-      FVertexLayouts::Layout, FVertexLayouts::NumElements,
-      Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  if (Desc.bIsInstancing)
+  {
+      Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+  else
+  {
+      Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+
+
   if (FAILED(Result)) {
-    return nullptr;
+      return nullptr;
   }
 
   Result = D3DReadFileToBlob(Desc.PixelShaderFileName.c_str(), &Blob);
@@ -433,7 +443,7 @@ TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
   return Texture;
 }
 
-TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
+TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EPipelineID Id) const {
   return FRenderResourceLibrary::Get().GetPipeline(Id);
 }
 

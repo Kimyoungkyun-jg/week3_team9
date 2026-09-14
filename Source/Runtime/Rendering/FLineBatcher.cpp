@@ -145,7 +145,7 @@ void FLineBatcher::Flush(ID3D11DeviceContext& Context, FRenderer& Renderer, cons
 	}
 
 	// 파이프라인 바인딩
-	auto Pipeline = Renderer.GetPipeline(EBuiltinPipeline::Simple_Solid);
+	auto Pipeline = Renderer.GetPipeline(EPipelineID::Simple_Solid);
 	if (Pipeline) {
 		Pipeline->Bind(Context);
 	}

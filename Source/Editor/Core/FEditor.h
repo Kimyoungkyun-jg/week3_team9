@@ -9,6 +9,7 @@
 #include "Runtime/CoreUObject/TWeakObjectPtr.h"
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/Engine/USceneManager.h"
+#include "Runtime/Rendering/ShaderConstants.h"
 
 
 enum class EEditorPrimitiveType : uint8 {

@@ -19,8 +19,8 @@ void FGizmo::Initialize()
 	CircleMesh = RenderResources.GetMesh("Circle");
 	RotationGizmoMesh = RenderResources.GetMesh("RotationGizmo");
 	SquareArrowMesh = RenderResources.GetMesh("SquareArrow");
-	Material = RenderResources.GetMaterial("Simple");
-	RotationGizmoMaterial = RenderResources.GetMaterial("RotationGizmo");
+	Material = RenderResources.GetMaterial(EMaterialID::Simple);
+	RotationGizmoMaterial = RenderResources.GetMaterial(EMaterialID::RotGizmo);
 }
 
 void FGizmo::Draw(FRenderer& Renderer, const FTransform& Transform, const FCamera& Camera) const

@@ -19,8 +19,9 @@ void UTextComponent::Register(UScene& Scene)
 		Font->Initialize(16);
 	}
 
-	if (Resources) {
-		SetMaterial(Resources->GetTextMaterial());
+	if (!GetMaterial())
+	{
+		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Text) : nullptr);
 	}
 	RebuildTextMesh();
 }

@@ -11,6 +11,10 @@
 class FRenderer;
 class FRenderResourceLibrary;
 
+
+
+
+
 class FMaterial final {
   friend class FRenderer;
 
