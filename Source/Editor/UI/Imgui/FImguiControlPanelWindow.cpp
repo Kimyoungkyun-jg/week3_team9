@@ -6,6 +6,7 @@
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/Core/FString.h"
 #include "Runtime/Engine/ShowFlags.h"
+#include "Editor/Core/EditorConstant.h"
 #include <Windows.h>
 #include <ShlObj.h>
 #include <filesystem>
@@ -42,23 +43,38 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::Text("Live UObjects : %llu, UObject Memory: %llu bytes (%.2f KiB)", static_cast<unsigned long long>(Count), static_cast<unsigned long long>(Bytes), static_cast<double>(Bytes) / 1024.0);
     ImGui::Separator();
 
-    // ---------------- 프리미티브 스폰 ----------------
-    static int primitive = 0;
-    const char* primitives[] = { "Cube", "Cylinder", "Sphere", "Billboard", "Spotlight"};
+    // ---------------- 액터 스폰 ----------------
+    static UClass* SelectedActorClass = EditorConstant::SpawnableActors[0];
+    const char* PreviewValue = SelectedActorClass->GetUClassName().c_str();
+    
     ImGui::SetNextItemWidth(180.0f);
-    ImGui::Combo("##Primitive", &primitive, primitives, IM_ARRAYSIZE(primitives));
+    if (ImGui::BeginCombo("##Actor", PreviewValue))
+    {
+        for (const auto Item : EditorConstant::SpawnableActors)
+        {
+            const bool bIsSelected = SelectedActorClass == Item;
+            const char* ItemDisplayName = Item->GetUClassName().c_str();
+            if (ImGui::Selectable(ItemDisplayName, bIsSelected))
+            {
+                SelectedActorClass = Item;
+            }
+
+            if (bIsSelected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
     ImGui::SameLine();
-    ImGui::Text("Primitive");
+    ImGui::Text("Actor");
 
     static int spawnCount = 1;
 
     if (ImGui::Button("Spawn"))
     {
         const int Count = (spawnCount < 1) ? 1 : spawnCount;
-        for (int i = 0; i < Count; ++i)
-        {
-            Editor.SpawnPrimitive(static_cast<EEditorPrimitiveType>(primitive));
-        }
+        Editor.SpawnActorToCurrentScene(SelectedActorClass, Count);
     }
 
 

@@ -197,6 +197,7 @@ AActor* UScene::SpawnActor(UClass* ClassType)
 		return nullptr;
 	}
 	Actor->Initialize();
+	Actor->Register(*this);
 
 	Actors.push_back(Actor);
 	return Actor;

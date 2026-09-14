@@ -110,40 +110,29 @@ void FEditor::SetCameraSensitivity(float Value)
     CameraSensitivity = Value;
 }
 
-UPrimitiveComponent* FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
-  if (!SceneManager || !SceneManager->CurrentScene) {
-    return nullptr;
-  }
+void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
+    if (!SceneManager || !SceneManager->CurrentScene) {
+        return;
+    }
 
-  // 오프셋 적용
-  static int SpawnSerial = 0;
-  const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
-  const FVector SpawnLoc{ Offset, 0.0f, 0.0f };
-  const FVector SpawnScale{ 0.5f, 0.5f, 0.5f };
+    if (Size <= 0) { return; }
 
-  AActor* NewActor = nullptr;
-  switch (Type) {
-  case EEditorPrimitiveType::Cube:
-    NewActor = SceneManager->CurrentScene->SpawnActor<ACubeActor>(SpawnLoc, SpawnScale);
-    break;
-  case EEditorPrimitiveType::Cylinder:
-    NewActor = SceneManager->CurrentScene->SpawnActor<ACylinderActor>(SpawnLoc, SpawnScale);
-    break;
-  case EEditorPrimitiveType::Sphere:
-    NewActor = SceneManager->CurrentScene->SpawnActor<ASphereActor>(SpawnLoc, SpawnScale);
-    break;
-  case EEditorPrimitiveType::Billboard:
-    NewActor = SceneManager->CurrentScene->SpawnActor<ABillboardActor>(SpawnLoc, SpawnScale);
-    break;
-  case EEditorPrimitiveType::Spotlight:
-    NewActor = SceneManager->CurrentScene->SpawnActor<ASpotlightActor>(SpawnLoc, SpawnScale);
-    break;
-  }
+    for (int i = 0; i < Size; ++i)
+    {
+        // 오프셋 적용
+        static int SpawnSerial = 0;
+        const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
 
-  if (!NewActor) {
-    return nullptr;
-  }
+        FTransform Transform;
+        Transform.Location = FVector{ Offset, 0.0f, 0.0f };
+        Transform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
-  SelectActor(NewActor);
-  return NewActor->GetRootComponent() ? NewActor->GetRootComponent()->Cast<UPrimitiveComponent>() : nullptr;
+        AActor* NewActor = SceneManager->CurrentScene->SpawnActor(Type);
+        if (!NewActor) { return; }
+
+        USceneComponent* RootComponent = NewActor->GetRootComponent();
+        RootComponent->SetRelativeTransform(Transform);
+
+        SelectActor(NewActor);
+    }
 }

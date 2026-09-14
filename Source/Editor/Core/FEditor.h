@@ -52,7 +52,7 @@ public:
   [[nodiscard]] UScene *GetCurrentScene() const {
     return SceneManager ? SceneManager->CurrentScene : nullptr;
   }
-  UPrimitiveComponent *SpawnPrimitive(EEditorPrimitiveType Type);
+  void SpawnActorToCurrentScene(UClass* Type, int Count = 1);
   // 피킹 등에서 현재 씬의 렌더링 대상 컴포넌트가 필요할 때 사용
   [[nodiscard]] TArray<UPrimitiveComponent *> GetPrimitiveComponents() const;
   FGizmo &GetGizmo() { return Gizmo; }
