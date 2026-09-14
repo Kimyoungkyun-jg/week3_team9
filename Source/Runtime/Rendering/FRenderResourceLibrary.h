@@ -227,6 +227,7 @@ private:
   TSharedPtr<FMesh> PlaneMesh;
   TSharedPtr<FMesh> RectMesh;
   TSharedPtr<FMesh> TextMesh;
+  TSharedPtr<FMesh> KorTextMesh;
 
   TSharedPtr<FMaterial> SimpleMaterial;
   TSharedPtr<FMaterial> GridMaterial;

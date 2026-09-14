@@ -36,7 +36,7 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
     {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
     {EBuiltinPipeline::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
-    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"TextPS.cso"},
+    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -985,56 +985,60 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
   return true;
 }
 
-bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer &Renderer,
-                                                  FString &textureName) {
 
-  return false;
+bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer& Renderer, FString& textureName)
+{
+
+
+    return false;
 }
 
-bool FRenderResourceLibrary::CreateTextMesh(FRenderer &Renderer) {
-  TArray<FVertexData> Vertices;
-  TArray<uint32> Indices;
-  FFont Font;
-  Font.Initialize(16);
-  FString Text{"Welcome To Jungle"}; // 메시 임의 초기값
+bool FRenderResourceLibrary::CreateTextMesh(FRenderer& Renderer)
+{
+    TArray<FVertexData> Vertices;
+    TArray<uint32> Indices;
+    FFont Font;
+    Font.InitializeForASCII(16);
+    FString Text{ "Welcome To Jungle" };    // 메시 임의 초기값
 
-  // TODO: PlaneGenerator 만들어야 함.
-  FTextVertex plane[4] = {{{0.0f, -0.5f, 0.5f}, 0.0f, 0.0f},
-                          {{0.0f, 0.5f, 0.5f}, 0.0f, 0.0f},
-                          {{0.0f, -0.5f, -0.5f}, 0.0f, 0.0f},
-                          {{0.0f, 0.5f, -0.5f}, 0.0f, 0.0f}};
-  TArray<uint32> IndexSet = {0, 1, 2, 1, 3, 2, 0, 2, 1, 1, 2, 3};
+    // TODO: PlaneGenerator 만들어야 함.
+    FTextVertex plane[4] =
+    {
+        { { 0.0f, -0.5f, 0.5f }, 0.0f, 0.0f },
+        { { 0.0f, 0.5f, 0.5f }, 0.0f, 0.0f },
+        { { 0.0f, -0.5f, -0.5f }, 0.0f, 0.0f },
+        { { 0.0f, 0.5f, -0.5f }, 0.0f, 0.0f }
+    };
+    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
 
-  // 텍스트 가운데 정렬
-  const float size = 0.55f;
-  const float totalWidth =
-      (Text.length() > 0) ? (Text.length() - 1) * size : 0.0f;
-  const float startOffset = -totalWidth * 0.5f;
+    const float size = 1.0f;
+    for (uint16 i = 0; i < Text.length(); ++i)
+    {
+        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
+        for (uint16 j = 0; j < 4; ++j)
+        {	// ranged-for 로 수정?
+            FVertexData tv;
+            float sizeAmount = size * i;
+            tv.x = plane[j].Pos.X;
+            tv.y = plane[j].Pos.Y + sizeAmount;
+            tv.z = plane[j].Pos.Z;
 
-  for (uint16 i = 0; i < Text.length(); ++i) {
-    const FCharacterInfo &CharInfo = Font.GetEngCharInfo(Text.at(i));
-    for (uint16 j = 0; j < 4; ++j) {
-      FVertexData tv;
-      float sizeAmount = startOffset + size * i;
-      tv.x = plane[j].Pos.X;
-      tv.y = plane[j].Pos.Y + sizeAmount;
-      tv.z = plane[j].Pos.Z;
+            bool bIsRight = (j == 1) || (j == 3);
+            bool bIsBottom = (j == 2) || (j == 3);
 
-      bool bIsRight = (j == 1) || (j == 3);
-      bool bIsBottom = (j == 2) || (j == 3);
+            float width = (bIsRight) ? CharInfo.width : 0.0f;
+            float height = (bIsBottom) ? CharInfo.height : 0.0f;
+            tv.u = CharInfo.u + width;
+            tv.v = CharInfo.v + height;
+            Vertices.push_back(tv);
+        }
 
-      float width = (bIsRight) ? CharInfo.width : 0.0f;
-      float height = (bIsBottom) ? CharInfo.height : 0.0f;
-      tv.u = CharInfo.u + width;
-      tv.v = CharInfo.v + height;
-      Vertices.push_back(tv);
+        uint32 VertexOffset = i * 4;
+        for (uint32 index : IndexSet)
+        {
+            Indices.push_back(index + VertexOffset);
+        }
     }
-
-    uint32 VertexOffset = i * 4;
-    for (uint32 index : IndexSet) {
-      Indices.push_back(index + VertexOffset);
-    }
-  }
 
   // 메시 빌드 추가하기
   FMeshDesc MeshData{
@@ -1056,7 +1060,7 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
 
     FMaterialDesc Desc = {
         .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-        .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
+        .PixelShaderFileName = Path + L"/Shader/MsdfTextPS.cso",
     };
 
   TextMaterial = RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
@@ -1073,7 +1077,7 @@ bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
     TextMaterial->SetPipeLine(Pipeline);
 
   // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-  TextMaterial->SetTexture(GetTexture("koreanatlas"));
+  TextMaterial->SetTexture(GetTexture("maplestorybold"));
 
   return true;
 }
