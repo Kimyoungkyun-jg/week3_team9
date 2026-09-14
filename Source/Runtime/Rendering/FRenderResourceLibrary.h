@@ -177,8 +177,8 @@ private:
   bool CreateTextures(FRenderer &Renderer);
   bool InitializeMaterials(FRenderer &Renderer);
 
-  // Text
-  bool CreateTextMesh(FRenderer& Renderer);
+
+
 
   FRenderer *RendererRef = nullptr;
 };

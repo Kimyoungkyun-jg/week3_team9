@@ -11,12 +11,12 @@ class UTextInstanceComponent : public UInstancePrimitiveComponent
 public:
 	void Register(UScene& InScene) override;
 
-	void SetText(const FString& InText) {
+	void SetText(const FWString& InText) {
 		Text = InText;
 		RebuildTextMesh();
 	}
 
-	[[nodiscard]] const FString& GetText() const { return Text; }
+	[[nodiscard]] const FWString& GetText() const { return Text; }
 	void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
 
 	void RebuildTextMesh();
@@ -25,6 +25,6 @@ public:
 
 private:
 	TSharedPtr<FFont> Font;
-	FString Text = "Hello Jungle World!";
+	FWString Text = L"Hello Jungle World!";
 
 };

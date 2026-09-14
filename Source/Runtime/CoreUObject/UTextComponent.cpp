@@ -16,7 +16,7 @@ void UTextComponent::Register(UScene& Scene)
 
 	if (!Font) {
 		Font = MakeShared<FFont>();
-		//Font->Initialize(16);
+
         FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
         Font->Deserialize(Path);
 	}

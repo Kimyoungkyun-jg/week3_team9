@@ -39,8 +39,8 @@ constexpr FPipelineEntry pipelineTable[] = {
      L"RotationGizmoPS.cso"},
     {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false,
      D3D11_CULL_NONE, true},
-    {EPipelineID::Text, L"ExampleVS.cso", L"TextPS.cso"},
-    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"TextPS.cso", true, D3D11_CULL_BACK, false, true},
+    {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
+    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, true},
 };
 
 // 머티리얼 정보 엔트리
@@ -56,9 +56,9 @@ constexpr FMaterialEntry materialTable[] = {
     {EMaterialID::Grid,  EPipelineID::Grid},
     {EMaterialID::RotGizmo,  EPipelineID::RotationGizmo},
     {EMaterialID::Spotlight, EPipelineID::Spotlight},
-    {EMaterialID::Text,  EPipelineID::Text, "koreanatlas"},
+    {EMaterialID::Text,  EPipelineID::Text, "maplestorybold"},
     {EMaterialID::Textured,  EPipelineID::Textured, "uv-test"},
-    {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "koreanatlas" },
+    {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "maplestorybold" },
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -142,8 +142,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
-      !CreateRectMesh(Renderer) || !CreateTextMesh(Renderer) ||
-      !CreateTextures(Renderer) || !InitializeMaterials(Renderer)) {
+      !CreateRectMesh(Renderer) ||!CreateTextures(Renderer) || !InitializeMaterials(Renderer)) {
     return false;
   }
 
@@ -911,66 +910,6 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
   return true;
 }
 
-bool FRenderResourceLibrary::CreateTextMesh(FRenderer &Renderer) {
-  TArray<FVertexData> Vertices;
-  TArray<uint32> Indices;
-  FFont Font;
-  Font.Initialize(16);
-  FString Text{"Welcome To Jungle"}; // 메시 임의 초기값
-
-    // TODO: PlaneGenerator 만들어야 함.
-    FTextVertex plane[4] =
-    {
-        { { 0.0f, -0.5f, 0.5f }, 0.0f, 0.0f },
-        { { 0.0f, 0.5f, 0.5f }, 0.0f, 0.0f },
-        { { 0.0f, -0.5f, -0.5f }, 0.0f, 0.0f },
-        { { 0.0f, 0.5f, -0.5f }, 0.0f, 0.0f }
-    };
-    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
-
-    const float size = 1.0f;
-    for (uint16 i = 0; i < Text.length(); ++i)
-    {
-        const FCharacterInfo& CharInfo = Font.GetCharInfo(Text.at(i));
-        for (uint16 j = 0; j < 4; ++j)
-        {	// ranged-for 로 수정?
-            FVertexData tv;
-            float sizeAmount = size * i;
-            tv.x = plane[j].Pos.X;
-            tv.y = plane[j].Pos.Y + sizeAmount;
-            tv.z = plane[j].Pos.Z;
-
-            bool bIsRight = (j == 1) || (j == 3);
-            bool bIsBottom = (j == 2) || (j == 3);
-
-            float width = (bIsRight) ? CharInfo.width : 0.0f;
-            float height = (bIsBottom) ? CharInfo.height : 0.0f;
-            tv.u = CharInfo.u + width;
-            tv.v = CharInfo.v + height;
-            Vertices.push_back(tv);
-        }
-
-        uint32 VertexOffset = i * 4;
-        for (uint32 index : IndexSet)
-        {
-            Indices.push_back(index + VertexOffset);
-        }
-    }
-
-  // 메시 빌드 추가하기
-  FMeshDesc MeshData{
-      .VertexData = Vertices.data(),
-      .VertexDataSize =
-          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-      .VertexStride = sizeof(FVertexData),
-      .VertexCount = static_cast<uint32>(Vertices.size()),
-      .IndexData = Indices.data(),
-      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-      .IndexCount = static_cast<uint32>(Indices.size())};
-
-  RegisterMesh("Text", Renderer.CreateDynamicMesh(MeshData));
-  return AllMeshMap["Text"] != nullptr;
-}
 
 TSharedPtr<FMesh>
 FRenderResourceLibrary::GetOrCreateMesh(const FString &name,

@@ -13,12 +13,13 @@ void UTextInstanceComponent::Register(UScene& InScene)
 	FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
 
 	if (!Font) {
-		Font = MakeShared<FFont>();
-		Font->Initialize(16);
+        Font = MakeShared<FFont>();
+        FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
+        Font->Deserialize(Path);
 	}
 
 	if (!GetMesh()) {
-		SetMesh(Resources ? Resources->GetMesh("Text") : nullptr);
+		SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
 	}
 	if (!GetMaterial()) {
 		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
@@ -30,70 +31,71 @@ void UTextInstanceComponent::Register(UScene& InScene)
 
 }
 
-void UTextInstanceComponent::RebuildTextMesh()
-{
-	if (Text.empty() || !Font) return;
+void UTextInstanceComponent::RebuildTextMesh() {
+    
+    
+    if (Text.empty() || !Font) return;
+    Instances.clear();
+    const FMatrix ComponentWorld = GetGlobalTransform().ToMatrix();
+    float prevAdvance = 0.0f;
+    UINT blankCnt = 0;
+    for (uint16 i = 0; i < Text.length(); ++i)
+    {
+        const FCharacterInfo& CharInfo = Font->GetCharInfo(Text.at(i));
+        if (Text.at(i) == ' ' || Text.at(i) == '\t')
+        {   // 공백일 경우 인스턴스를 생성하지 않고 위치만 누적
+            prevAdvance += CharInfo.advance;
+            ++blankCnt;
+            continue;
+        }
+        // 원본과 동일하게 4개 정점 좌표 및 UV 계산
+        FVertexData tv[4]{};
+        tv[0].x = 0.0f;
+        tv[0].y = CharInfo.planeLeft + prevAdvance;
+        tv[0].z = -CharInfo.planeTop;
+        tv[0].u = CharInfo.u;
+        tv[0].v = CharInfo.v;
+        
+        tv[1].x = 0.0f;
+        tv[1].y = CharInfo.planeRight + prevAdvance;
+        tv[1].z = -CharInfo.planeTop;
+        tv[1].u = CharInfo.u + CharInfo.width;
+        tv[1].v = CharInfo.v;
+        
+        tv[2].x = 0.0f;
+        tv[2].y = CharInfo.planeLeft + prevAdvance;
+        tv[2].z = -CharInfo.planeBottom;
+        tv[2].u = CharInfo.u;
+        tv[2].v = CharInfo.v + CharInfo.height;
+        
+        tv[3].x = 0.0f;
+        tv[3].y = CharInfo.planeRight + prevAdvance;
+        tv[3].z = -CharInfo.planeBottom;
+        tv[3].u = CharInfo.u + CharInfo.width;
+        tv[3].v = CharInfo.v + CharInfo.height;
+        
 
-	// 첫 글자가 128 이상이면 한글
-	const bool bIsKorean = (static_cast<unsigned char>(Text[0]) >= 128);
+        float charWidth = tv[1].y - tv[0].y;
+        float charHeight = tv[0].z - tv[2].z; // planeTop - planeBottom
+        float centerY = (tv[0].y + tv[1].y) * 0.5f;
+        float centerZ = (tv[0].z + tv[2].z) * 0.5f;
+       
+       
+        FMatrix CharMatrix = FMatrix::MakeScale(FVector(1.0f, charWidth, charHeight))
+            * FMatrix::MakeTranslation(FVector(0.0f, centerY, centerZ))
+            * ComponentWorld;
 
-	if (bIsKorean) {
-		SetTextureByName("koreanatlas");
-	}
-	else {
-		SetTextureByName("englishatlas");
-	}
-
-	FWString WideText;
-	if (bIsKorean) {
-		FString CleanText = Text.c_str();
-		int len = MultiByteToWideChar(CP_UTF8, 0, CleanText.data(), static_cast<int>(CleanText.size()), nullptr, 0);
-		if (len > 0) {
-			WideText.resize(len);
-			MultiByteToWideChar(CP_UTF8, 0, CleanText.data(), static_cast<int>(CleanText.size()), &WideText[0], len);
-		}
-		while (!WideText.empty() && (WideText.back() == L'\0' || WideText.back() == L'\r' || WideText.back() == L'\n')) {
-			WideText.pop_back();
-		}
-	}
-
-	Instances.clear();
-
-	const float size = bIsKorean ? 1.0f : 0.55f;
-	const uint32 CharCount = bIsKorean ? static_cast<uint32>(WideText.length()) : static_cast<uint32>(Text.length());
-	const float totalWidth = (CharCount > 0) ? (CharCount - 1) * size : 0.0f;
-	const float startOffset = -totalWidth * 0.5f;
-
-	const FMatrix ComponentWorld = GetGlobalTransform().ToMatrix();
-
-	for (uint32 i = 0; i < CharCount; ++i) {
-		if (bIsKorean && (WideText[i] == L' ' || WideText[i] == L'\t')) {
-			continue;
-		}
-		if (!bIsKorean && (Text[i] == ' ' || Text[i] == '\t')) {
-			continue;
-		}
-
-		FCharacterInfo CharInfo;
-		if (bIsKorean) {
-			CharInfo = Font->GetKrCharInfo(WideText[i]);
-		}
-		else {
-			CharInfo = Font->GetEngCharInfo(Text[i]);
-		}
-
-		float sizeAmount = startOffset + size * i;
-		FMatrix LocalCharMatrix = FMatrix::MakeTranslation(FVector(0.0f, sizeAmount, 0.0f));
-
-		FInstanceData Data;
-		Data.Word = LocalCharMatrix * ComponentWorld;
-		Data.Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		Data.UV = FVector2(CharInfo.width, CharInfo.height);
-		Data.UVOffset = FVector2(CharInfo.u, CharInfo.v);
-
-		Instances.push_back(Data);
-	}
+        FInstanceData Data;
+        Data.Word = CharMatrix;
+        Data.Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        Data.UV = FVector2(CharInfo.width, CharInfo.height); // UV 크기
+        Data.UVOffset = FVector2(tv[0].u, tv[0].v);          // UV 시작점
+       
+        Instances.push_back(Data);
+        prevAdvance += CharInfo.advance;
+    }
 }
+
 
 void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted)
 {

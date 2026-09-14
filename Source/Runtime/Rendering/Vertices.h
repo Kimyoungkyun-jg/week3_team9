@@ -24,12 +24,6 @@ struct FVertexData {
   float nx = 0.0f, ny = 0.0f, nz = 0.0f;        // Normal
 };
 
-struct FVertexInstance
-{
-    FMatrix World;
-
-
-};
 
 // 공용 Direct3D 입력 레이아웃 메타데이터
 struct FVertexLayouts {
