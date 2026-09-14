@@ -853,7 +853,7 @@ bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
   Material->SetPipeLine(Pipeline);
 
   // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-  Material->SetTexture(GetTexture("sandclock"));
+  Material->SetTexture(GetTexture("uv-test"));
 
   return true;
 }
