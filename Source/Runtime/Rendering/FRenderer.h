@@ -73,7 +73,7 @@ public:
   void UpdateLightConstants(const FLightConstants &Constants);
 
   // 텍스트 인스턴싱
-  void AddTextInstanceArray(const TArray<FInstanceData> &Instances);
+  void AddTextInstanceArray(const TArray<FInstanceData>& Instances);
   void DrawTextInstances(const FCamera& Camera);
   void ClearTextInstances();
 

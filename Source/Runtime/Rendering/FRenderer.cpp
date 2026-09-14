@@ -633,26 +633,27 @@ void FRenderer::DrawTextInstances(const FCamera& Camera)
     SC.MVP = Camera.CreateViewProjectionMatrix();
     UpdateBuffer(SC);
 
-    TSharedPtr<FMaterial> Material = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Text);
+    TSharedPtr<FMaterial> DefaultMat = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Text);
 
     // 파이프라인 바인딩
-    TSharedPtr<FRenderPipeline> Pipeline = Material->GetPipeline();
+    TSharedPtr<FRenderPipeline> Pipeline = DefaultMat->GetPipeline();
     if (Pipeline)
     {
         Pipeline->Bind(*Context.Get());
     }
 
-    //Todo-static::class 받아서 임시 객체를 만들던 뭔가 해야될듯
-    Material->BindResources(*Context.Get()); 
-    FRenderResourceLibrary::Get().GetTextMesh()->BindResources(*Context.Get());
+    // 메쉬 및 머티리얼 바인딩
+    DefaultMat->BindResources(*Context.Get());
+    auto RectMesh = FRenderResourceLibrary::Get().GetRectMesh();
+    if (!RectMesh) return;
+    RectMesh->BindResources(*Context.Get());
 
     // 슬롯1에 인스턴스 버퍼 바인딩
     UINT Stride = sizeof(FInstanceData);
     UINT Offset = 0;
     Context->IASetVertexBuffers(1, 1, TextInstanceBuffer.GetAddressOf(), &Stride, &Offset);
 
-
-    Context->DrawInstanced(4, InstanceCount, 0, 0);
+    Context->DrawIndexedInstanced(RectMesh->GetIndexCount(), InstanceCount, 0, 0, 0);
 }
 
 void FRenderer::ClearTextInstances()

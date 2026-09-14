@@ -18,14 +18,16 @@ void UTextInstanceComponent::Register(UScene& InScene)
 	}
 
 	if (!GetMesh()) {
-		SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
+		SetMesh(Resources ? Resources->GetMesh("Text") : nullptr);
 	}
 	if (!GetMaterial()) {
 		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
 	}
 
-	Super::Register(InScene);
 	RebuildTextMesh();
+
+	Super::Register(InScene);
+
 }
 
 void UTextInstanceComponent::RebuildTextMesh()
