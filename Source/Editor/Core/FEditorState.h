@@ -40,6 +40,7 @@ private:
 public:
 	void WriteToFile(FStringView FilePath = DefaultFileName) const;
 	void ReadFromFile(FStringView FilePath = DefaultFileName);
+	void ResetToDefaults();
 	void Tick(float DeltaTime);
 	void FlushToFile(FStringView FilePath = DefaultFileName);
 

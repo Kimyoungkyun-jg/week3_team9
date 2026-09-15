@@ -107,6 +107,12 @@ void FEditorState::ReadFromFile(FStringView FilePath)
 	TimeSinceLastSave = 0.0f;
 }
 
+void FEditorState::ResetToDefaults()
+{
+	*this = FEditorState{};
+	bDirty = true;
+}
+
 void FEditorState::Tick(float DeltaTime)
 {
 	TimeSinceLastSave += DeltaTime;

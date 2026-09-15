@@ -10,6 +10,7 @@
 #include "Runtime/CoreUObject/UObject.h"
 #include "Runtime/CoreUObject/USphereComp.h"
 #include "Runtime/Engine/FTimeManager.h"
+#include "Runtime/Input/FInputManager.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include <numbers>
 
@@ -32,6 +33,14 @@ FRenderResourceLibrary *FEditor::GetRendererLibrary() {
 
 void FEditor::Process() {
   // 씬의 액터 업데이트
+  
+    if (FInputManager::Get().IsKeyDown(VK_DELETE) && SelectedActor)
+    {
+        AActor* Target = SelectedActor;
+        UnSelectActor();
+        Target->Destroy();
+    }
+    
   if (SceneManager && SceneManager->CurrentScene) {
     SceneManager->CurrentScene->Update(FTimeManager::Get().GetDeltaTime());
   }
@@ -54,6 +63,9 @@ void FEditor::SaveState() {
   State.SetCameraYaw(Camera.Yaw);
   State.SetCameraFOV(Camera.Projection.FOV);
   State.SetGridCellSize(Grid.GetCellSize());
+  State.SetGizmoMode(static_cast<uint8>(Gizmo.Mode));
+  State.SetGizmoSpace(static_cast<uint8>(Gizmo.GetSpace()));
+  State.SetSelectedActor(SelectedActor ? SelectedActor->GetUUID() : static_cast<uint32>(-1));
 }
 
 void FEditor::LoadState()
@@ -68,11 +80,15 @@ void FEditor::LoadState()
     Camera.Yaw = State.GetCameraYaw();
     Camera.Projection.FOV = State.GetCameraFOV();
     Grid.SetCellSize(State.GetGridCellSize());
+    Gizmo.Mode = static_cast<EGizmoMode>(State.GetGizmoMode());
+    Gizmo.SetGizmoSpace(static_cast<EGizmoSpace>(State.GetGizmoSpace()));
 }
 
 void FEditor::NewScene() {
-  SelectedActor = nullptr;
+  UnSelectActor();
   SceneManager->SetScene(NewObject<UScene>());
+  State.ResetToDefaults();
+  LoadState();
 }
 
 void FEditor::SaveScene(const FString &Path) { SceneManager->SaveScene(Path); }

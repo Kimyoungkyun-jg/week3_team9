@@ -93,6 +93,9 @@ void FImguiControlPanelWindow::ActorSpawnSetting(FEditor& Editor)
         Editor.SpawnActorToCurrentScene(SelectedActorClass, Count);
     }
     ImGui::SameLine();
+    ImGui::SetNextItemWidth(120.0f);
+    ImGui::InputInt("##SpawnCount", &spawnCount);
+    ImGui::SameLine();
     ImGui::Text("Number of spawn");
 }
 
