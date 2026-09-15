@@ -146,7 +146,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
       !CreateRectMesh(Renderer) || !CreateTextures(Renderer) ||
-      !InitializeMaterials(Renderer) || !CreateInstancingArrayMap()) {
+      !InitializeMaterials(Renderer) || !CreateInstancingArrayMap() ||
+      !CreateEditTextures(Renderer)) {
     return false;
   }
 
@@ -856,6 +857,70 @@ bool FRenderResourceLibrary::InitializeMaterials(FRenderer &Renderer) {
   return true;
 }
 
+bool FRenderResourceLibrary::CreateEditTextures(FRenderer& Renderer)
+{
+    const std::filesystem::path ExeDir(GetExecutableDirectory());
+    const std::filesystem::path ProjectRoot =
+        ExeDir.parent_path().parent_path().parent_path();
+
+    TArray<std::filesystem::path> SearchRoots = {
+        ProjectRoot / L"Edit",
+        std::filesystem::current_path() / L"Edit",
+        ExeDir / L"Edit",
+    };
+
+    for (const auto& Root : SearchRoots) {
+        std::error_code Ec;
+        if (!std::filesystem::exists(Root, Ec)) {
+            continue;
+        }
+
+        for (const auto& Entry :
+            std::filesystem::recursive_directory_iterator(Root, Ec)) {
+            if (!Entry.is_regular_file(Ec))
+                continue;
+
+            FWString Ext = Entry.path().extension().wstring();
+            std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+            if (Ext != L".png" && Ext != L".jpg" && Ext != L".jpeg")
+                continue;
+
+            // 확장자 제거
+            FString KeyWide = Entry.path().stem().string();
+            std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
+                ::tolower);
+
+            // 이미 로드된 텍스처 건너뜀
+            if (AllEditorTextureMap.find(KeyWide) != AllEditorTextureMap.end()) {
+                continue;
+            }
+
+            int W = 0, H = 0, ChannelsInFile = 0;
+            unsigned char* Pixels =
+                stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
+            if (!Pixels)
+                continue;
+
+            FTextureDesc Desc{
+                .PixelData = Pixels,
+                .Width = static_cast<uint32>(W),
+                .Height = static_cast<uint32>(H),
+                .RowPitch = static_cast<uint32>(W) * 4u,
+            };
+
+            TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
+            stbi_image_free(Pixels);
+
+            if (!Texture)
+                continue;
+
+            RegisterEditTexture(KeyWide, Texture);
+        }
+    }
+
+    return true;
+}
+
 TSharedPtr<FMaterial> FRenderResourceLibrary::RegisterMaterial(EMaterialID Id, TSharedPtr<FMaterial> inMaterial) {
   if (inMaterial) {
     inMaterial->MaterialId = Id;
@@ -864,7 +929,8 @@ TSharedPtr<FMaterial> FRenderResourceLibrary::RegisterMaterial(EMaterialID Id, T
   return inMaterial;
 }
 
-bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
+bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) 
+{
   const std::filesystem::path ExeDir(GetExecutableDirectory());
   const std::filesystem::path ProjectRoot =
       ExeDir.parent_path().parent_path().parent_path();

@@ -92,6 +92,9 @@ public:
   // 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
 
+  //에디터용 아이콘 텍스쳐 보관 맵
+  TMap<FString, TSharedPtr<FTexture>> AllEditorTextureMap;
+
   // 인스턴싱 배치 배열 맵
   TMap<FInstanceBatchKey, TArray<FInstanceData>> AllInstancingArrayMap;
 
@@ -182,12 +185,24 @@ public:
     AllTextureMap[name] = texture;
   }
 
+  void RegisterEditTexture(const FString& name, TSharedPtr<FTexture> texture)
+  {
+      AllEditorTextureMap[name] = texture;
+  }
+
   // 텍스처 조회. 없으면 nullptr
   [[nodiscard]] TSharedPtr<FTexture> GetTexture(const FString &name) const {
     auto it = AllTextureMap.find(name);
     if (it != AllTextureMap.end())
       return it->second;
     return nullptr;
+  }
+
+  [[nodiscard]] TSharedPtr<FTexture> GetEditTexture(const FString& name) const {
+      auto it = AllEditorTextureMap.find(name);
+      if (it != AllEditorTextureMap.end())
+          return it->second;
+      return nullptr;
   }
 
   // 메쉬 전체 해제
@@ -240,6 +255,7 @@ private:
   // 텍스처 및 머티리얼 일괄 초기화
   bool CreateTextures(FRenderer &Renderer);
   bool InitializeMaterials(FRenderer &Renderer);
+  bool CreateEditTextures(FRenderer& Renderer);
 
   FRenderer *RendererRef = nullptr;
 };

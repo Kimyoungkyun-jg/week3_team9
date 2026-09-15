@@ -212,7 +212,15 @@ void FImguiContentsDrawer::RenderContentView()
 
 		const TSharedPtr<FTexture> Thumbnail = GetOrLoadThumbnail(Item);
 
-		if (Thumbnail && Thumbnail->GetSRV())
+		// 폴더는 썸네일이 없으므로 에디터 아이콘으로 대신한다.
+		// 아이콘이 없으면 DisplayImage가 nullptr이 되어 아래 else로 떨어진다.
+		TSharedPtr<FTexture> DisplayImage = Thumbnail;
+		if (Item.bIsDirectory)
+		{
+			DisplayImage = FRenderResourceLibrary::Get().GetEditTexture("foldericon");
+		}
+
+		if (DisplayImage && DisplayImage->GetSRV())          
 		{
 			// 선택 상태를 배경색으로 표시한다.
 			const ImGuiStyle& S = ImGui::GetStyle();
@@ -221,7 +229,7 @@ void FImguiContentsDrawer::RenderContentView()
 
 			// ImGui 1.93의 ImTextureID는 ImU64라서 포인터를 정수로 한 번 거쳐야 한다.
 			const ImTextureID TexId =
-				static_cast<ImTextureID>(reinterpret_cast<intptr_t>(Thumbnail->GetSRV()));
+				static_cast<ImTextureID>(reinterpret_cast<intptr_t>(DisplayImage->GetSRV()));
 
 			if (ImGui::ImageButton("##thumb", TexId, ImVec2(ThumbnailSize, ThumbnailSize)))
 			{
