@@ -84,7 +84,7 @@ constexpr FPipelineEntry pipelineTable[] = {
     {
         .Id = EPipelineID::Instance_Simple,
         .VertexShader = L"InstanceVS.cso",
-        .PixelShader = L"ExamplePS.cso",
+        .PixelShader = L"UnlightPS.cso",
         .BlendMode = EBlendMode::Opaque,
         .bIsInstancing = true,
     },

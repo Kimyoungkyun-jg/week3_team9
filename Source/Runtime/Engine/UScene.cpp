@@ -12,7 +12,7 @@
 IMPLEMENT_UCLASS(UScene, UObject)
 UCLASS_META(UScene, SerializeName, "Scene")
 
-TArray<UPrimitiveComponent *> UScene::GetRenderComponents() const {
+const TArray<UPrimitiveComponent *> & UScene::GetRenderComponents() const {
   return RenderComponents;
 }
 

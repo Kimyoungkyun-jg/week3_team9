@@ -70,6 +70,7 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::Text("Actor");
 
     static int spawnCount = 1;
+    static int totalInstanceCount = 0;
 
     if (ImGui::Button("Spawn"))
     {
@@ -77,12 +78,25 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         Editor.SpawnActorToCurrentScene(SelectedActorClass, Count);
     }
 
-
     ImGui::SameLine();
     ImGui::SetNextItemWidth(180.0f);
     ImGui::InputInt("##SpawnCount", &spawnCount);
     ImGui::SameLine();
     ImGui::Text("Number of spawn");
+
+    // Actor 1개에 N개 인스턴스 - UObject 오버헤드 없음
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.5f, 0.85f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.65f, 1.0f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.75f, 1.0f));
+    if (ImGui::Button("Spawn Instancing"))
+    {
+        const int Count = (spawnCount < 1) ? 1 : spawnCount;
+        Editor.SpawnInstancingToCurrentScene(Count);
+        totalInstanceCount += Count;
+    }
+    ImGui::PopStyleColor(3);
+    ImGui::SameLine();
+    ImGui::Text("Instances: %d", totalInstanceCount);
 
     // 그리드 설정
     float CellSize = Editor.GetGrid().GetCellSize();

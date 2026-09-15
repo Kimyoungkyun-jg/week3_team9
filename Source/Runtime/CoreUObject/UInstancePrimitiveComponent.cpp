@@ -9,34 +9,64 @@ IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
 void UInstancePrimitiveComponent::Register(UScene& Scene)
 {
-	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
-	if (!PrimitiveMesh)
-	{
-		SetMesh(Resources ? Resources->GetMesh(EMeshID::Cube) : nullptr);
-	}
-	
-	if (!PrimitiveMaterial)
-	{
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Simple) : nullptr);
-	}
+    FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
+    if (!PrimitiveMesh)
+    {
+        SetMesh(Resources ? Resources->GetMesh(EMeshID::Cube) : nullptr);
+    }
 
-	Super::Register(Scene);
+    if (!PrimitiveMaterial)
+    {
+        SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Simple) : nullptr);
+    }
+
+    Super::Register(Scene);
+}
+
+void UInstancePrimitiveComponent::AddInstance(const FVector& WorldPosition, const FVector4& Color)
+{
+    InstanceTransforms.push_back({ WorldPosition, Color });
+}
+
+void UInstancePrimitiveComponent::ClearInstances()
+{
+    InstanceTransforms.clear();
 }
 
 void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted)
 {
-	// 매 프레임 이전 인스턴스 누적 방지
-	Instances.clear();
+    if (!GetMesh() || !GetMaterial()) return;
 
-	FMatrix WorldMatrix = GetGlobalTransform().ToMatrix();
+    Instances.clear();
 
-	FInstanceData Data
-	{
-		.World = WorldMatrix,
-		.Color = FVector4(GetColor(), 1.0f),
-	};
+    if (InstanceTransforms.empty())
+    {
+        // 등록된 인스턴스 없으면 자기 자신 트랜스폼 1개만 사용
+        FInstanceData Data
+        {
+            .World    = GetGlobalTransform().ToMatrix(),
+            .Color    = FVector4(GetColor(), 1.0f),
+            .UVScale  = {1.0f, 1.0f},
+            .UVOffset = {0.0f, 0.0f},
+        };
+        Instances.push_back(Data);
+    }
+    else
+    {
+        // 배열 기반 - Actor 1개가 N개 위치 관리 (UObject 오버헤드 없음)
+        Instances.reserve(InstanceTransforms.size());
+        for (const auto& Entry : InstanceTransforms)
+        {
+            FInstanceData Data
+            {
+                .World    = FMatrix::MakeTranslation(Entry.Position),
+                .Color    = Entry.Color,
+                .UVScale  = {1.0f, 1.0f},
+                .UVOffset = {0.0f, 0.0f},
+            };
+            Instances.push_back(Data);
+        }
+    }
 
-	Instances.push_back(Data);
-
-	renderer.AddTextInstanceArray(Instances, GetMesh()->MeshId, GetMaterial()->MaterialId);
+    renderer.AddTextInstanceArray(Instances, GetMesh()->MeshId, GetMaterial()->MaterialId);
 }

@@ -97,7 +97,7 @@ void FEditorApplication::Render() {
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())//씬에 등록된 component들 순회
+    for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
     {
         if (!PrimitiveComponent) continue;
 
@@ -113,15 +113,14 @@ void FEditorApplication::Render() {
         else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
         else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
 
-        RenderView->Render
-        (
-            EditorViewport.ViewportCamera,
-            EditorViewport.TopLeftUV,
-            EditorViewport.LengthUV,
-            PrimitiveComponent,
-            bSelected
-        );
+        // 인스턴스 데이터 누적만 수행 (DrawInstances는 루프 밖에서 일괄 호출)
+        RenderView->GetRenderer().SetViewportUV(EditorViewport.TopLeftUV, EditorViewport.LengthUV);
+        PrimitiveComponent->Render(RenderView->GetRenderer(), EditorViewport.ViewportCamera, bSelected);
     }
+
+    // 모든 컴포넌트 누적 후 한 번에 드로우
+    RenderView->GetRenderer().DrawInstances(EditorViewport.ViewportCamera);
+    RenderView->GetRenderer().ClearTextInstances();
 
 
 

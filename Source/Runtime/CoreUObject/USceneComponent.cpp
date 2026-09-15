@@ -114,12 +114,9 @@ FTransform USceneComponent::GetGlobalTransform() const //나중에 부모 rootco
     
     if (!bInheritRotation)
     {
-        // 부모 회전 무시
+        // 부모 회전 무시 - 위치와 스케일만 상속
         FTransform Result;
-        Result.Scale3D = FVector(
-            ParentWorld.Scale3D.X * RelativeTransform.Scale3D.X,
-            ParentWorld.Scale3D.Y * RelativeTransform.Scale3D.Y,
-            ParentWorld.Scale3D.Z * RelativeTransform.Scale3D.Z);
+        Result.Scale3D = RelativeTransform.Scale3D;
         Result.Rotation = RelativeTransform.Rotation; // 자신의 회전만 사용
         Result.Location = ParentWorld.Location + RelativeTransform.Location; // 월드 축 기준 오프셋
         return Result;
