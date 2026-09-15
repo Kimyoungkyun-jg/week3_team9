@@ -4,6 +4,8 @@
 #include "Runtime/Rendering/FFont.h"
 #include "Runtime/CoreUObject/UInstancePrimitiveComponent.h"
 
+class FArchive;
+
 class UTextInstanceComponent : public UInstancePrimitiveComponent
 {
 	GENERATED_BODY()
@@ -26,6 +28,9 @@ public:
 	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) override;
 
 	virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_BillboardText; }
+
+	virtual void Serialize(FArchive& Archive) const override;
+	virtual void Deserialize(const FArchive& Archive) override;
 
 private:
 	TSharedPtr<FFont> Font;

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <limits>
 #include <windows.h>
+#include "Runtime/Engine/FArchive.h"
 
 IMPLEMENT_UCLASS(UTextInstanceComponent, UInstancePrimitiveComponent)
 
@@ -169,4 +170,20 @@ void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, 
     }
 
     renderer.AddTextInstanceArray(RenderInstances, GetMesh()->MeshId, GetMaterial()->MaterialId);
+}
+
+void UTextInstanceComponent::Serialize(FArchive& Archive) const
+{
+    Super::Serialize(Archive);
+    
+    Archive.SetWString("Text", Text);
+}
+
+void UTextInstanceComponent::Deserialize(const FArchive& Archive)
+{
+    Super::Deserialize(Archive);
+
+    Text = Archive.GetWString("Text");
+
+    RebuildTextMesh();
 }
