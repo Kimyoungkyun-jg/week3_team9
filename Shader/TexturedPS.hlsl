@@ -20,7 +20,8 @@ float4 MainPS(PS_INPUT Input) : SV_Target
     clip(max(Sampled.r, max(Sampled.g, Sampled.b)) - 0.05f);
     
     // 하이라이트 색상 보간
-    float3 BaseColor = lerp(Sampled.rgb, ColorOverride, ColorOverrideAmount);
+    float3 Tint = lerp(float3(1.0f, 1.0f, 1.0f), ColorOverride, ColorOverrideAmount);
+    float3 BaseColor = Sampled.rgb * Tint;
     
     // 조명 계산 및 양면 음영 보정
     float3 N = normalize(Input.Normal);

@@ -217,6 +217,9 @@ public:
   TSharedPtr<FMesh> GetOrCreateMesh(const EMeshID &ID,
                                     const TArray<FVertexData> &vertices);
 
+
+
+
 private:
   bool InitializePipelines(FRenderer &Renderer);
   bool CreateSolidWireframePipeline(FRenderer &Renderer);

@@ -13,6 +13,15 @@ class FImguiEditorViewportWindow final
 {
 
 public:
+	FImguiEditorViewportWindow() = default;
+	~FImguiEditorViewportWindow() = default;
+
+	//복사 생성 금지
+	FImguiEditorViewportWindow(const FImguiEditorViewportWindow&) = delete;
+	//복사 대입 금지
+	FImguiEditorViewportWindow& operator=(const FImguiEditorViewportWindow&) = delete;
+
+
 	void Process(FEditor& Editor, float DeltaTime);
 
 private:

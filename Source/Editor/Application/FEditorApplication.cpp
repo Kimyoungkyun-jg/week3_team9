@@ -80,7 +80,7 @@ void FEditorApplication::Tick(float DeltaTime) {
   ControlPanelWindow.Process(Editor);
   PropertyWindow.Process(Editor);
   ConsoleWindow.Process(Editor);
-
+  ContentsDrawer.Process(Editor);
   Editor.Process();
 }
 
