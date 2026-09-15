@@ -250,6 +250,21 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Editor\Core\FConfigArchive.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Core\FEditorState.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\AInstancingActor.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ATextRenderActor.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
@@ -485,6 +500,13 @@
     <ClInclude Include="Source\Runtime\Actors\TestTextActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Editor\Core\EditorConstant.h" />
+    <ClInclude Include="Source\Editor\Core\FConfigArchive.h" />
+    <ClInclude Include="Source\Editor\Core\FEditorState.h" />
+    <ClInclude Include="Source\Runtime\Actors\AAnimatedBillboardActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\AInstancingActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ATextRenderActor.h" />
+    <ClInclude Include="Source\ThirdParty\mINI\ini.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
@@ -511,6 +533,8 @@
     <FxCompile Include="Shader\RotationGizmoPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Shader\MsdfTextPS.hlsl" />
+    <FxCompile Include="Shader\UnlightPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Constants.hlsli">
