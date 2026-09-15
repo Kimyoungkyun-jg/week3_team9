@@ -76,29 +76,6 @@ struct std::hash<FInstanceBatchKey> {
   }
 };
 
-enum class EPipelineID : uint8 {
-  Simple_Solid,
-  Simple_Wireframe,
-  Textured,
-  Grid,
-  RotationGizmo,
-  Count,
-  Spotlight,
-  Text,
-  Instance_Text,
-};
-
-enum class EMaterialID : uint8
-{
-    Simple,
-    Grid,
-    RotGizmo,
-    Spotlight,
-    Text,
-    Textured,
-    Instance_Text,
-};
-
 class FRenderResourceLibrary final {
 public:
   // 전역 싱글톤 접근자
