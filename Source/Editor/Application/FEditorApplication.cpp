@@ -17,12 +17,15 @@
 #include <Windows.h>
 
 
+#include "Runtime/Engine/FSceneView.h"
+
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/Actors/AInstancingActor.h"
 #include "Runtime/Actors/TestTextActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
 #include "Runtime/CoreUObject/UTextComponent.h"
+
 
 void FEditorApplication::Initialize_ImguiWin32DX11(
     HWND &Window, ID3D11Device *Device, ID3D11DeviceContext *Context) {
@@ -87,15 +90,26 @@ void FEditorApplication::Tick(float DeltaTime) {
 void FEditorApplication::Render() {
   const TArray<FEditorViewport> &EditorViewports = Editor.GetViewports();
 
-  for (auto &EditorViewport : EditorViewports) {
-    if (RenderView) {
-      RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
-      RenderView->GetRenderer().UpdateLightConstants(Editor.GlobalLight, EditorViewport.ViewMode); // globallgiht udpate
+  for (auto &EditorViewport : EditorViewports)
+  {
+      //VP행렬을 매번 계산하는걸 방지하기 위해 FSceneView 사용
+      FSceneView sceneview
+      {
+          EditorViewport.ViewportCamera,
+          EditorViewport.ViewportCamera.CreateViewProjectionMatrix()
+      };
+
+    if (RenderView) 
+    {
+      RenderView->SetRenderMode(EditorViewport.ViewMode);
+      RenderView->UpdateLightConstants(Editor.GlobalLight, EditorViewport.ViewMode); // globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
+
+    RenderView->SetViewportUV(EditorViewport.TopLeftUV, EditorViewport.LengthUV);
 
     for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
     {
@@ -113,16 +127,22 @@ void FEditorApplication::Render() {
         else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
         else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
 
+
         RenderView->Render
         (
             EditorViewport.ViewportCamera,
             EditorViewport.TopLeftUV,
             EditorViewport.LengthUV,
             PrimitiveComponent,
+            sceneview,
             bSelected
         );
     }
 
+
+    
+    RenderView->DrawInstances(sceneview.Camera);
+    RenderView->ClearTextInstances();
 
 
     if (Editor.ObjectSelected())
@@ -161,11 +181,12 @@ void FEditorApplication::Render() {
         }
     }
 
-    RenderView->GetRenderer().FlushLineBatch(
-        EditorViewport.ViewportCamera
-            .CreateViewProjectionMatrix()); // line batch 일괄 flush
 
-    if (Editor.ObjectSelected()) {
+    RenderView->FlushLineBatch(sceneview.ViewProj); // line batch 일괄 flush
+
+
+    if (Editor.ObjectSelected())
+    {
       // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,

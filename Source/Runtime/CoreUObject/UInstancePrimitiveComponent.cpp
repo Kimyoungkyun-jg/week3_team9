@@ -23,7 +23,7 @@ void UInstancePrimitiveComponent::Register(UScene& Scene)
 	Super::Register(Scene);
 }
 
-void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted)
+void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
 {
 	// 매 프레임 이전 인스턴스 누적 방지
 	Instances.clear();

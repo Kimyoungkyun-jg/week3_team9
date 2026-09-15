@@ -28,7 +28,8 @@ bool FRenderer::Initialize(HWND Window) {
   return true;
 }
 
-void FRenderer::Shutdown() {
+void FRenderer::Shutdown() 
+{
   if (Context) {
     Context->ClearState();
     Context->Flush();

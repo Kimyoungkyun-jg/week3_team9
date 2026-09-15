@@ -6,6 +6,7 @@
 #include "Runtime/Rendering/FMaterial.h"
 #include "Runtime/Rendering/FMesh.h"
 #include "Runtime/Engine/ShowFlags.h"
+#include "Runtime/Engine/FSceneView.h"
 #include "USceneComponent.h"
 
 
@@ -26,8 +27,7 @@ public:
 	virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
 
   // 컴포넌트 렌더링
-  virtual void Render(FRenderer &renderer, const FCamera &Camera,
-                      const bool &bHighlighted);
+  virtual void Render(FRenderer &renderer, const FCamera &Camera,const bool &bHighlighted,const FSceneView& SceneView);
 
   // 메쉬 및 재질 설정
   void SetMesh(TSharedPtr<FMesh> Mesh) { PrimitiveMesh = std::move(Mesh); }
