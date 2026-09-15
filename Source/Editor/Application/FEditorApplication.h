@@ -11,6 +11,8 @@
 #include "Runtime/Engine/FRenderView.h"
 #include "Runtime/Input/FCameraInputController.h"
 
+#include "Editor/Visualizer/FVisualizerRegistry.h"
+
 class FEditorApplication final {
 	FEditor Editor;
 
@@ -27,6 +29,7 @@ class FEditorApplication final {
 	FImguiWorldOutliner WorldOutliner;
 	FImguiContentsDrawer ContentsDrawer;
 
+	FVisualizerRegistry VisualizerRegistry;
 
 	FRenderView* RenderView = nullptr;
 

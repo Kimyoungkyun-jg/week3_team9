@@ -246,6 +246,7 @@ void FImguiEditorViewportWindow::HandlePicking(FEditor &Editor,
     const bool bHit = FRayCastingManager::RayIntersectsMeshes(
         FRayCastingManager::CreateRayFromScreenPosition(
             Viewport.ViewportCamera, LocalMousePixels, ViewportSizePixels),
+            Viewport.ViewportCamera,
         Components, HitComponent, ImpactPoint);
 
     // 피킹은 액터 단위로 선택한다. 소유 액터가 없으면 선택할 수 없다.

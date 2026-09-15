@@ -26,6 +26,8 @@
 #include "Runtime/CoreUObject/USphereComp.h"
 #include "Runtime/CoreUObject/UTextComponent.h"
 
+#include "Editor/Visualizer/IVisualizer.h"
+
 
 void FEditorApplication::Initialize_ImguiWin32DX11(
     HWND &Window, ID3D11Device *Device, ID3D11DeviceContext *Context) {
@@ -147,37 +149,15 @@ void FEditorApplication::Render() {
 
     if (Editor.ObjectSelected())
     {
-        // AABB 그리기
+        // 선택된 물체에 대해서 Visualizer 수행
         USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
         UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-        if (PrimComp && PrimComp->GetMesh())
+
+        if (PrimComp && RenderView)
         {
-            if (PrimComp->IsA<USpotLightComponent>())
-            {
-                auto Mesh = PrimComp->GetMesh();
-                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-                const auto& Positions = Mesh->GetPositions();
-                const auto& Indices = Mesh->GetIndices();
-                const FVector4 WireColor{ 1.0f, 1.0f, 0.0f, 1.0f }; // 노란색 선
-                // 메쉬의 삼각형 인덱스를 순회하며 모서리 선 그리기
-                for (size_t i = 0; i + 2 < Indices.size(); i += 3)
-                {
-                    FVector A = ModelMatrix.TransformPointRow(Positions[Indices[i]]);
-                    FVector B = ModelMatrix.TransformPointRow(Positions[Indices[i + 1]]);
-                    FVector C = ModelMatrix.TransformPointRow(Positions[Indices[i + 2]]);
-                    RenderView->RenderLine(A, B, WireColor);
-                    RenderView->RenderLine(B, C, WireColor);
-                    RenderView->RenderLine(C, A, WireColor);
-                }
-            }
-            else
-            {
-                // AABB 그리기
-                const FMesh& Mesh = *PrimComp->GetMesh();
-                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-                FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-                RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
-            }
+            UClass* ClassType = PrimComp->GetClass();
+            IVisualizer* Visualizer = VisualizerRegistry.FindVisualizer(ClassType);
+            Visualizer->Draw(*PrimComp, *RenderView, EditorViewport.ViewportCamera);
         }
     }
 

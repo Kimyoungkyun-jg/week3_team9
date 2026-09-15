@@ -277,6 +277,11 @@
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiToolBar.cpp" />
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp" />
+    <ClCompile Include="Source\Editor\Visualizer\FBillboardVisualizer.cpp" />
+    <ClCompile Include="Source\Editor\Visualizer\FPrimitiveVisualizer.cpp" />
+    <ClCompile Include="Source\Editor\Visualizer\FSpotlightVisualizer.cpp" />
+    <ClCompile Include="Source\Editor\Visualizer\FTextVisualizer.cpp" />
+    <ClCompile Include="Source\Editor\Visualizer\FVisualizerRegistry.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Runtime\Actors\AActor.cpp" />
     <ClCompile Include="Source\Runtime\Actors\ABillboardActor.cpp" />
@@ -390,6 +395,7 @@
     <ClInclude Include="Source\Editor\Core\FConfigArchive.h" />
     <ClInclude Include="Source\Editor\Core\FEditor.h" />
     <ClInclude Include="Source\Editor\Core\FEditorState.h" />
+    <ClInclude Include="Source\Editor\Visualizer\FTextVisualizer.h" />
     <ClInclude Include="Source\Runtime\Engine\FSceneView.h" />
     <ClInclude Include="Source\Editor\Grid\FGrid.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiContentsDrawer.h" />
@@ -401,6 +407,11 @@
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiPropertyWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiToolBar.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h" />
+    <ClInclude Include="Source\Editor\Visualizer\FBillboardVisualizer.h" />
+    <ClInclude Include="Source\Editor\Visualizer\FPrimitiveVisualizer.h" />
+    <ClInclude Include="Source\Editor\Visualizer\FSpotlightVisualizer.h" />
+    <ClInclude Include="Source\Editor\Visualizer\FVisualizerRegistry.h" />
+    <ClInclude Include="Source\Editor\Visualizer\IVisualizer.h" />
     <ClInclude Include="Source\Runtime\Actors\AActor.h" />
     <ClInclude Include="Source\Runtime\Actors\ABillboardActor.h" />
     <ClInclude Include="Source\Runtime\Actors\ACubeActor.h" />
@@ -617,7 +628,7 @@
   <ImportGroup Label="ExtensionTargets" />
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\"</Command>
+      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\"  &amp; if exist "$(SolutionDir)Resources\Textures\Fonts" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\"</Command>
       <Message>Copying textures to output directory...</Message>
     </PostBuildEvent>
     <ClCompile>

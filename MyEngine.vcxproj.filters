@@ -71,6 +71,9 @@
     <Filter Include="Source\Editor\Grid">
       <UniqueIdentifier>{8b3d1db5-440e-4645-adba-5c30f97feec1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Editor\Visualizer">
+      <UniqueIdentifier>{587ee1c8-a1c4-496b-b2f4-40bcc6fdfafb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\main.cpp">
@@ -276,6 +279,21 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Utility\WindowsUtil.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Visualizer\FBillboardVisualizer.cpp">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Visualizer\FPrimitiveVisualizer.cpp">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Visualizer\FSpotlightVisualizer.cpp">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Visualizer\FVisualizerRegistry.cpp">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Visualizer\FTextVisualizer.cpp">
+      <Filter>Source\Editor\Visualizer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -527,6 +545,25 @@
     <ClInclude Include="Source\Runtime\Actors\ATextRenderActor.h" />
     <ClInclude Include="Source\Runtime\Utility\WindowsUtil.h" />
     <ClInclude Include="Source\ThirdParty\mINI\ini.h" />
+    <ClInclude Include="Source\Editor\Visualizer\FBillboardVisualizer.h">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\Visualizer\FPrimitiveVisualizer.h">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\Visualizer\FSpotlightVisualizer.h">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\Visualizer\FVisualizerRegistry.h">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\Visualizer\IVisualizer.h">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Engine\FSceneView.h" />
+    <ClInclude Include="Source\Editor\Visualizer\FTextVisualizer.h">
+      <Filter>Source\Editor\Visualizer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
@@ -553,8 +590,24 @@
     <FxCompile Include="Shader\RotationGizmoPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="Shader\MsdfTextPS.hlsl" />
-    <FxCompile Include="Shader\UnlightPS.hlsl" />
+    <FxCompile Include="Shader\MsdfTextPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\TextPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\TexturedPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\UnlightPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\ScreenQuadVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\OutlinePostProcessPS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Constants.hlsli">
@@ -580,14 +633,6 @@
     <ClInclude Include="Source\Runtime\Engine\ShowFlags.h">
       <Filter>Source\Runtime\Engine</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shader\TexturedPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Shader\TextPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.cpp">

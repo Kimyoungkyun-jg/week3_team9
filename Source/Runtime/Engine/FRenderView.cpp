@@ -58,6 +58,18 @@ void FRenderView::RenderBoxMinMax(const FVector &Min, const FVector &Max,
   LineBatcher.DrawBoxMinMax(Min, Max, Color);
 }
 
+void FRenderView::RenderQuad(
+    const FVector& A,
+    const FVector& B,
+    const FVector& C,
+    const FVector& D,
+    const FVector4& Color
+)
+{
+    FLineBatcher& LineBatcher = Renderer.GetLineBatcher();
+    LineBatcher.DrawQuad(A, B, C, D, Color);
+}
+
 void FRenderView::RenderSphere(const FVector &Center, float Radius,
                                const FVector4 &Color, uint32 Segments) {
   FLineBatcher &LineBatcher = Renderer.GetLineBatcher();

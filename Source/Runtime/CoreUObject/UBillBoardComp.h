@@ -30,6 +30,8 @@ public:
   virtual void SetTexture(FString texture); // 원본 머터리얼을 건드리지 않고
                                             // instance로 생성해서 사용
 
+  // Object -> World 변환 행렬 생성
+  virtual FMatrix GetRenderMatrix(const FCamera& Camera) const override;
 
 
   virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_BillboardText; }
