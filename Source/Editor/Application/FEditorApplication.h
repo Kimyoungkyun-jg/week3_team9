@@ -50,7 +50,7 @@ public:
 	void Update(float DeltaTime);
 	void Render();
 	void OnWindowSize(UINT Width, UINT Height);
-
+	
 	void CollectGarbage();
 
 private:

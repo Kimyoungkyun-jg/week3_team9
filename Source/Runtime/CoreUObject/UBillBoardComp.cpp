@@ -5,6 +5,7 @@
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Core/Log.h"
 #include "Runtime/Rendering/FRenderer.h"
+#include "Runtime/Engine/FSceneView.h"
 #include "UClass.h"
 #include <algorithm>
 #include <cctype>
@@ -40,9 +41,7 @@ void UBillBoardComp::Deserialize(const FArchive& Archive)
     UVOffset = Archive.GetVector2("UVOffset");
 }
 
-void UBillBoardComp::Render(FRenderer &renderer, const FCamera &Camera,
-
-                            const bool &bHighlighted) {
+void UBillBoardComp::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) {
   if (!GetMesh() || !GetMaterial()) {
     return;
   }
@@ -65,7 +64,7 @@ void UBillBoardComp::Render(FRenderer &renderer, const FCamera &Camera,
   Constants.ViewUp = ViewUp;
   Constants.BillboardSize = FVector2{ Transform.Scale3D.Y, Transform.Scale3D.Z };
 
-  Constants.VP = Camera.CreateViewProjectionMatrix();
+  Constants.VP = SceneView.ViewProj;
 
   // 텍스처 좌표 정보 갱신
   Constants.UVScale = UVScale;

@@ -25,7 +25,7 @@ public:
 
 	void RebuildTextMesh();
 
-	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) override;
+	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) override;
 
 	virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_BillboardText; }
 
