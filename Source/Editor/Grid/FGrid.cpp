@@ -14,60 +14,6 @@
 
 #include "Runtime/Engine/FRayCastingManager.h"
 
-void FGrid::Initialize() {
-  auto &RenderResources = FRenderResourceLibrary::Get();
-  GridMesh = RenderResources.GetMesh(EMeshID::Grid);
-  GridMaterial = RenderResources.GetMaterial(EMaterialID::Grid);
-  LineMesh = RenderResources.GetMesh(EMeshID::Arrow);
-  LineMaterial = RenderResources.GetMaterial(EMaterialID::Simple);
-}
-
-void FGrid::Draw(FRenderer &Renderer, const FCamera &Camera) {
-  if (!GridMesh || !GridMaterial)
-    return;
-
-  // 카메라 XY 따라감, Z=0 (바닥)
-  const float ScaleFactor = (CellSize > 1.0f) ? CellSize : 1.0f;
-  const FMatrix World =
-      FMatrix::MakeScale(FVector{ScaleFactor, ScaleFactor, 1.0f}) *
-      FMatrix::MakeTranslation(
-          FVector{Camera.Position.X, Camera.Position.Y, 0.0f});
-
-  const FMatrix VP = Camera.CreateViewProjectionMatrix();
-
-  FGridConstants C;
-  C.World = World;
-  C.MVP = World * VP; // 스왑은 UpdateGridConstants 가 함
-  C.CellSize = CellSize;
-
-  Renderer.Draw(*GridMesh, *GridMaterial, C, 0, false);
-
-  if (!LineMesh || !LineMaterial)
-    return;
-
-  const FMatrix LineMatrix =
-      FMatrix::MakeTranslation(FVector{-0.5f, 0.0f, 0.0f}) *
-      FMatrix::MakeScale(FVector{100.0f * ScaleFactor, 0.5f * ScaleFactor,
-                                 0.5f * ScaleFactor});
-  Renderer.Draw<FObjectConstants>(
-      *LineMesh, *LineMaterial,
-      {LineMatrix *
-           FMatrix::MakeTranslation(FVector{Camera.Position.X, 0.0f, 0.0f}) *
-           VP,
-       FVector{1.0f, 0.0f, 0.0f}, 1.0f});
-  Renderer.Draw<FObjectConstants>(
-      *LineMesh, *LineMaterial,
-      {LineMatrix * FMatrix::MakeRotationZ(std::numbers::pi_v<float> * 0.5f) *
-           FMatrix::MakeTranslation(FVector{0.0f, Camera.Position.Y, 0.0f}) *
-           VP,
-       FVector{0.0f, 1.0f, 0.0f}, 1.0f});
-  Renderer.Draw<FObjectConstants>(
-      *LineMesh, *LineMaterial,
-      {LineMatrix * FMatrix::MakeRotationY(std::numbers::pi_v<float> * 0.5f) *
-           FMatrix::MakeTranslation(FVector{0.0f, 0.0f, Camera.Position.Z}) *
-           VP,
-       FVector{0.0f, 0.0f, 1.0f}, 1.0f});
-}
 
 void FGrid::DrawLine(FRenderer &Renderer, const FCamera &Camera) {
   auto &LineBatcher = Renderer.GetLineBatcher();

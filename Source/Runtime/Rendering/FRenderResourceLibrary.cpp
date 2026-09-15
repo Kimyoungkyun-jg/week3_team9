@@ -46,12 +46,6 @@ constexpr FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Translucent,
     },
     {
-        .Id = EPipelineID::Grid,
-        .VertexShader = L"GridVS.cso",
-        .PixelShader = L"GridPS.cso",
-        .BlendMode = EBlendMode::Opaque,
-    },
-    {
         .Id = EPipelineID::RotationGizmo,
         .VertexShader = L"RotationGizmoVS.cso",
         .PixelShader = L"RotationGizmoPS.cso",
@@ -104,10 +98,6 @@ constexpr FMaterialEntry materialTable[] = {
     {
         .Id = EMaterialID::Simple,
         .PipelineID = EPipelineID::Simple_Solid,
-    },
-    {
-        .Id = EMaterialID::Grid,
-        .PipelineID = EPipelineID::Grid,
     },
     {
         .Id = EMaterialID::RotGizmo,

@@ -18,7 +18,6 @@
 void FEditor::Initialize(USceneManager *SceneManager) {
   State.ReadFromFile();
   Gizmo.Initialize();
-  Grid.Initialize();
   this->SceneManager = SceneManager;
 }
 
