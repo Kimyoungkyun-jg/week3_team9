@@ -64,7 +64,7 @@ public:
   CreateRenderPipeline(const FRenderPipelineDesc &Desc,
                        EViewModeIndex RenderMode = EViewModeIndex::VMI_Lit);
   [[nodiscard]]
-  TSharedPtr<FTexture> CreateTexture(FTextureDesc &desc);
+  TSharedPtr<FTexture> CreateTexture(const wchar_t* path);
   // 파이프라인 조회
   [[nodiscard]]
   TSharedPtr<FRenderPipeline> GetPipeline(EPipelineID Id) const;
