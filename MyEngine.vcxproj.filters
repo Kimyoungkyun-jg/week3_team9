@@ -157,6 +157,9 @@
     <ClCompile Include="Source\Runtime\Engine\FTimeManager.cpp">
       <Filter>Source\Runtime\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Engine\FCamera.cpp">
+      <Filter>Source\Runtime\Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Engine\FRayCastingManager.cpp">
       <Filter>Source\Runtime\Engine</Filter>
     </ClCompile>

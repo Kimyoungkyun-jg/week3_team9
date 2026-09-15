@@ -40,7 +40,7 @@ void FGrid::Draw(FRenderer &Renderer, const FCamera &Camera) {
   C.MVP = World * VP; // 스왑은 UpdateGridConstants 가 함
   C.CellSize = CellSize;
 
-  Renderer.Draw(*GridMesh, *GridMaterial, C, false);
+  Renderer.Draw(*GridMesh, *GridMaterial, C, 0, false);
 
   if (!LineMesh || !LineMaterial)
     return;

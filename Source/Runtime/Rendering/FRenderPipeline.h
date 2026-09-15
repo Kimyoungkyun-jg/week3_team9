@@ -17,7 +17,7 @@ struct FRenderPipelineDesc {
   bool bEnableDepthWrite = true;               //기본 불투명
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;  //기본 뒷면 제거
   bool bAdditiveBlend = false;                 //기본 불투명
-  bool bIsInstancing = false;
+  int32 Type = 0; // 0: Default / 1: Instancing / 2: InstancedBillboard
 
   bool operator==(const FRenderPipelineDesc &) const = default;
 };
