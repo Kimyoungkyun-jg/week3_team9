@@ -10,7 +10,6 @@ struct VS_INPUT
 
     // 인스턴스 데이터
     row_major float4x4 InstanceWorld : INSTANCE_WORLD;
-    row_major float4x4 InstanceWorldModel : INSTANCE_WORLDMODEL;
     float4 InstanceColor : INSTANCE_COLOR;
     float2 InstanceUVScale : INSTANCE_UV_SCALE;
     float2 InstanceUVOffset : INSTANCE_UV_OFFSET;
@@ -29,7 +28,7 @@ PS_INPUT MainVS(VS_INPUT Input)
     PS_INPUT Output;
 
     // 인스턴스 월드 변환
-    float4 WorldPos = mul(mul(float4(Input.Position, 1.0f), Input.InstanceWorld), Input.InstanceWorldModel);
+    float4 WorldPos = mul(float4(Input.Position, 1.0f), Input.InstanceWorld);
 
     Output.Position = mul(WorldPos, MVP);
     
