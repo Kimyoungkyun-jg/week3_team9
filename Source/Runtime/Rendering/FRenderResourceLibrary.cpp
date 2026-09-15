@@ -27,7 +27,7 @@ struct FPipelineEntry {
   bool bDepthWrite = true;
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;
   bool bAdditiveBlend = false;
-  bool bIsInstancing = false;
+  int32 Type = 0; // 0 : Default / 1 : Instance / 2: BillboardInstance
 };
 
 // 기본 파이프라인 테이블
@@ -38,8 +38,10 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EPipelineID::RotationGizmo, L"RotationGizmoVS.cso",L"RotationGizmoPS.cso"},
     {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
     {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
-    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true,D3D11_CULL_BACK, false, true},
-    {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, true},
+    {EPipelineID::Billboard, L"BillboardVS.cso", L"TexturedPS.cso" },
+    {EPipelineID::Instance_Text, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 2},
+    {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, 1},
+    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"TexturedPS.cso", true, D3D11_CULL_BACK, false, 2 },
     {EPipelineID::Gizmo, L"ExampleVS.cso", L"UnlightPS.cso"},
 };
 
@@ -56,10 +58,12 @@ constexpr FMaterialEntry materialTable[] = {
     {EMaterialID::Grid, EPipelineID::Grid},
     {EMaterialID::RotGizmo, EPipelineID::RotationGizmo},
     {EMaterialID::Spotlight, EPipelineID::Spotlight},
-    {EMaterialID::Text, EPipelineID::Text, "maplestorybold"},
-    {EMaterialID::Textured, EPipelineID::Textured, "uv-test"},
-    {EMaterialID::Instance_Text, EPipelineID::Instance_Text, "maplestorybold"},
+    {EMaterialID::Text,  EPipelineID::Text, "maplestorybold"},
+    {EMaterialID::Textured,  EPipelineID::Textured, "uv-test"},
+    {EMaterialID::Billboard,  EPipelineID::Billboard, "uv-test"},
+    {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "maplestorybold" },
     {EMaterialID::Instance_Simple, EPipelineID::Instance_Simple},
+    {EMaterialID::Instance_Billboard,  EPipelineID::Instance_Billboard, "maplestorybold"},
     {EMaterialID::Gizmo, EPipelineID::Gizmo},
 };
 
@@ -120,7 +124,7 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
         .bEnableDepthWrite = Entry.bDepthWrite,
         .CullMode = Entry.CullMode,
         .bAdditiveBlend = Entry.bAdditiveBlend,
-        .bIsInstancing = Entry.bIsInstancing,
+        .Type = Entry.Type,
     };
 
     TSharedPtr<FRenderPipeline> Pipeline =

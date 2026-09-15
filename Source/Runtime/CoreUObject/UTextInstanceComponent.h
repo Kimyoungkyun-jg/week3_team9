@@ -2,6 +2,7 @@
 
 #include "UInstancePrimitiveComponent.h"
 #include "Runtime/Rendering/FFont.h"
+#include "Runtime/CoreUObject/UInstancePrimitiveComponent.h"
 
 class UTextInstanceComponent : public UInstancePrimitiveComponent
 {
@@ -20,8 +21,6 @@ public:
 	[[nodiscard]] const FWString& GetText() const { return Text; }
 	void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
 
-
-
 	void RebuildTextMesh();
 
 	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) override;
@@ -32,4 +31,8 @@ private:
 	TSharedPtr<FFont> Font;
 	FWString Text = L"Hello Jungle World!";
 
+	float Width = 0.0f;
+	float Height = 0.0f;
+
+	TArray<FInstanceData> TextInstances;
 };

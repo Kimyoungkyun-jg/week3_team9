@@ -28,6 +28,8 @@ enum class EPipelineID : uint8 {
   Text,
   Instance_Text,
   Instance_Simple,
+  Instance_Billboard,
+  Billboard,
   Gizmo
 };
 
@@ -58,7 +60,9 @@ enum class EMaterialID : uint8 {
   Textured,
   Instance_Text,
   Instance_Simple,
-  Gizmo
+  Instance_Billboard,
+  Billboard,
+  Gizmo,
 };
 
 // 인스턴싱 배치 키 구조체

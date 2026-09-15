@@ -37,12 +37,6 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
 
   Editor.Initialize(SceneManager);
 
-  
-  AInstancingActor* actor = CurrentScene->SpawnActor<AInstancingActor>();
-  
-
-
-
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
   Viewport.ViewportCamera.Pitch = -25.0f;

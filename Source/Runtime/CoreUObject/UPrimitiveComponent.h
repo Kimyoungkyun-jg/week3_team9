@@ -53,7 +53,6 @@ public:
 protected:
   UPrimitiveComponent() = default;
 
-private:
   TSharedPtr<FMesh> PrimitiveMesh;
   TSharedPtr<FMaterial> PrimitiveMaterial;
   TSharedPtr<FAxisAlignedBoundingBox> BoundingBox;

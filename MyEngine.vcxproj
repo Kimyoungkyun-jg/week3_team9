@@ -305,6 +305,7 @@
     <ClCompile Include="Source\Runtime\Core\FName.cpp" />
     <ClCompile Include="Source\Runtime\Core\FNamePool.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FArchive.cpp" />
+    <ClCompile Include="Source\Runtime\Engine\FCamera.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FRayCastingManager.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FRenderView.cpp" />
     <ClCompile Include="Source\Runtime\Engine\FTimeManager.cpp" />
@@ -376,11 +377,6 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">TurnOffAllWarnings</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp" />
-    <ClCompile Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.cpp" />
-    <ClCompile Include="Source\Runtime\Actors\TestTextActor.cpp" />
-    <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp" />
-    <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\Application\FEditorApplication.h" />
@@ -389,8 +385,6 @@
     <ClInclude Include="Source\Editor\Core\FEditor.h" />
     <ClInclude Include="Source\Editor\Core\FEditorState.h" />
     <ClInclude Include="Source\Editor\Grid\FGrid.h" />
-    <ClInclude Include="Source\Editor\Gizmo\FGizmo.h" />
-    <ClInclude Include="Source\Editor\EditorViewport\FEditorViewport.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiContentsDrawer.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiControlPanelWindow.h" />
@@ -418,7 +412,6 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UConeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCubeComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UCylinderComp.h" />
-    <ClInclude Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObjectGlobals.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h" />
@@ -474,13 +467,23 @@
     <ClInclude Include="Source\ThirdParty\Imgui\imstb_truetype.h" />
     <ClInclude Include="Source\ThirdParty\Json\json.hpp" />
     <ClInclude Include="Source\ThirdParty\Json\nlohmann\json.hpp" />
-    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
-    <ClInclude Include="Source\Runtime\Actors\TestTextActor.h" />
-    <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h" />
-    <ClInclude Include="Source\Runtime\Actors\AAnimatedBillboardActor.h" />
     <ClInclude Include="Source\ThirdParty\mINI\ini.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Shader\BillboardVS.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="Shader\ExamplePS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>
@@ -506,6 +509,20 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\InstancedBillboardVS.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Vertex</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainVS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\MsdfTextPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
