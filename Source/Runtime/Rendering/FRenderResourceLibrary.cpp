@@ -14,6 +14,7 @@
 
 #include "ThirdParty/stb/stb_image.h"
 
+
 FRenderResourceLibrary &FRenderResourceLibrary::Get() {
   static FRenderResourceLibrary Instance;
   return Instance;
@@ -969,7 +970,7 @@ bool FRenderResourceLibrary::CreateEditTextures(FRenderer& Renderer)
 
             FWString Ext = Entry.path().extension().wstring();
             std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
-            if (Ext != L".png" && Ext != L".jpg" && Ext != L".jpeg")
+            if (Ext != L".dds" && Ext != L".jpg" && Ext != L".jpeg")
                 continue;
 
             // 확장자 제거
@@ -982,21 +983,7 @@ bool FRenderResourceLibrary::CreateEditTextures(FRenderer& Renderer)
                 continue;
             }
 
-            int W = 0, H = 0, ChannelsInFile = 0;
-            unsigned char* Pixels =
-                stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
-            if (!Pixels)
-                continue;
-
-            FTextureDesc Desc{
-                .PixelData = Pixels,
-                .Width = static_cast<uint32>(W),
-                .Height = static_cast<uint32>(H),
-                .RowPitch = static_cast<uint32>(W) * 4u,
-            };
-
-            TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
-            stbi_image_free(Pixels);
+            TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Entry.path().wstring().c_str());
 
             if (!Texture)
                 continue;
@@ -1041,7 +1028,7 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer)
 
       FWString Ext = Entry.path().extension().wstring();
       std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
-      if (Ext != L".png" && Ext != L".jpg" && Ext != L".jpeg")
+      if (Ext != L".dds" && Ext != L".jpg" && Ext != L".jpeg")
         continue;
 
       // 확장자 제거
@@ -1053,22 +1040,8 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer)
       if (AllTextureMap.find(KeyWide) != AllTextureMap.end()) {
         continue;
       }
-
-      int W = 0, H = 0, ChannelsInFile = 0;
-      unsigned char *Pixels =
-          stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
-      if (!Pixels)
-        continue;
-
-      FTextureDesc Desc{
-          .PixelData = Pixels,
-          .Width = static_cast<uint32>(W),
-          .Height = static_cast<uint32>(H),
-          .RowPitch = static_cast<uint32>(W) * 4u,
-      };
-
-      TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
-      stbi_image_free(Pixels);
+  
+      TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Entry.path().wstring().c_str());
 
       if (!Texture)
         continue;
