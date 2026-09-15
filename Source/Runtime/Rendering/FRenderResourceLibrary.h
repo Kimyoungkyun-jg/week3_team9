@@ -28,10 +28,9 @@ enum class EPipelineID : uint8 {
   Text,
   Instance_Text,
   Instance_Simple,
-  Gizmo
+  Gizmo,
   Instance_Billboard,
   Billboard,
-  Gizmo,
   SelectedActor_Text,
   Outline,
   PostProcess
@@ -260,6 +259,7 @@ private:
   bool CreateRectMesh(FRenderer &Renderer);
 
   bool CreateInstancingArrayMap();
+  bool CreateOutlinePipeline(); //아웃라인용
 
   // 텍스처 및 머티리얼 일괄 초기화
   bool CreateTextures(FRenderer &Renderer);

@@ -775,16 +775,8 @@ void FRenderer::DrawTextInstances(const FCamera &Camera, const EMeshID &MeshId,
   auto &ResLib = FRenderResourceLibrary::Get();
 
   // 상수 버퍼 업데이트
-  FInstancedBillboardConstants SC{};
-  FMatrix CameraRotation = Camera.GetRotationMatrix();
-  FVector ViewUp =
-      CameraRotation.TransformPointRow(FVector{0.0f, 0.0f, 1.0f}, 0.0f);
-  FVector ViewRight =
-      CameraRotation.TransformPointRow(FVector{0.0f, 1.0f, 0.0f}, 0.0f);
-
-  SC.ViewRight = ViewRight;
-  SC.ViewUp = ViewUp;
-  SC.VP = Camera.CreateViewProjectionMatrix();
+  FObjectConstants SC{};
+  SC.MVP = Camera.CreateViewProjectionMatrix();
   UpdateBuffer(SC);
 
   TArray<FInstanceData> InstanceData =

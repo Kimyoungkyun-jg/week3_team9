@@ -149,6 +149,10 @@ constexpr FMaterialEntry materialTable[] = {
         .Id = EMaterialID::Gizmo,
         .PipelineID = EPipelineID::Gizmo,
     },
+    {
+        .Id = EMaterialID::Outline,
+        .PipelineID = EPipelineID::Outline,
+    },
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
