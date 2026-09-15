@@ -105,6 +105,7 @@ int WINAPI wWinMain(
 		//EditorApp.CollectGarbage();
 	}
 
+	EditorApp.Shutdown();
 	SceneManager.Release();
 	//EditorApp.CollectGarbage();
 	Renderer.Shutdown();

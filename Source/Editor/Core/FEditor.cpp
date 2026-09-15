@@ -15,10 +15,15 @@
 
 
 void FEditor::Initialize(USceneManager *SceneManager) {
-    State.ReadFromFile();
+  State.ReadFromFile();
   Gizmo.Initialize();
   Grid.Initialize();
   this->SceneManager = SceneManager;
+}
+
+void FEditor::Shutdown() {
+  SaveState();
+  State.FlushToFile();
 }
 
 FRenderResourceLibrary *FEditor::GetRendererLibrary() {
@@ -34,6 +39,35 @@ void FEditor::Process() {
   if (SelectedActor) {
     SelectedActor->SetTransform(SelectedTransform);
   }
+
+  SaveState();
+  State.Tick(FTimeManager::Get().GetDeltaTime());
+}
+
+void FEditor::SaveState() {
+  const FEditorViewport* Viewport = GetActiveViewport();
+  if (!Viewport) { return; }
+
+  const FCamera& Camera = Viewport->ViewportCamera;
+  State.SetCameraLocation(Camera.Position);
+  State.SetCameraPitch(Camera.Pitch);
+  State.SetCameraYaw(Camera.Yaw);
+  State.SetCameraFOV(Camera.Projection.FOV);
+  State.SetGridCellSize(Grid.GetCellSize());
+}
+
+void FEditor::LoadState()
+{
+    FEditorViewport* Viewport = GetActiveViewport();
+    if (!Viewport) { return; }
+
+    FCamera& Camera = Viewport->ViewportCamera;
+
+    Camera.Position = State.GetCameraLocation();
+    Camera.Pitch = State.GetCameraPitch();
+    Camera.Yaw = State.GetCameraYaw();
+    Camera.Projection.FOV = State.GetCameraFOV();
+    Grid.SetCellSize(State.GetGridCellSize());
 }
 
 void FEditor::NewScene() {

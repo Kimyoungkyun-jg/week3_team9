@@ -33,6 +33,7 @@ public:
 
 public:
   void Initialize(USceneManager *SceneManager);
+  void Shutdown();
 
   void Process();
 
@@ -67,6 +68,9 @@ public:
   FRenderResourceLibrary *GetRendererLibrary();
 
   void ClearSelectionForGC();
+
+  void SaveState();
+  void LoadState();
 
 private:
   USceneManager *SceneManager =

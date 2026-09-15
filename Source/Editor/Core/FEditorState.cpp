@@ -12,6 +12,10 @@ void FEditorState::WriteToFile(FStringView FilePath) const
 	Archive.SetVector("Camera", "Location", CameraLocation);
 	Archive.SetFloat("Camera", "Yaw", CameraYaw);
 	Archive.SetFloat("Camera", "Pitch", CameraPitch);
+	Archive.SetFloat("Camera", "FOV", CameraFOV);
+
+	// Grid
+	Archive.SetFloat("Grid", "CellSize", GridCellSize);
 
 	// Gizmo
 	Archive.SetUInt32("Gizmo", "Mode", GizmoMode);
@@ -50,7 +54,12 @@ void FEditorState::ReadFromFile(FStringView FilePath)
 		CameraSpeed = Archive.GetFloat("Camera", "Speed");
 	}
 
-	if (!Archive.IsEmpty("Camera", "Location"))
+	if
+	(
+		!Archive.IsEmpty("Camera", "Location.0") &&
+		!Archive.IsEmpty("Camera", "Location.1") &&
+		!Archive.IsEmpty("Camera", "Location.2")
+	)
 	{
 		CameraLocation = Archive.GetVector("Camera", "Location");
 	}
@@ -63,6 +72,18 @@ void FEditorState::ReadFromFile(FStringView FilePath)
 	if (!Archive.IsEmpty("Camera", "Pitch"))
 	{
 		CameraPitch = Archive.GetFloat("Camera", "Pitch");
+	}
+
+	if (!Archive.IsEmpty("Camera", "FOV"))
+	{
+		CameraFOV = Archive.GetFloat("Camera", "FOV");
+	}
+
+	// Grid
+
+	if (!Archive.IsEmpty("Grid", "CellSize"))
+	{
+		GridCellSize = Archive.GetFloat("Grid", "CellSize");
 	}
 
 	// Gizmo
@@ -82,60 +103,99 @@ void FEditorState::ReadFromFile(FStringView FilePath)
 		SelectedActor = Archive.GetUInt32("Gizmo", "SelectedActor");
 	}
 
+	bDirty = false;
+	TimeSinceLastSave = 0.0f;
+}
+
+void FEditorState::Tick(float DeltaTime)
+{
+	TimeSinceLastSave += DeltaTime;
+	if (TimeSinceLastSave < SaveIntervalSeconds)
+	{
+		return;
+	}
+
+	TimeSinceLastSave = 0.0f;
+	FlushToFile();
+}
+
+void FEditorState::FlushToFile(FStringView FilePath)
+{
+	if (!bDirty)
+	{
+		return;
+	}
+
+	WriteToFile(FilePath);
+	bDirty = false;
 }
 
 void FEditorState::SetCameraSensitivity(float Value)
 {
 	if (CameraSensitivity == Value) { return; }
 	CameraSensitivity = Value;
-	WriteToFile();
+	bDirty = true;
 }
 
 void FEditorState::SetCameraSpeed(float Value)
 {
 	if (CameraSpeed == Value) { return; }
 	CameraSpeed = Value;
-	WriteToFile();
+	bDirty = true;
 }
 
 void FEditorState::SetCameraLocation(const FVector& Value)
 {
 	if (CameraLocation == Value) { return; }
 	CameraLocation = Value;
-	WriteToFile();
+	bDirty = true;
 }
 
 void FEditorState::SetCameraYaw(float Value)
 {
 	if (CameraYaw == Value) { return; }
 	CameraYaw = Value;
-	WriteToFile();
+	bDirty = true;
 }
 
 void FEditorState::SetCameraPitch(float Value)
 {
 	if (CameraPitch == Value) { return; }
 	CameraPitch = Value;
-	WriteToFile();
+	bDirty = true;
+}
+
+void FEditorState::SetCameraFOV(float Value)
+{
+	if (CameraFOV == Value) { return; }
+	CameraFOV = Value;
+	bDirty = true;
+}
+
+void FEditorState::SetGridCellSize(float Value)
+{
+	if (GridCellSize == Value) { return; }
+	GridCellSize = Value;
+	bDirty = true;
 }
 
 void FEditorState::SetGizmoMode(uint8 Value)
 {
 	if (GizmoMode == Value) { return; }
 	GizmoMode = Value;
-	WriteToFile();
+	bDirty = true;
 }
 
 void FEditorState::SetGizmoSpace(uint8 Value)
 {
 	if (GizmoSpace == Value) { return; }
 	GizmoSpace = Value;
-	WriteToFile();
+	bDirty = true;
 }
 
 void FEditorState::SetSelectedActor(uint32 Value)
 {
 	if (SelectedActor == Value) { return; }
 	SelectedActor = Value;
-	WriteToFile();
+	bDirty = true;
 }

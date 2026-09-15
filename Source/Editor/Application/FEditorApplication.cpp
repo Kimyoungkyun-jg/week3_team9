@@ -42,14 +42,16 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
 
   Editor.Initialize(SceneManager);
 
-  FEditorViewport Viewport;
-  Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
-  Viewport.ViewportCamera.Pitch = -25.0f;
-  Viewport.ViewportCamera.Yaw = -45.0f;
-  Viewport.TopLeftUV = {0.0f, 0.0f};
-  Viewport.LengthUV = {0.7f, 0.7f};
-  Editor.AddViewport(Viewport);
+  Editor.AddViewport(FEditorViewport{});
+
+  Editor.LoadState();
+
+
   // Editor.LoadScene("");
+}
+
+void FEditorApplication::Shutdown() {
+  Editor.Shutdown();
 }
 
 /// <summary>
