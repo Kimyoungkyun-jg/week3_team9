@@ -38,7 +38,13 @@ void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Cam
 		// 정점 좌표 변환 (W = 1.0f 기준)
 		FVector WorldPos = WorldMatrix.TransformPointRow(LocalPos);
 		FMatrix PosMatrix = FMatrix::MakeTranslation(WorldPos);
-		Instances.push_back(FInstanceData{ PosMatrix, FVector4(GetColor(), 1.0f) });
+		FInstanceData Data
+		{
+			.World = PosMatrix,
+			.Color = FVector4(GetColor(), 1.0f),
+		};
+
+		Instances.push_back(Data);
 	}
 
 

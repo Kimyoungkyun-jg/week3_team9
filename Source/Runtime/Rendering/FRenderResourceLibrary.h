@@ -28,8 +28,6 @@ enum class EPipelineID : uint8 {
   Text,
   Instance_Text,
   Instance_Simple,
-  Instance_Billboard,
-  Billboard,
   Gizmo
 };
 
@@ -60,7 +58,6 @@ enum class EMaterialID : uint8 {
   Textured,
   Instance_Text,
   Instance_Simple,
-  Instance_Billboard,
   Billboard,
   Gizmo,
 };

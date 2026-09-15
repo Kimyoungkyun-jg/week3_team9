@@ -46,27 +46,33 @@ void UBillBoardComp::Render(FRenderer& renderer, const FCamera& Camera, const bo
     return;
   }
 
-  FBillboardConstants Constants;
+  FTransform Transform = GetGlobalTransform();
 
   FMatrix CameraRotation = Camera.GetRotationMatrix();
+  FVector ViewForward = CameraRotation.TransformPointRow(FVector{ 1.0f, 0.0f, 0.0f }, 0.0f); // X+
+  FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f); // Y+
+  FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f); // Z+
 
-  // Z+
-  FVector ViewUp = CameraRotation.TransformPointRow(FVector{0.0f, 0.0f, 1.0f}, 0.0f);
+  FVector Up = ViewUp * Transform.Scale3D.Z;
+  FVector Right = ViewRight * Transform.Scale3D.Y;
 
-  // Y+
-  FVector ViewRight = CameraRotation.TransformPointRow(FVector{0.0f, 1.0f, 0.0f}, 0.0f);
+  FMatrix ModelMatrix
+  {
+      FVector4{ ViewForward, 0.0f },
+      FVector4{ Right, 0.0f },
+      FVector4{ Up, 0.0f },
+      FVector4{ Transform.Location, 1.0f },
+  };
 
-  FTransform Transform = GetGlobalTransform();
-  const FMatrix WorldMatrix = Transform.ToMatrix();
+  FMatrix VP = Camera.CreateViewProjectionMatrix();
 
-  Constants.Center = Transform.Location;
-  Constants.ViewRight = ViewRight;
-  Constants.ViewUp = ViewUp;
-  Constants.BillboardSize = FVector2{ Transform.Scale3D.Y, Transform.Scale3D.Z };
+  FObjectConstants Constants;
+  Constants.MVP = ModelMatrix * VP;
+  Constants.World = ModelMatrix;
 
   Constants.VP = SceneView.ViewProj;
 
-  // 텍스처 좌표 정보 갱신
+  // UV 반영
   Constants.UVScale = UVScale;
   Constants.UVOffset = UVOffset;
 
@@ -75,14 +81,15 @@ void UBillBoardComp::Render(FRenderer& renderer, const FCamera& Camera, const bo
   Constants.ColorOverrideAmount = GetColorAmount();
 
   if (bHighlighted) {
-    // 하이라이트 색상 보정
-    if (Constants.ColorOverrideAmount > 0.0f) {
-      Constants.ColorOverride =
-          Constants.ColorOverride * 0.7f + FVector{0.3f, 0.3f, 0.3f};
-    } else {
-      Constants.ColorOverride = FVector{1.0f, 1.0f, 1.0f};
-      Constants.ColorOverrideAmount = 0.5f;
-    }
+      // 하이라이트 색상 보정
+      if (Constants.ColorOverrideAmount > 0.0f) {
+          Constants.ColorOverride =
+              Constants.ColorOverride * 0.7f + FVector{ 0.3f, 0.3f, 0.3f };
+      }
+      else {
+          Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
+          Constants.ColorOverrideAmount = 0.5f;
+      }
   }
 
   renderer.Draw(*GetMesh(), *GetMaterial(), Constants);

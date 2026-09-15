@@ -13,6 +13,7 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
+#include "ThirdParty/DirectXTK/Inc/DDSTextureLoader.h"
 
 
 bool FRenderer::Initialize(HWND Window) {
@@ -310,14 +311,9 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  if (Desc.Type == 1)
+  if (Desc.bIsInstancing)
   {
       Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
-          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
-  }
-  else if (Desc.Type == 2)
-  {
-      Result = Device->CreateInputLayout(FVertexInstancedBillboardLayouts::Layout, FVertexInstancedBillboardLayouts::NumElements,
           Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
   }
   else
@@ -376,7 +372,23 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   BlendDesc.IndependentBlendEnable = false;
   auto &RenderTargetBlend = BlendDesc.RenderTarget[0];
 
-  if (Desc.bAdditiveBlend) {
+  switch (Desc.BlendMode) {
+  case EBlendMode::Opaque:
+  case EBlendMode::Masked:
+    RenderTargetBlend.BlendEnable = false;
+    break;
+
+  case EBlendMode::Translucent:
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    break;
+
+  case EBlendMode::Additive:
     RenderTargetBlend.BlendEnable = true;
     RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
     RenderTargetBlend.DestBlend = D3D11_BLEND_ONE;
@@ -384,11 +396,20 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
     RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_ZERO;
     RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-  } else {
-    RenderTargetBlend.BlendEnable = false;
-    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    break;
+
+  case EBlendMode::PremultipliedAlpha:
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    break;
   }
+
+  RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
   Result = Device->CreateBlendState(&BlendDesc, &Pipeline->BlendState);
   if (FAILED(Result)) {
@@ -412,37 +433,21 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   return Pipeline;
 }
 
-TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
+TSharedPtr<FTexture> FRenderer::CreateTexture(const wchar_t* path){
   auto Texture = TSharedPtr<FTexture>{new FTexture()};
-
-  D3D11_TEXTURE2D_DESC TextureDesc = {
-      .Width = desc.Width,
-      .Height = desc.Height,
-      .MipLevels = 1u,
-      .ArraySize = 1u,
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .SampleDesc = {.Count = 1u},
-      .Usage = D3D11_USAGE_DEFAULT,
-      .BindFlags = D3D11_BIND_SHADER_RESOURCE,
-  };
-
-  D3D11_SUBRESOURCE_DATA InitialData = {
-      .pSysMem = desc.PixelData,
-      .SysMemPitch = desc.RowPitch,
-  };
-
-  HRESULT Result =
-      Device->CreateTexture2D(&TextureDesc, &InitialData, &Texture->Texture2D);
-  if (FAILED(Result)) {
-    return nullptr;
+  Microsoft::WRL::ComPtr<ID3D11Resource> TempResource;
+  HRESULT hr = DirectX::CreateDDSTextureFromFile(Device.Get(), path, TempResource.GetAddressOf(), Texture->TextureSRV.GetAddressOf());
+  if (FAILED(hr)) {
+      return nullptr;
   }
 
-  Result = Device->CreateShaderResourceView(Texture->Texture2D.Get(), nullptr,
-                                            &Texture->TextureSRV);
-  if (FAILED(Result)) {
-    return nullptr;
+  hr = TempResource.As(&Texture->Texture2D);
+  if (FAILED(hr)) {
+      return nullptr;
   }
 
+  D3D11_TEXTURE2D_DESC desc;
+  Texture->Texture2D->GetDesc(&desc);
   Texture->Width = desc.Width;
   Texture->Height = desc.Height;
 
@@ -641,14 +646,8 @@ void FRenderer::DrawInstances(const FCamera& Camera)
     auto& ResLib = FRenderResourceLibrary::Get();
 
     // 상수 버퍼 업데이트
-    FInstancedBillboardConstants SC{};
-    FMatrix CameraRotation = Camera.GetRotationMatrix();
-    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f);
-    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f);
-
-    SC.ViewRight = ViewRight;
-    SC.ViewUp = ViewUp;
-    SC.VP = Camera.CreateViewProjectionMatrix();
+    FObjectConstants SC{};
+    SC.MVP = Camera.CreateViewProjectionMatrix();
     UpdateBuffer(SC);
 
     // 배치 키(MaterialID, MeshID) 순회

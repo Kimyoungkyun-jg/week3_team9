@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EBlendMode.h"
 #include "Vertices.h"
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -16,8 +17,8 @@ struct FRenderPipelineDesc {
   bool bEnableDepthTest = true;
   bool bEnableDepthWrite = true;               //기본 불투명
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;  //기본 뒷면 제거
-  bool bAdditiveBlend = false;                 //기본 불투명
-  int32 Type = 0; // 0: Default / 1: Instancing / 2: InstancedBillboard
+  EBlendMode BlendMode = EBlendMode::Opaque;
+  bool bIsInstancing = false;				   //기본 노 인스턴스
 
   bool operator==(const FRenderPipelineDesc &) const = default;
 };

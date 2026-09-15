@@ -15,13 +15,10 @@ public:
 	void Register(UScene& InScene) override;
 	void Update(float delta) override;
 
-	void SetText(const FWString& InText) {
-		Text = InText;
-		RebuildTextMesh();
-	}
+	void SetText(const FWString& InText);
 
 	[[nodiscard]] const FWString& GetText() const { return Text; }
-	void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
+	void SetFont(TSharedPtr<FFont> InFont);
 
 	void RebuildTextMesh();
 
@@ -38,6 +35,4 @@ private:
 
 	float Width = 0.0f;
 	float Height = 0.0f;
-
-	TArray<FInstanceData> TextInstances;
 };

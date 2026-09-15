@@ -28,28 +28,36 @@ void UTextInstanceComponent::Register(UScene& InScene)
 		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
 	}
 
-	RebuildTextMesh();
+    RebuildTextMesh();
 
-	Super::Register(InScene);
-
+    Super::Register(InScene);
 }
 
 void UTextInstanceComponent::Update(float delta)
 {
+
+}
+
+void UTextInstanceComponent::SetText(const FWString& InText)
+{
+    Text = InText;
+    RebuildTextMesh();
+}
+
+void UTextInstanceComponent::SetFont(TSharedPtr<FFont> InFont)
+{
+    Font = InFont;
     RebuildTextMesh();
 }
 
 void UTextInstanceComponent::RebuildTextMesh() {
-    TextInstances.clear();
+    Instances.clear();
     Width = 0;
     Height = 0;
 
     if (Text.empty() || !Font) return;
 
     // Phase 1 : 전체 Bound 값 계산
-
-    // Calculate the visible text bounds first so the component origin can be
-    // used as the billboard pivot for the whole string.
     float minY = std::numeric_limits<float>::max();
     float minZ = std::numeric_limits<float>::max();
 
@@ -136,19 +144,20 @@ void UTextInstanceComponent::RebuildTextMesh() {
         float centerY = (tv[0].y + tv[1].y) * 0.5f - textCenterY;
         float centerZ = (tv[0].z + tv[2].z) * 0.5f - textCenterZ;
        
-        // 글자별 순수 로컬 변환 (크기 * 위치)
-        FMatrix CharMatrix = FMatrix::MakeScale(FVector(1.0f, charWidth, charHeight))
-            * FMatrix::MakeTranslation(FVector(0.0f, centerY, centerZ));
+        FMatrix CharMatrix =
+            FMatrix::MakeScale(FVector(1.0f, charWidth, charHeight)) *
+            FMatrix::MakeTranslation(FVector(0.0f, centerY, centerZ));
 
-        FInstanceData Data{};
-        Data.World = CharMatrix;
-        Data.Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
-        Data.Center = FVector(0.0f, 0.0f, 0.0f);
-        Data.Size = FVector2(1.0f, 1.0f);
-        Data.UVScale = FVector2(CharInfo.width, CharInfo.height);
-        Data.UVOffset = FVector2(tv[0].u, tv[0].v);
+        // 글자별 순수 로컬 변환 (크기 * 위치)
+        FInstanceData Data
+        {
+            .World = CharMatrix,
+            .Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f),
+            .UVScale = FVector2(CharInfo.width, CharInfo.height),
+            .UVOffset = FVector2(tv[0].u, tv[0].v),
+        };
        
-        TextInstances.push_back(Data);
+        Instances.push_back(Data);
         prevAdvance += CharInfo.advance;
     }
 }
@@ -156,20 +165,40 @@ void UTextInstanceComponent::RebuildTextMesh() {
 
 void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
 {
-	if (!GetMesh() || !GetMaterial() || TextInstances.empty()) {
+	if (!GetMesh() || !GetMaterial() || Instances.empty()) {
 		return;
 	}
 
     FTransform Transform = GetGlobalTransform();
 
-    TArray<FInstanceData> RenderInstances = TextInstances;
-    for (auto& Instance : RenderInstances)
+    FMatrix CameraRotation = Camera.GetRotationMatrix();
+    FVector ViewForward = CameraRotation.TransformPointRow(FVector{ 1.0f, 0.0f, 0.0f }, 0.0f); // X+
+    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f); // Y+
+    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f); // Z+
+
+    FVector Up = ViewUp * Transform.Scale3D.Z;
+    FVector Right = ViewRight * Transform.Scale3D.Y;
+
+    FMatrix ModelMatrix
     {
-        Instance.Center = Transform.Location;
-        Instance.Size = FVector2{ Transform.Scale3D.Y, Transform.Scale3D.Z };
+        FVector4{ ViewForward, 0.0f },
+        FVector4{ Right, 0.0f },
+        FVector4{ Up, 0.0f },
+        FVector4{ Transform.Location, 1.0f },
+    };
+
+    TArray<FInstanceData> RenderInstances;
+    for (auto& Instance : Instances)
+    {
+        FInstanceData Data = Instance;
+        Data.World *= ModelMatrix;
+        RenderInstances.push_back(Data);
     }
 
     renderer.AddTextInstanceArray(RenderInstances, GetMesh()->MeshId, GetMaterial()->MaterialId);
+    
+    // 현재 빌보드는 특수한 ModelMatrix가 필요한 관계로 InstancePrimitiveComponent::Render() 사용 불가..
+    //Super::Render(renderer, Camera, bHighlighted);
 }
 
 void UTextInstanceComponent::Serialize(FArchive& Archive) const
