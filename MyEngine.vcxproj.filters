@@ -324,6 +324,9 @@
     <ClInclude Include="Source\Runtime\Core\FString.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\EBlendMode.h">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Rendering\FRenderPipeline.h">
       <Filter>Source\Runtime\Rendering</Filter>
     </ClInclude>

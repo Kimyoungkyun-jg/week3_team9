@@ -26,23 +26,73 @@ struct FPipelineEntry {
   const wchar_t *PixelShader;
   bool bDepthWrite = true;
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;
-  bool bAdditiveBlend = false;
-  int32 Type = 0; // 0 : Default / 1 : Instance / 2: BillboardInstance
+  EBlendMode BlendMode = EBlendMode::Opaque;
+  bool bIsInstancing = false;
 };
 
 // 기본 파이프라인 테이블
 constexpr FPipelineEntry pipelineTable[] = {
-    {EPipelineID::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
-    {EPipelineID::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
-    {EPipelineID::Grid, L"GridVS.cso", L"GridPS.cso"},
-    {EPipelineID::RotationGizmo, L"RotationGizmoVS.cso",L"RotationGizmoPS.cso"},
-    {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
-    {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
-    {EPipelineID::Billboard, L"BillboardVS.cso", L"TexturedPS.cso" },
-    {EPipelineID::Instance_Text, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 2},
-    {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, 1},
-    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"TexturedPS.cso", true, D3D11_CULL_BACK, false, 2 },
-    {EPipelineID::Gizmo, L"ExampleVS.cso", L"UnlightPS.cso"},
+    {
+        .Id = EPipelineID::Simple_Solid,
+        .VertexShader = L"ExampleVS.cso",
+        .PixelShader = L"ExamplePS.cso",
+        .BlendMode = EBlendMode::Opaque,
+    },
+    {
+        .Id = EPipelineID::Textured,
+        .VertexShader = L"ExampleVS.cso",
+        .PixelShader = L"TexturedPS.cso",
+        .bDepthWrite = false,
+        .BlendMode = EBlendMode::Translucent,
+    },
+    {
+        .Id = EPipelineID::Grid,
+        .VertexShader = L"GridVS.cso",
+        .PixelShader = L"GridPS.cso",
+        .BlendMode = EBlendMode::Opaque,
+    },
+    {
+        .Id = EPipelineID::RotationGizmo,
+        .VertexShader = L"RotationGizmoVS.cso",
+        .PixelShader = L"RotationGizmoPS.cso",
+        .BlendMode = EBlendMode::Opaque,
+    },
+    {
+        .Id = EPipelineID::Spotlight,
+        .VertexShader = L"ExampleVS.cso",
+        .PixelShader = L"SpotlightPS.cso",
+        .bDepthWrite = false,
+        .CullMode = D3D11_CULL_NONE,
+        .BlendMode = EBlendMode::Additive,
+    },
+    {
+        .Id = EPipelineID::Text,
+        .VertexShader = L"ExampleVS.cso",
+        .PixelShader = L"MsdfTextPS.cso",
+        .bDepthWrite = false,
+        .BlendMode = EBlendMode::Translucent,
+    },
+    {
+        .Id = EPipelineID::Instance_Text,
+        .VertexShader = L"InstanceVS.cso",
+        .PixelShader = L"MsdfTextPS.cso",
+        .bDepthWrite = false,
+        .BlendMode = EBlendMode::Translucent,
+        .bIsInstancing = true,
+    },
+    {
+        .Id = EPipelineID::Instance_Simple,
+        .VertexShader = L"InstanceVS.cso",
+        .PixelShader = L"ExamplePS.cso",
+        .BlendMode = EBlendMode::Opaque,
+        .bIsInstancing = true,
+    },
+    {
+        .Id = EPipelineID::Gizmo,
+        .VertexShader = L"ExampleVS.cso",
+        .PixelShader = L"UnlightPS.cso",
+        .BlendMode = EBlendMode::Opaque,
+    },
 };
 
 // 머티리얼 정보 엔트리
@@ -54,17 +104,50 @@ struct FMaterialEntry {
 
 // 기본 머티리얼 테이블
 constexpr FMaterialEntry materialTable[] = {
-    {EMaterialID::Simple, EPipelineID::Simple_Solid},
-    {EMaterialID::Grid, EPipelineID::Grid},
-    {EMaterialID::RotGizmo, EPipelineID::RotationGizmo},
-    {EMaterialID::Spotlight, EPipelineID::Spotlight},
-    {EMaterialID::Text,  EPipelineID::Text, "maplestorybold"},
-    {EMaterialID::Textured,  EPipelineID::Textured, "uv-test"},
-    {EMaterialID::Billboard,  EPipelineID::Billboard, "uv-test"},
-    {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "maplestorybold" },
-    {EMaterialID::Instance_Simple, EPipelineID::Instance_Simple},
-    {EMaterialID::Instance_Billboard,  EPipelineID::Instance_Billboard, "maplestorybold"},
-    {EMaterialID::Gizmo, EPipelineID::Gizmo},
+    {
+        .Id = EMaterialID::Simple,
+        .PipelineID = EPipelineID::Simple_Solid,
+    },
+    {
+        .Id = EMaterialID::Grid,
+        .PipelineID = EPipelineID::Grid,
+    },
+    {
+        .Id = EMaterialID::RotGizmo,
+        .PipelineID = EPipelineID::RotationGizmo,
+    },
+    {
+        .Id = EMaterialID::Spotlight,
+        .PipelineID = EPipelineID::Spotlight,
+    },
+    {
+        .Id = EMaterialID::Text,
+        .PipelineID = EPipelineID::Text,
+        .TextureName = "maplestorybold",
+    },
+    {
+        .Id = EMaterialID::Textured,
+        .PipelineID = EPipelineID::Textured,
+        .TextureName = "transparent-test",
+    },
+    {
+        .Id = EMaterialID::Billboard,
+        .PipelineID = EPipelineID::Textured,
+        .TextureName = "uv-test",
+    },
+    {
+        .Id = EMaterialID::Instance_Text,
+        .PipelineID = EPipelineID::Instance_Text,
+        .TextureName = "maplestorybold",
+    },
+    {
+        .Id = EMaterialID::Instance_Simple,
+        .PipelineID = EPipelineID::Instance_Simple,
+    },
+    {
+        .Id = EMaterialID::Gizmo,
+        .PipelineID = EPipelineID::Gizmo,
+    },
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -123,8 +206,8 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
         .bEnableDepthTest = true,
         .bEnableDepthWrite = Entry.bDepthWrite,
         .CullMode = Entry.CullMode,
-        .bAdditiveBlend = Entry.bAdditiveBlend,
-        .Type = Entry.Type,
+        .BlendMode = Entry.BlendMode,
+        .bIsInstancing = Entry.bIsInstancing,
     };
 
     TSharedPtr<FRenderPipeline> Pipeline =

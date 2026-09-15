@@ -309,14 +309,9 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  if (Desc.Type == 1)
+  if (Desc.bIsInstancing)
   {
       Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
-          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
-  }
-  else if (Desc.Type == 2)
-  {
-      Result = Device->CreateInputLayout(FVertexInstancedBillboardLayouts::Layout, FVertexInstancedBillboardLayouts::NumElements,
           Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
   }
   else
@@ -375,7 +370,23 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   BlendDesc.IndependentBlendEnable = false;
   auto &RenderTargetBlend = BlendDesc.RenderTarget[0];
 
-  if (Desc.bAdditiveBlend) {
+  switch (Desc.BlendMode) {
+  case EBlendMode::Opaque:
+  case EBlendMode::Masked:
+    RenderTargetBlend.BlendEnable = false;
+    break;
+
+  case EBlendMode::Translucent:
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    break;
+
+  case EBlendMode::Additive:
     RenderTargetBlend.BlendEnable = true;
     RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
     RenderTargetBlend.DestBlend = D3D11_BLEND_ONE;
@@ -383,11 +394,20 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
     RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_ZERO;
     RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-  } else {
-    RenderTargetBlend.BlendEnable = false;
-    RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    break;
+
+  case EBlendMode::PremultipliedAlpha:
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    break;
   }
+
+  RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
   Result = Device->CreateBlendState(&BlendDesc, &Pipeline->BlendState);
   if (FAILED(Result)) {
@@ -640,14 +660,8 @@ void FRenderer::DrawInstances(const FCamera& Camera)
     auto& ResLib = FRenderResourceLibrary::Get();
 
     // 상수 버퍼 업데이트
-    FInstancedBillboardConstants SC{};
-    FMatrix CameraRotation = Camera.GetRotationMatrix();
-    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f);
-    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f);
-
-    SC.ViewRight = ViewRight;
-    SC.ViewUp = ViewUp;
-    SC.VP = Camera.CreateViewProjectionMatrix();
+    FObjectConstants SC{};
+    SC.MVP = Camera.CreateViewProjectionMatrix();
     UpdateBuffer(SC);
 
     // 배치 키(MaterialID, MeshID) 순회
