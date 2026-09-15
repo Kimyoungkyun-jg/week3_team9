@@ -24,6 +24,8 @@ void FCameraInputController::UpdateKeyInput(FCamera& Camera, float DeltaTime) co
 
 	FVector Direction{};
 
+	float RelativeSpeed = 1.0f;
+
 	if (FInputManager::Get().IsKeyDown(VK_LEFT) || FInputManager::Get().IsKeyDown('A'))
 	{
 		Direction -= Right;
@@ -47,16 +49,26 @@ void FCameraInputController::UpdateKeyInput(FCamera& Camera, float DeltaTime) co
 	// 하강 이동
 	if (FInputManager::Get().IsKeyDown('Q'))
 	{
-		Direction -= Up;
+		Direction += FVector{0.0f, 0.0f, -1.0f};
 	}
 
 	// 상승 이동
 	if (FInputManager::Get().IsKeyDown('E'))
 	{
-		Direction += Up;
+		Direction += FVector{ 0.0f, 0.0f, 1.0f };
 	}
 
-	Camera.Position += Direction * CameraMoveSpeed * DeltaTime;
+	if (FInputManager::Get().IsKeyDown(VK_LSHIFT))
+	{
+		RelativeSpeed *= 2.0f;
+	}
+
+	if (FInputManager::Get().IsKeyDown(VK_LCONTROL))
+	{
+		RelativeSpeed *= 0.5f;
+	}
+
+	Camera.Position += Direction * CameraMoveSpeed * RelativeSpeed * DeltaTime;
 }
 
 void FCameraInputController::UpdateMouseInput(FCamera& Camera) const
