@@ -310,9 +310,14 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  if (Desc.bIsInstancing)
+  if (Desc.Type == 1)
   {
       Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+  else if (Desc.Type == 2)
+  {
+      Result = Device->CreateInputLayout(FVertexInstancedBillboardLayouts::Layout, FVertexInstancedBillboardLayouts::NumElements,
           Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
   }
   else
@@ -620,8 +625,14 @@ void FRenderer::DrawInstances(const FCamera& Camera)
     auto& ResLib = FRenderResourceLibrary::Get();
 
     // 상수 버퍼 업데이트
-    FObjectConstants SC;
-    SC.MVP = Camera.CreateViewProjectionMatrix();
+    FInstancedBillboardConstants SC{};
+    FMatrix CameraRotation = Camera.GetRotationMatrix();
+    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f);
+    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f);
+
+    SC.ViewRight = ViewRight;
+    SC.ViewUp = ViewUp;
+    SC.VP = Camera.CreateViewProjectionMatrix();
     UpdateBuffer(SC);
 
     // 배치 키(MaterialID, MeshID) 순회
