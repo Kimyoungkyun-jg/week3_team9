@@ -22,8 +22,7 @@ public:
 
 	[[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
 	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
-	[[nodiscard]] FMatrix GetModelMatrix() const { return GetGlobalTransform().ToMatrix(); }
-	virtual FMatrix GetRenderMatrix(const FCamera& Camera) { return GetGlobalTransform().ToMatrix(); }
+	virtual FMatrix GetRenderMatrix(const FCamera& Camera) const { return GetGlobalTransform().ToMatrix(); }
 	virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
 
   // 컴포넌트 렌더링
@@ -34,6 +33,9 @@ public:
   void SetMaterial(TSharedPtr<FMaterial> Material) {
     PrimitiveMaterial = std::move(Material);
   }
+
+  // Visualizer 및 충돌 판정용 LocalBounds
+  virtual FAxisAlignedBoundingBox CalcLocalBounds();
 
   // 텍스처 이름으로 머티리얼 텍스처 교체
   bool SetTextureByName(const FString &InTextureName);
@@ -47,7 +49,6 @@ public:
   float GetColorAmount() const { return ColorAmount; }
   void SetColorAmount(float InAmount) { ColorAmount = InAmount; }
 
-
   virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
 
 protected:
@@ -55,7 +56,6 @@ protected:
 
   TSharedPtr<FMesh> PrimitiveMesh;
   TSharedPtr<FMaterial> PrimitiveMaterial;
-  TSharedPtr<FAxisAlignedBoundingBox> BoundingBox;
 
   FVector Color{1.0f, 1.0f, 1.0f};
   float ColorAmount = 0.0f;

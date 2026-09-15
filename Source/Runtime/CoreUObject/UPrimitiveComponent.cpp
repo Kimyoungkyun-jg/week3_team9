@@ -60,6 +60,16 @@ void UPrimitiveComponent::SetRelativeTransform(
   Super::SetRelativeTransform(RelativeTransform);
 }
 
+FAxisAlignedBoundingBox UPrimitiveComponent::CalcLocalBounds()
+{
+    if (PrimitiveMesh)
+    {
+        return PrimitiveMesh->GetLocalBounds();
+    }
+
+    return {};
+}
+
 bool UPrimitiveComponent::SetTextureByName(const FString &InTextureName) {
   auto CurrentMat = GetMaterial();
   if (!CurrentMat) {

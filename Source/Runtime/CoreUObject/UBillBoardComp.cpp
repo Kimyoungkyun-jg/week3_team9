@@ -46,31 +46,12 @@ void UBillBoardComp::Render(FRenderer& renderer, const FCamera& Camera, const bo
     return;
   }
 
-  FTransform Transform = GetGlobalTransform();
-
-  FMatrix CameraRotation = Camera.GetRotationMatrix();
-  FVector ViewForward = CameraRotation.TransformPointRow(FVector{ 1.0f, 0.0f, 0.0f }, 0.0f); // X+
-  FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f); // Y+
-  FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f); // Z+
-
-  FVector Up = ViewUp * Transform.Scale3D.Z;
-  FVector Right = ViewRight * Transform.Scale3D.Y;
-
-  FMatrix ModelMatrix
-  {
-      FVector4{ ViewForward, 0.0f },
-      FVector4{ Right, 0.0f },
-      FVector4{ Up, 0.0f },
-      FVector4{ Transform.Location, 1.0f },
-  };
-
+  FMatrix ModelMatrix = GetRenderMatrix(Camera);
   FMatrix VP = Camera.CreateViewProjectionMatrix();
 
   FObjectConstants Constants;
   Constants.MVP = ModelMatrix * VP;
   Constants.World = ModelMatrix;
-
-
 
   // UV 반영
   Constants.UVScale = UVScale;
@@ -122,4 +103,25 @@ void UBillBoardComp::SetTexture(
 
   materialinstance->SetTexture(NewTex);
   SetMaterial(materialinstance);
+}
+
+FMatrix UBillBoardComp::GetRenderMatrix(const FCamera& Camera) const
+{
+    FTransform Transform = GetGlobalTransform();
+
+    FMatrix CameraRotation = Camera.GetRotationMatrix();
+    FVector ViewForward = CameraRotation.TransformPointRow(FVector{ 1.0f, 0.0f, 0.0f }, 0.0f); // X+
+    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f); // Y+
+    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f); // Z+
+
+    FVector Up = ViewUp * Transform.Scale3D.Z;
+    FVector Right = ViewRight * Transform.Scale3D.Y;
+
+    return FMatrix
+    {
+        FVector4{ ViewForward, 0.0f },
+        FVector4{ Right, 0.0f },
+        FVector4{ Up, 0.0f },
+        FVector4{ Transform.Location, 1.0f },
+    };
 }

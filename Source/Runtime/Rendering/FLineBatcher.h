@@ -35,6 +35,15 @@ public:
 	void DrawBoxCenterExtent(const FVector& Center, const FVector& Extent, const FVector4& Color);
 	void DrawBoxMinMax(const FVector& Center, const FVector& Extent, const FVector4& Color);
 
+	// Quad 와이어프레임 추가
+	void DrawQuad(
+		const FVector& A,
+		const FVector& B,
+		const FVector& C,
+		const FVector& D,
+		const FVector4& Color
+	);
+
 	// 구체 와이어프레임 추가
 	void DrawSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments = 16);
 

@@ -8,9 +8,6 @@
 
 constexpr float Epsilon = 0.000001f;
 
-// TODO: DEBUG 테스트 변수 나중에 지울것
-int DEBUG_AABB_Count = 0;
-
 FRay FRayCastingManager::CreateRayFromScreenPosition(const FCamera& Camera, const FVector2& MousePosition, const FVector2& ViewportSize)
 {
 	float ViewportWidth = ViewportSize.X;
@@ -40,6 +37,7 @@ FRay FRayCastingManager::CreateRayFromScreenPosition(const FCamera& Camera, cons
 
 bool FRayCastingManager::RayIntersectsMeshes(
 	const FRay& Ray,
+	const FCamera& Camera,
 	const TArray<UPrimitiveComponent*>& Components,
 	UPrimitiveComponent*& HitComponent,
 	FVector& OutImpactPoint)
@@ -49,8 +47,6 @@ bool FRayCastingManager::RayIntersectsMeshes(
 	float ClosestHit = (std::numeric_limits<float>::max)();
 	UPrimitiveComponent* ClosestComponent = nullptr;
 	FVector ClosestImpactPoint;
-
-	DEBUG_AABB_Count = 0;
 
 	for (UPrimitiveComponent* Component : Components)
 	{
@@ -65,7 +61,7 @@ bool FRayCastingManager::RayIntersectsMeshes(
 			continue;
 		}
 
-		FMatrix World = Component->GetModelMatrix();
+		FMatrix World = Component->GetRenderMatrix(Camera);
 
 		float HitDistance;
 		FVector ImpactPoint;
@@ -77,8 +73,6 @@ bool FRayCastingManager::RayIntersectsMeshes(
 			ClosestImpactPoint = ImpactPoint;
 		}
 	}
-
-	UE_LOG("AABB 판별: %d개", DEBUG_AABB_Count)
 	
 	HitComponent = ClosestComponent;
 	OutImpactPoint = ClosestImpactPoint;
@@ -151,8 +145,6 @@ bool FRayCastingManager::RayIntersectsMesh(const FRay& Ray, const FMesh& Mesh, c
 	{
 		return false;
 	}
-
-	++DEBUG_AABB_Count;
 
 	const uint32 elementCount = Mesh.HasIndices()
 		? static_cast<uint32>(Indices.size())

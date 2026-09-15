@@ -90,6 +90,20 @@ void FLineBatcher::DrawBoxMinMax(const FVector& Min, const FVector& Max, const F
 	DrawLine(FVector{ Min.X, Max.Y, Min.Z }, FVector{ Min.X, Max.Y, Max.Z }, Color);
 }
 
+void FLineBatcher::DrawQuad(
+	const FVector& A,
+	const FVector& B,
+	const FVector& C,
+	const FVector& D,
+	const FVector4& Color
+)
+{
+	DrawLine(A, B, Color);
+	DrawLine(B, C, Color);
+	DrawLine(C, D, Color);
+	DrawLine(D, A, Color);
+}
+
 void FLineBatcher::DrawSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments) {
 	if (Segments < 4) Segments = 4;
 	const float Step = std::numbers::pi_v<float> * 2.0f / static_cast<float>(Segments);
