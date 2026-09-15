@@ -19,16 +19,15 @@ float4 MainPS(PS_INPUT Input) : SV_Target
     clip(Sampled.a - 0.1f);
     clip(max(Sampled.r, max(Sampled.g, Sampled.b)) - 0.05f);
     
-    // 색상 조정
-    float3 BaseColor = Sampled.rgb * ColorOverride * ColorOverrideAmount;
+    // 하이라이트 색상 보간
+    float3 BaseColor = lerp(Sampled.rgb, ColorOverride, ColorOverrideAmount);
     
-    // ==== Directional Light 계산 ====
+    // 조명 계산 및 양면 음영 보정
     float3 N = normalize(Input.Normal);
-    float NdotL = max(0.0f, dot(N, -normalize(LightDirection)));
+    float NdotL = saturate(abs(dot(N, -normalize(LightDirection))));
     float3 Diffuse = LightColor * (Intensity * NdotL);
-    float3 Ambient = LightColor * AmbientIntensity;
-    float3 DirectionalLight = Ambient + Diffuse;
-    // ================================
+    float3 Ambient = LightColor * max(AmbientIntensity, 0.4f);
+    float3 DirectionalLight = max(Ambient + Diffuse, 0.5f);
 
     float3 FinalColor = BaseColor * DirectionalLight;
     return float4(FinalColor, Sampled.a);

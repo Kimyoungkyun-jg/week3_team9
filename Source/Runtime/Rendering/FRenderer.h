@@ -3,21 +3,23 @@
 #include "FMaterial.h"
 #include "FMesh.h"
 #include "FRenderPipeline.h"
+#include "FRenderResourceLibrary.h"
 #include "Runtime/Core/IntTypes.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Core/TMap.h"
 #include "Runtime/Math/FVector2.h"
-#include "ShaderConstants.h"
 #include "Runtime/Rendering/FLineBatcher.h"
+#include "ShaderConstants.h"
+#include "Vertices.h"
 
 #include <Windows.h>
 #include <d3d11.h>
 #include <filesystem>
 #include <wrl/client.h>
 
-
 class FTexture;
 struct FTextureDesc;
+struct FCamera;
 
 inline FWString GetExecutableDirectory() {
   wchar_t Buffer[256];
@@ -26,6 +28,7 @@ inline FWString GetExecutableDirectory() {
 }
 
 #include "Runtime/Engine/ShowFlags.h"
+
 
 class FRenderer final {
 public:
@@ -37,7 +40,7 @@ public:
   void SwapBuffer();
   void OnWindowSize(UINT Width, UINT Height);
 
-  void FlushLineBatch(const FMatrix& ViewProjection);
+  void FlushLineBatch(const FMatrix &ViewProjection);
 
   EViewModeIndex GetRenderMode() const { return CurrentRenderMode; }
   void SetRenderMode(EViewModeIndex InMode) { CurrentRenderMode = InMode; }
@@ -45,26 +48,35 @@ public:
   [[nodiscard]]
   TSharedPtr<FMesh> CreateMesh(const FMeshDesc &Desc);
   [[nodiscard]]
-  TSharedPtr<FMesh> CreateDynamicMesh(const FMeshDesc& Desc);   // 텍스트 렌더링용
+  TSharedPtr<FMesh> CreateDynamicMesh(const FMeshDesc &Desc); // 텍스트 렌더링용
   [[nodiscard]]
   TSharedPtr<FMaterial> CreateMaterial(const FMaterialDesc &Desc);
-  
-  void GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,ID3D11DeviceContext *&ContextOut);
-  [[nodiscard]] ID3D11Device* GetDevice() const { return Device.Get(); }
-  [[nodiscard]] ID3D11DeviceContext* GetContext() const { return Context.Get(); }
+
+  void GetDeviceAndContext_ImplDX11(ID3D11Device *&DeviceOut,
+                                    ID3D11DeviceContext *&ContextOut);
+  [[nodiscard]] ID3D11Device *GetDevice() const { return Device.Get(); }
+  [[nodiscard]] ID3D11DeviceContext *GetContext() const {
+    return Context.Get();
+  }
 
   [[nodiscard]]
-  TSharedPtr<FRenderPipeline> CreateRenderPipeline(const FRenderPipelineDesc &Desc,EViewModeIndex RenderMode = EViewModeIndex::VMI_Lit);
+  TSharedPtr<FRenderPipeline>
+  CreateRenderPipeline(const FRenderPipelineDesc &Desc,
+                       EViewModeIndex RenderMode = EViewModeIndex::VMI_Lit);
   [[nodiscard]]
-  TSharedPtr<FTexture> CreateTexture(FTextureDesc& desc);
+  TSharedPtr<FTexture> CreateTexture(FTextureDesc &desc);
   // 파이프라인 조회
   [[nodiscard]]
-  TSharedPtr<FRenderPipeline> GetPipeline(EBuiltinPipeline Id) const;
+  TSharedPtr<FRenderPipeline> GetPipeline(EPipelineID Id) const;
 
-  FLineBatcher& GetLineBatcher() { return LineBatcher; }
+  FLineBatcher &GetLineBatcher() { return LineBatcher; }
 
+  void UpdateLightConstants(FLightConstants &Constants, const EViewModeIndex InMode);
 
-  void UpdateLightConstants(const FLightConstants& Constants);
+  // 텍스트 인스턴싱
+  void AddTextInstanceArray(const TArray<FInstanceData>& Instances);
+  void DrawTextInstances(const FCamera& Camera);
+  void ClearTextInstances();
 
 private:
   bool InitializeDeviceAndSwapChain(HWND Window);
@@ -72,7 +84,7 @@ private:
   bool InitializeConstantBuffers();
 
 private:
-    FLineBatcher LineBatcher;
+  FLineBatcher LineBatcher;
   Microsoft::WRL::ComPtr<ID3D11Device> Device;
   Microsoft::WRL::ComPtr<ID3D11DeviceContext> Context;
   Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain;
@@ -93,68 +105,72 @@ private:
   Microsoft::WRL::ComPtr<ID3D11Buffer> LightConstantBuffer;
 
 
+
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> EditorViewPortRTV;
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> EditorViewPortSRV;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
 
-  EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
-public:
+  // 텍스트 인스턴싱 버퍼
+  TArray<FInstanceData> TextInstanceData;
+  Microsoft::WRL::ComPtr<ID3D11Buffer> TextInstanceBuffer;
+  UINT TextInstanceBufferSize = 0;
 
+  EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
+
+
+
+public:
   // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
   template <typename TConstants>
-  void Draw(const FMesh& Mesh, const FMaterial& Material,
-      const TConstants& Constants, bool bApplyViewMode = true)
-  {
-      UpdateBuffer(Constants);
+  void Draw(const FMesh &Mesh, const FMaterial &Material,
+            const TConstants &Constants, bool bApplyViewMode = true) {
+    UpdateBuffer(Constants);
 
+    TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
+    if (bApplyViewMode && CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
+      Pipeline = GetPipeline(EPipelineID::Simple_Wireframe);
+    }
+    if (Pipeline) {
+      Pipeline->Bind(*Context.Get());
+    }
 
+    Material.BindResources(*Context.Get());
+    Mesh.BindResources(*Context.Get());
 
-      TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
-      if (bApplyViewMode && CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
-          Pipeline = GetPipeline(EBuiltinPipeline::Simple_Wireframe);
-      }
-      if (Pipeline) {
-          Pipeline->Bind(*Context.Get());
-      }
-
-      Material.BindResources(*Context.Get());
-      Mesh.BindResources(*Context.Get());
-
-      if (Mesh.HasIndices()) {
-          Context->DrawIndexed(Mesh.IndexCount, 0, 0);
-      }
-      else {
-          Context->Draw(Mesh.VertexCount, 0);
-      }
+    if (Mesh.HasIndices()) {
+      Context->DrawIndexed(Mesh.IndexCount, 0, 0);
+    } else {
+      Context->Draw(Mesh.VertexCount, 0);
+    }
   }
+
 private:
   // 어느 상수 타입이든 b0 버퍼 하나에 써 넣는다.
   // 크기가 맞는지는 컴파일 타임에 검사한다.
   template <typename TConstants>
-  void UpdateBuffer(const TConstants& Constants)
-  {
-      static_assert(sizeof(TConstants) <= ConstantBufferSize);
-      static_assert(sizeof(TConstants) % 16 == 0);
+  void UpdateBuffer(const TConstants &Constants) {
+    static_assert(sizeof(TConstants) <= ConstantBufferSize);
+    static_assert(sizeof(TConstants) % 16 == 0);
 
-      // 언리얼 Clip -> D3D Clip 좌표 변환.
-      // MVP를 가진 상수 타입에만 적용한다(없는 타입은 그대로 통과).
-      TConstants ShaderConstants = Constants;
-      if constexpr (requires { ShaderConstants.MVP; }) {
-          static const FMatrix UnrealClipToD3DClip{
-              FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-              FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-          ShaderConstants.MVP *= UnrealClipToD3DClip;
-      }
+    // 언리얼 Clip -> D3D Clip 좌표 변환.
+    // MVP를 가진 상수 타입에만 적용한다(없는 타입은 그대로 통과).
+    TConstants ShaderConstants = Constants;
+    if constexpr (requires { ShaderConstants.MVP; }) {
+      static const FMatrix UnrealClipToD3DClip{
+          FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
+          FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
+      ShaderConstants.MVP *= UnrealClipToD3DClip;
+    }
 
-      D3D11_MAPPED_SUBRESOURCE Mapped{};
-      if (FAILED(Context->Map(b0ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Mapped))) {
-          return;
-      }
-      std::memcpy(Mapped.pData, &ShaderConstants, sizeof(TConstants));
-      Context->Unmap(b0ConstantBuffer.Get(), 0);
+    D3D11_MAPPED_SUBRESOURCE Mapped{};
+    if (FAILED(Context->Map(b0ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD,
+                            0, &Mapped))) {
+      return;
+    }
+    std::memcpy(Mapped.pData, &ShaderConstants, sizeof(TConstants));
+    Context->Unmap(b0ConstantBuffer.Get(), 0);
 
-      Context->VSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
-      Context->PSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
+    Context->VSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
+    Context->PSSetConstantBuffers(0u, 1u, b0ConstantBuffer.GetAddressOf());
   }
 };
-

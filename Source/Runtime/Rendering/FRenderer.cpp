@@ -6,6 +6,7 @@
 #include "FRenderPipeline.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Rendering/FTexture.h"
+#include "Runtime/Engine/FCamera.h"
 #include "ShaderConstants.h"
 #include "Vertices.h"
 #include <Windows.h>
@@ -308,11 +309,20 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  Result = Device->CreateInputLayout(
-      FVertexLayouts::Layout, FVertexLayouts::NumElements,
-      Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  if (Desc.bIsInstancing)
+  {
+      Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+  else
+  {
+      Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+
+
   if (FAILED(Result)) {
-    return nullptr;
+      return nullptr;
   }
 
   Result = D3DReadFileToBlob(Desc.PixelShaderFileName.c_str(), &Blob);
@@ -433,7 +443,7 @@ TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
   return Texture;
 }
 
-TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
+TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EPipelineID Id) const {
   return FRenderResourceLibrary::Get().GetPipeline(Id);
 }
 
@@ -579,8 +589,83 @@ bool FRenderer::InitializeConstantBuffers()
   return true;
 }
 
-void FRenderer::UpdateLightConstants(const FLightConstants& Constants)
+void FRenderer::UpdateLightConstants(FLightConstants& Constants, const EViewModeIndex InMode)
 {
+    if (InMode == EViewModeIndex::VMI_Unlit)
+    {
+        Constants.Intensity = 0;
+    }
+    else
+    {
+        Constants.Intensity = 1.0f;
+    }
+
     Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
     Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
+}
+
+void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances)
+{
+    TextInstanceData.insert(TextInstanceData.end(), Instances.begin(), Instances.end());
+}
+
+void FRenderer::DrawTextInstances(const FCamera& Camera)
+{
+    if (TextInstanceData.empty()) return;
+
+    const UINT InstanceCount = static_cast<UINT>(TextInstanceData.size());
+    const UINT RequiredSize = InstanceCount * sizeof(FInstanceData);
+
+    // 버퍼 크기가 부족하면 재생성
+    if (RequiredSize > TextInstanceBufferSize)
+    {
+        TextInstanceBuffer.Reset();
+
+        D3D11_BUFFER_DESC Desc{};
+        Desc.ByteWidth = RequiredSize;
+        Desc.Usage = D3D11_USAGE_DYNAMIC;
+        Desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+        if (FAILED(Device->CreateBuffer(&Desc, nullptr, &TextInstanceBuffer))) return;
+        TextInstanceBufferSize = RequiredSize;
+    }
+
+    // 인스턴스 데이터 업로드
+    D3D11_MAPPED_SUBRESOURCE MappedResource{};
+    if (FAILED(Context->Map(TextInstanceBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource))) return;
+    std::memcpy(MappedResource.pData, TextInstanceData.data(), RequiredSize);
+    Context->Unmap(TextInstanceBuffer.Get(), 0);
+
+    // 상수 버퍼 업데이트
+    FObjectConstants SC;
+    SC.MVP = Camera.CreateViewProjectionMatrix();
+    UpdateBuffer(SC);
+
+    TSharedPtr<FMaterial> DefaultMat = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Text);
+
+    // 파이프라인 바인딩
+    TSharedPtr<FRenderPipeline> Pipeline = DefaultMat->GetPipeline();
+    if (Pipeline)
+    {
+        Pipeline->Bind(*Context.Get());
+    }
+
+    // 메쉬 및 머티리얼 바인딩
+    DefaultMat->BindResources(*Context.Get());
+    auto RectMesh = FRenderResourceLibrary::Get().GetRectMesh();
+    if (!RectMesh) return;
+    RectMesh->BindResources(*Context.Get());
+
+    // 슬롯1에 인스턴스 버퍼 바인딩
+    UINT Stride = sizeof(FInstanceData);
+    UINT Offset = 0;
+    Context->IASetVertexBuffers(1, 1, TextInstanceBuffer.GetAddressOf(), &Stride, &Offset);
+
+    Context->DrawIndexedInstanced(RectMesh->GetIndexCount(), InstanceCount, 0, 0, 0);
+}
+
+void FRenderer::ClearTextInstances()
+{
+    TextInstanceData.clear();
 }

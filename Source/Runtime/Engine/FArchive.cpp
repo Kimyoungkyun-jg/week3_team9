@@ -75,6 +75,17 @@ void FArchive::SetString(const FString& Key, const FString& Value)
 	Object[Key] = Value;
 }
 
+
+FWString FArchive::GetWString(const FString& Key) const
+{
+	return Object.at(Key).get<FWString>();
+}
+
+void FArchive::SetWString(const FString& Key, const FWString& Value)
+{
+	Object[Key] = Value;
+}
+
 bool FArchive::IsNull(const FString& Key) const
 {
 	// 주어진 키 자체가 존재하지 않음

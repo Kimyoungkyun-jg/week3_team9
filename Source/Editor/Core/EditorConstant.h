@@ -7,7 +7,9 @@
 #include "Runtime/Actors/ASphereActor.h"
 #include "Runtime/Actors/ACylinderActor.h"
 #include "Runtime/Actors/ABillboardActor.h"
+#include "Runtime/Actors/AAnimatedBillboardActor.h"
 #include "Runtime/Actors/ASpotlightActor.h"
+#include "Runtime/Actors/ATextRenderActor.h"
 
 namespace EditorConstant
 {
@@ -21,7 +23,9 @@ namespace EditorConstant
 	   ASphereActor::StaticClass(),
 	   ACylinderActor::StaticClass(),
 	   ABillboardActor::StaticClass(),
+	   AAnimatedBillboardActor::StaticClass(),
 	   ASpotlightActor::StaticClass(),
+	   ATextRenderActor::StaticClass(),
 	};
 
 }

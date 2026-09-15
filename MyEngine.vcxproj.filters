@@ -41,6 +41,9 @@
     <Filter Include="Source\ThirdParty">
       <UniqueIdentifier>{54d071d0-8efc-4fbc-b99e-4cf7ba4e7c0a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Editor\Application">
+      <UniqueIdentifier>{c710c096-8a44-4f0b-aa47-59238fdea084}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Editor\Core">
       <UniqueIdentifier>{27ad0d68-7275-4759-bd9a-0b7ac1ec0f3e}</UniqueIdentifier>
     </Filter>
@@ -67,9 +70,6 @@
     </Filter>
     <Filter Include="Source\Editor\Grid">
       <UniqueIdentifier>{8b3d1db5-440e-4645-adba-5c30f97feec1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Application">
-      <UniqueIdentifier>{c710c096-8a44-4f0b-aa47-59238fdea084}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -161,7 +161,7 @@
       <Filter>Source\Runtime\Engine</Filter>
     </ClCompile>
     <ClCompile Include="Source\Editor\Application\FEditorApplication.cpp">
-      <Filter>Source\Application</Filter>
+      <Filter>Source\Editor\Application</Filter>
     </ClCompile>
     <ClCompile Include="Source\Editor\EditorViewport\FEditorViewport.cpp">
       <Filter>Source\Editor\EditorViewport</Filter>
@@ -232,14 +232,23 @@
     <ClCompile Include="Source\Runtime\Core\FName.cpp">
       <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ABillboardActor.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Engine\FArchive.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Actors\ASpotlightActor.cpp">
       <Filter>Source\Runtime\Actors</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Actors\ABillboardActor.cpp">
+    <ClCompile Include="Source\Runtime\Actors\TestTextActor.cpp">
       <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp">
+      <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -346,7 +355,7 @@
       <Filter>Source\Runtime\Engine</Filter>
     </ClInclude>
     <ClInclude Include="Source\Editor\Application\FEditorApplication.h">
-      <Filter>Source\Application</Filter>
+      <Filter>Source\Editor\Application</Filter>
     </ClInclude>
     <ClInclude Include="Source\Editor\Core\FEditor.h">
       <Filter>Source\Editor\Core</Filter>
@@ -450,6 +459,12 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h">
+      <Filter>Source\Runtime\CoreUObject</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\FGarbageCollector.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\FReferenceCollector.h" />
     <ClInclude Include="Source\Runtime\Geometry\FAxisAlignedBoundingBox.h">
@@ -462,15 +477,13 @@
     <ClInclude Include="Source\Runtime\Core\FName.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\ABillboardActor.h" />
     <ClInclude Include="Source\Runtime\Engine\FArchive.h" />
     <ClInclude Include="Source\Runtime\Actors\ASpotlightActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Actors\ABillboardActor.h">
+    <ClInclude Include="Source\Runtime\Actors\TestTextActor.h">
       <Filter>Source\Runtime\Actors</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Editor\Core\EditorConstant.h">
-      <Filter>Source\Editor\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -478,6 +491,9 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\ExampleVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\InstanceVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\GridPS.hlsl">

@@ -97,6 +97,7 @@ void UAnimatedBillboardComp::Update(float DeltaTime) {
   RefreshUV();
 }
 
+
 void UAnimatedBillboardComp::RefreshUV() {
   if (GridX <= 0 || GridY <= 0) {
     UVScale = FVector2{1.0f, 1.0f};

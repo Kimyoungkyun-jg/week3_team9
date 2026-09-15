@@ -6,11 +6,9 @@ IMPLEMENT_UCLASS(USphereComp, UPrimitiveComponent)
 UCLASS_META(USphereComp, DisplayName, "Sphere")
 UCLASS_META(USphereComp, MeshName, "Sphere")
 
-
-void USphereComp::Register(UScene& InScene)
-{
-	FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
-	SetMesh(Resources ? Resources->GetMesh("Sphere") : nullptr);
-	SetMaterial(Resources ? Resources->GetMaterial("Simple") : nullptr);
-	Super::Register(InScene);
+void USphereComp::Register(UScene &InScene) {
+  FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
+  SetMesh(Resources ? Resources->GetMesh("Sphere") : nullptr);
+  SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Simple) : nullptr);
+  Super::Register(InScene);
 }

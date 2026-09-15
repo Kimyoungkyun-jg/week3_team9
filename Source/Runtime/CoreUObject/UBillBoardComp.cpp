@@ -19,7 +19,7 @@ void UBillBoardComp::Register(UScene& InScene) {
     SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
   }
   if (!GetMaterial()) {
-    SetMaterial(Resources ? Resources->GetMaterial("Textured") : nullptr);
+    SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Textured) : nullptr);
   }
   Super::Register(InScene);
 }
@@ -159,7 +159,7 @@ void UBillBoardComp::SetTexture(
   if (GetMaterial()) {
     materialinstance->SetPipeLine(GetMaterial()->GetPipeline());
   } else {
-    materialinstance->SetPipeLine(lib.GetPipeline(EBuiltinPipeline::Textured));
+    materialinstance->SetPipeLine(lib.GetPipeline(EPipelineID::Textured));
   }
 
   materialinstance->SetTexture(NewTex);

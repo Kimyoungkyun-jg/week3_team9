@@ -23,35 +23,20 @@ public:
   void SetSpriteSheet(int InGridX, int InGridY, float InFrameRate = 10.0f,
                       int InTotalFrames = -1);
 
-  // 재생 시작
   void Play() { bPlaying = true; }
-
-  // 일시 정지
   void Pause() { bPlaying = false; }
-
-  // 재생 정지
   void Stop();
 
-  // 프레임 지정
   void SetCurrentFrame(int InFrame);
-
-  // 현재 프레임 반환
   int GetCurrentFrame() const { return CurrentFrame; }
-
-  // 재생 속도 설정
   void SetFrameRate(float InRate) { FrameRate = InRate; }
-
-  // 재생 속도 반환
   float GetFrameRate() const { return FrameRate; }
 
-  // 반복 재생 설정
+
   void SetLooping(bool bInLoop) { bLoop = bInLoop; }
-
-  // 반복 여부 확인
   bool IsLooping() const { return bLoop; }
-
-  // 재생 여부 확인
   bool IsPlaying() const { return bPlaying; }
+
 
 private:
   // 좌표 계산
