@@ -39,11 +39,11 @@ PS_INPUT MainVS(VS_INPUT Input)
 {
     PS_INPUT Output;
     
-    float3 GlyphLocalPosition = mul(float4(Input.Position, 1.0f), Input.InstanceWorld).xyz;
+    float3 WorldPosition = mul(float4(Input.Position, 1.0f), Input.InstanceWorld).xyz;
     
     float3 VertexPosition = Input.InstanceCenter
-    + ViewRight * GlyphLocalPosition.y * Input.BillboardSize.x
-    + ViewUp * GlyphLocalPosition.z * Input.BillboardSize.y;
+    + ViewRight * WorldPosition.y * Input.BillboardSize.x
+    + ViewUp * WorldPosition.z * Input.BillboardSize.y;
   
     Output.Position = mul(float4(VertexPosition, 1.0f), VP);
     Output.Color = Input.InstanceColor;
