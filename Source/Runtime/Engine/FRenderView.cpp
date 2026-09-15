@@ -10,20 +10,20 @@
 #include "Runtime/Rendering/ShaderConstants.h"
 #include <fstream>
 
-
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
-void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered,bool bHighlighted) {
+void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV,
+                         FVector2 LengthUV, UPrimitiveComponent *Rendered,
+                         bool bHighlighted) {
   if (!Rendered) {
     return;
   }
 
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   Rendered->Render(Renderer, Camera, bHighlighted);
-  
+
   Renderer.DrawInstances(Camera);
   Renderer.ClearTextInstances();
-
 }
 
 void FRenderView::RenderGizmo(const FTransform &Transform,
@@ -39,8 +39,6 @@ void FRenderView::RenderGrid(const FCamera &Camera, FVector2 TopLeftUV,
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   Grid.DrawLine(Renderer, Camera);
 }
-
-
 
 void FRenderView::RenderLine(const FVector &Start, const FVector &End,
                              const FVector4 &Color) {
@@ -67,12 +65,16 @@ void FRenderView::RenderSphere(const FVector &Center, float Radius,
   LineBatcher.DrawSphere(Center, Radius, Color, Segments);
 }
 
-void FRenderView::RenderUUIDText(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, UTextInstanceComponent* textcomp)
-{
-    Renderer.SetViewportUV(TopLeftUV, LengthUV);
-    Renderer.ClearDepth();
-    textcomp->Render(Renderer, Camera, false);
-    Renderer.DrawTextInstances(Camera, textcomp->GetMesh()->MeshId, textcomp->GetMaterial()->MaterialId);
-    Renderer.ClearTextInstances();
+void FRenderView::RenderUUIDText(const FCamera &Camera, FVector2 TopLeftUV,
+                                 FVector2 LengthUV,
+                                 UTextInstanceComponent *textcomp) {
+  if (!textcomp || !textcomp->GetMesh() || !textcomp->GetMaterial()) {
+    return;
+  }
+  Renderer.SetViewportUV(TopLeftUV, LengthUV);
+  Renderer.ClearDepth();
+  textcomp->Render(Renderer, Camera, false);
+  Renderer.DrawTextInstances(Camera, textcomp->GetMesh()->MeshId,
+                             textcomp->GetMaterial()->MaterialId);
+  Renderer.ClearTextInstances();
 }
-
