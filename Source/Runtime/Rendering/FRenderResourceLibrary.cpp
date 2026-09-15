@@ -43,7 +43,6 @@ constexpr FPipelineEntry pipelineTable[] = {
         .Id = EPipelineID::Textured,
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"TexturedPS.cso",
-        .bDepthWrite = false,
         .BlendMode = EBlendMode::Translucent,
     },
     {
