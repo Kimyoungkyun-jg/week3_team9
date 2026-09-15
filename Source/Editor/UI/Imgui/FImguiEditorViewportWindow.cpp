@@ -98,7 +98,8 @@ void FImguiEditorViewportWindow::Process(FEditor &Editor, float DeltaTime) {
       Gizmo.HoveredHandle = EGizmoHandle::None;
     }
 
-    CameraController.CameraRotateSpeed = Editor.GetCameraSensitivity();
+    CameraController.CameraRotateSpeed = Editor.State.GetCameraSensitivity();
+    CameraController.CameraMoveSpeed = Editor.State.GetCameraSpeed();
 
     if (bFocused) {
       FCamera &Camera = ActiveViewport->ViewportCamera;

@@ -26,6 +26,9 @@ public:
 	const FVector& GetLightColor() const { return LightColor; }
 	void SetLightColor(const FVector& InColor) { LightColor = InColor; }
 
+	void Serialize(FArchive& Archive) const override;
+	void Deserialize(const FArchive& Archive) override;
+
 private:
 	// 조명 기본 속성
 	float SpotAngle = 30.0f;

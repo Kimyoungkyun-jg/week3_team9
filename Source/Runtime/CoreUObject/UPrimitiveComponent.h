@@ -5,6 +5,7 @@
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 #include "Runtime/Rendering/FMaterial.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Engine/ShowFlags.h"
 #include "USceneComponent.h"
 
 
@@ -46,6 +47,8 @@ public:
   float GetColorAmount() const { return ColorAmount; }
   void SetColorAmount(float InAmount) { ColorAmount = InAmount; }
 
+
+  virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
 protected:
   UPrimitiveComponent() = default;
 

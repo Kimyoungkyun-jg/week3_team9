@@ -21,22 +21,44 @@ FRenderResourceLibrary &FRenderResourceLibrary::Get() {
 
 // 파이프라인 정보 엔트리
 struct FPipelineEntry {
-  EBuiltinPipeline Id;
+  EPipelineID Id;
   const wchar_t *VertexShader;
   const wchar_t *PixelShader;
   bool bDepthWrite = true;
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;
   bool bAdditiveBlend = false;
+  bool bIsInstancing = false;
 };
 
 // 기본 파이프라인 테이블
 constexpr FPipelineEntry pipelineTable[] = {
-    {EBuiltinPipeline::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
-    {EBuiltinPipeline::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
-    {EBuiltinPipeline::Grid, L"GridVS.cso", L"GridPS.cso"},
-    {EBuiltinPipeline::RotationGizmo, L"RotationGizmoVS.cso", L"RotationGizmoPS.cso"},
-    {EBuiltinPipeline::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
-    {EBuiltinPipeline::Text, L"ExampleVS.cso", L"TextPS.cso"},
+    {EPipelineID::Simple_Solid, L"ExampleVS.cso", L"ExamplePS.cso"},
+    {EPipelineID::Textured, L"ExampleVS.cso", L"TexturedPS.cso"},
+    {EPipelineID::Grid, L"GridVS.cso", L"GridPS.cso"},
+    {EPipelineID::RotationGizmo, L"RotationGizmoVS.cso",
+     L"RotationGizmoPS.cso"},
+    {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false,
+     D3D11_CULL_NONE, true},
+    {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
+    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, true},
+};
+
+// 머티리얼 정보 엔트리
+struct FMaterialEntry {
+  EMaterialID Id;
+  EPipelineID PipelineID;
+  const char *TextureName = nullptr;
+};
+
+// 기본 머티리얼 테이블
+constexpr FMaterialEntry materialTable[] = {
+    {EMaterialID::Simple, EPipelineID::Simple_Solid},
+    {EMaterialID::Grid,  EPipelineID::Grid},
+    {EMaterialID::RotGizmo,  EPipelineID::RotationGizmo},
+    {EMaterialID::Spotlight, EPipelineID::Spotlight},
+    {EMaterialID::Text,  EPipelineID::Text, "maplestorybold"},
+    {EMaterialID::Textured,  EPipelineID::Textured, "uv-test"},
+    {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "maplestorybold" },
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -58,14 +80,14 @@ bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
   TSharedPtr<FRenderPipeline> SolidPipeline =
       Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
   if (SolidPipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
+    AllPipelineMap[EPipelineID::Simple_Solid] = SolidPipeline;
   }
 
   // 와이어프레임 파이프라인 생성 및 등록
   TSharedPtr<FRenderPipeline> WireframePipeline =
       Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
   if (WireframePipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
+    AllPipelineMap[EPipelineID::Simple_Wireframe] = WireframePipeline;
   }
 
   return SolidPipeline != nullptr && WireframePipeline != nullptr;
@@ -96,6 +118,7 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
         .bEnableDepthWrite = Entry.bDepthWrite,
         .CullMode = Entry.CullMode,
         .bAdditiveBlend = Entry.bAdditiveBlend,
+        .bIsInstancing = Entry.bIsInstancing,
     };
 
     TSharedPtr<FRenderPipeline> Pipeline =
@@ -111,19 +134,15 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
 
 bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
   RendererRef = &Renderer;
-  if (!InitializePipelines(Renderer) || !CreateCubeMesh(Renderer) ||
+  if (!InitializePipelines(Renderer) //파이프라인을 먼저 생성해야 뒤에 material 할당가능
+      || !CreateCubeMesh(Renderer) ||
       !CreateCylinderMesh(Renderer, 1.0f, 24u, 1.0f, 1.0f) ||
       !CreateConeMesh(Renderer) || !CreateSpotlightConeMesh(Renderer) ||
       !CreateArrowMesh(Renderer) || !CreateCircleMesh(Renderer) ||
       !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
-      !CreateRectMesh(Renderer) || !CreateTextMesh(Renderer) ||
-      !CreateSimpleMaterial(Renderer) || !CreateGridMaterial(Renderer) ||
-      !CreateRotationGizmoMaterial(Renderer) || !CreateTextures(Renderer) ||
-      !CreateTexturedMaterial(Renderer) ||
-      !CreateTextMesh(Renderer) || !CreateTextMaterial(Renderer) ||
-      !CreateSpotlightMaterial(Renderer)) {
+      !CreateRectMesh(Renderer) ||!CreateTextures(Renderer) || !InitializeMaterials(Renderer)) {
     return false;
   }
 
@@ -141,8 +160,8 @@ bool FRenderResourceLibrary::CreateCubeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(std::size(CubeIndices)),
   };
 
-  CubeMesh = RegisterMesh("Cube", Renderer.CreateMesh(MeshDesc));
-  return CubeMesh != nullptr;
+  RegisterMesh("Cube", Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap["Cube"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
@@ -248,8 +267,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  CylinderMesh = RegisterMesh("Cylinder", Renderer.CreateMesh(MeshDesc));
-  return CylinderMesh != nullptr;
+  RegisterMesh("Cylinder", Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap["Cylinder"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
@@ -336,8 +355,8 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  ConeMesh = RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
-  return ConeMesh != nullptr;
+  RegisterMesh("Cone", Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap["Cone"] != nullptr;
 }
 
 // 스포트라이트 전용 열린 원뿔 메쉬 생성
@@ -404,9 +423,8 @@ bool FRenderResourceLibrary::CreateSpotlightConeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  SpotlightConeMesh =
-      RegisterMesh("SpotlightCone", Renderer.CreateMesh(MeshDesc));
-  return SpotlightConeMesh != nullptr;
+  RegisterMesh("SpotlightCone", Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap["SpotlightCone"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
@@ -524,8 +542,8 @@ bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  ArrowMesh = RegisterMesh("Arrow", Renderer.CreateMesh(MeshDesc));
-  return ArrowMesh != nullptr;
+  RegisterMesh("Arrow", Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap["Arrow"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCircleMesh(FRenderer &Renderer) {
@@ -585,8 +603,8 @@ bool FRenderResourceLibrary::CreateCircleMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  CircleMesh = RegisterMesh("Circle", Renderer.CreateMesh(Desc));
-  return CircleMesh != nullptr;
+  RegisterMesh("Circle", Renderer.CreateMesh(Desc));
+  return AllMeshMap["Circle"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer &Renderer) {
@@ -655,8 +673,8 @@ bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RotationGizmoMesh = RegisterMesh("RotationGizmo", Renderer.CreateMesh(Desc));
-  return RotationGizmoMesh != nullptr;
+  RegisterMesh("RotationGizmo", Renderer.CreateMesh(Desc));
+  return AllMeshMap["RotationGizmo"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
@@ -707,8 +725,8 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  SquareArrowMesh = RegisterMesh("SquareArrow", Renderer.CreateMesh(Desc));
-  return SquareArrowMesh != nullptr;
+  RegisterMesh("SquareArrow", Renderer.CreateMesh(Desc));
+  return AllMeshMap["SquareArrow"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
@@ -738,8 +756,8 @@ bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  GridMesh = RegisterMesh("Grid", Renderer.CreateMesh(MeshDesc));
-  return GridMesh != nullptr;
+  RegisterMesh("Grid", Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap["Grid"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSphereMesh(FRenderer &Renderer) {
@@ -753,8 +771,8 @@ bool FRenderResourceLibrary::CreateSphereMesh(FRenderer &Renderer) {
       .VertexCount = static_cast<uint32>(Vertices.size()),
   };
 
-  SphereMesh = RegisterMesh("Sphere", Renderer.CreateMesh(MeshDesc));
-  return SphereMesh != nullptr;
+  RegisterMesh("Sphere", Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap["Sphere"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
@@ -764,8 +782,8 @@ bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
                  .VertexCount = static_cast<uint32>(std::size(LineVertices)),
                  .bIsLine = true};
 
-  LineMesh = RegisterMesh("Line", Renderer.CreateMesh(Desc));
-  return LineMesh != nullptr;
+  RegisterMesh("Line", Renderer.CreateMesh(Desc));
+  return AllMeshMap["Line"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
@@ -776,8 +794,8 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
       .VertexCount = static_cast<uint32>(std::size(PlaneVertices)),
   };
 
-  PlaneMesh = RegisterMesh("Plane", Renderer.CreateMesh(Desc));
-  return PlaneMesh != nullptr;
+  RegisterMesh("Plane", Renderer.CreateMesh(Desc));
+  return AllMeshMap["Plane"] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
@@ -804,122 +822,29 @@ bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  // 사각형 메쉬 생성 및 등록
-  RectMesh = RegisterMesh("Rect", Renderer.CreateMesh(MeshDesc));
-  if (RectMesh) {
-    AllMeshMap["Rectangle"] = RectMesh;
+  RegisterMesh("Rect", Renderer.CreateMesh(MeshDesc));
+  if (AllMeshMap["Rect"]) {
+    AllMeshMap["Rectangle"] = AllMeshMap["Rect"];
   }
-  return RectMesh != nullptr;
+  return AllMeshMap["Rect"] != nullptr;
 }
 
-bool FRenderResourceLibrary::CreateSimpleMaterial(FRenderer &Renderer) {
-  FWString Path = GetExecutableDirectory();
+bool FRenderResourceLibrary::InitializeMaterials(FRenderer &Renderer) {
+  for (const auto &Entry : materialTable) {
+    TSharedPtr<FMaterial> Material = std::make_shared<FMaterial>();
 
-  FMaterialDesc Desc = {
-      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-      .PixelShaderFileName = Path + L"/Shader/ExamplePS.cso",
-  };
+    TSharedPtr<FRenderPipeline> Pipeline = GetPipeline(Entry.PipelineID);
+    if (Pipeline) {
+      Material->SetPipeLine(Pipeline);
+    }
 
-  SimpleMaterial = RegisterMaterial("Simple", Renderer.CreateMaterial(Desc));
+    if (Entry.TextureName) {
+      Material->SetTexture(GetTexture(Entry.TextureName));
+    }
 
-  if (SimpleMaterial) {
-    SimpleMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Simple_Solid));
-    return true;
-  } else {
-    return false;
+    RegisterMaterial(Entry.Id, Material);
   }
-}
-
-bool FRenderResourceLibrary::CreateTexturedMaterial(FRenderer &Renderer) {
-  FWString Path = GetExecutableDirectory();
-
-  FMaterialDesc Desc = {
-      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-      .PixelShaderFileName = Path + L"/Shader/TexturedPS.cso",
-  };
-
-  TSharedPtr<FMaterial> Material =
-      RegisterMaterial("Textured", Renderer.CreateMaterial(Desc));
-  if (!Material) {
-    return false;
-  }
-
-  TSharedPtr<FRenderPipeline> Pipeline =
-      GetPipeline(EBuiltinPipeline::Textured);
-  if (!Pipeline) {
-    // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
-    return false;
-  }
-  Material->SetPipeLine(Pipeline);
-
-  // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-  Material->SetTexture(GetTexture("uv-test"));
-
   return true;
-}
-
-// 스포트라이트 머티리얼 초기화
-bool FRenderResourceLibrary::CreateSpotlightMaterial(FRenderer &Renderer) {
-  FWString Path = GetExecutableDirectory();
-
-  FMaterialDesc Desc = {
-      .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-      .PixelShaderFileName = Path + L"/Shader/SpotlightPS.cso",
-  };
-
-  SpotlightMaterial =
-      RegisterMaterial("Spotlight", Renderer.CreateMaterial(Desc));
-  if (!SpotlightMaterial) {
-    return false;
-  }
-
-  TSharedPtr<FRenderPipeline> Pipeline =
-      GetPipeline(EBuiltinPipeline::Spotlight);
-  if (!Pipeline) {
-    return false;
-  }
-  // 파이프라인 지정
-  SpotlightMaterial->SetPipeLine(Pipeline);
-
-  return true;
-}
-
-bool FRenderResourceLibrary::CreateGridMaterial(FRenderer &Renderer) {
-  FWString Path = GetExecutableDirectory();
-
-  FMaterialDesc Desc = {
-      .VertexShaderFileName = Path + L"/Shader/GridVS.cso",
-      .PixelShaderFileName = Path + L"/Shader/GridPS.cso",
-  };
-
-  GridMaterial = RegisterMaterial("Grid", Renderer.CreateMaterial(Desc));
-
-  if (GridMaterial) {
-    GridMaterial->SetPipeLine(GetPipeline(EBuiltinPipeline::Grid));
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool FRenderResourceLibrary::CreateRotationGizmoMaterial(FRenderer &Renderer) {
-  FWString Path = GetExecutableDirectory();
-
-  FMaterialDesc Desc = {
-      .VertexShaderFileName = Path + L"/Shader/RotationGizmoVS.cso",
-      .PixelShaderFileName = Path + L"/Shader/RotationGizmoPS.cso",
-  };
-
-  RotationGizmoMaterial =
-      RegisterMaterial("RotationGizmo", Renderer.CreateMaterial(Desc));
-
-  if (RotationGizmoMaterial) {
-    RotationGizmoMaterial->SetPipeLine(
-        GetPipeline(EBuiltinPipeline::RotationGizmo));
-    return true;
-  } else {
-    return false;
-  }
 }
 
 bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
@@ -985,95 +910,23 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
   return true;
 }
 
-bool FRenderResourceLibrary::CreateCommonMaterial(FRenderer &Renderer,
-                                                  FString &textureName) {
 
-  return false;
-}
+TSharedPtr<FMesh>
+FRenderResourceLibrary::GetOrCreateMesh(const FString &name,
+                                        const TArray<FVertexData> &vertices) {
+  auto it = AllMeshMap.find(name);
+  if (it != AllMeshMap.end())
+    return it->second;
 
-bool FRenderResourceLibrary::CreateTextMesh(FRenderer &Renderer) {
-  TArray<FVertexData> Vertices;
-  TArray<uint32> Indices;
-  FFont Font;
-  Font.Initialize(16);
-  FString Text{"Welcome To Jungle"}; // 메시 임의 초기값
-
-  // TODO: PlaneGenerator 만들어야 함.
-  FTextVertex plane[4] = {{{0.0f, -0.5f, 0.5f}, 0.0f, 0.0f},
-                          {{0.0f, 0.5f, 0.5f}, 0.0f, 0.0f},
-                          {{0.0f, -0.5f, -0.5f}, 0.0f, 0.0f},
-                          {{0.0f, 0.5f, -0.5f}, 0.0f, 0.0f}};
-  TArray<uint32> IndexSet = {0, 1, 2, 1, 3, 2, 0, 2, 1, 1, 2, 3};
-
-  // 텍스트 가운데 정렬
-  const float size = 0.55f;
-  const float totalWidth =
-      (Text.length() > 0) ? (Text.length() - 1) * size : 0.0f;
-  const float startOffset = -totalWidth * 0.5f;
-
-  for (uint16 i = 0; i < Text.length(); ++i) {
-    const FCharacterInfo &CharInfo = Font.GetEngCharInfo(Text.at(i));
-    for (uint16 j = 0; j < 4; ++j) {
-      FVertexData tv;
-      float sizeAmount = startOffset + size * i;
-      tv.x = plane[j].Pos.X;
-      tv.y = plane[j].Pos.Y + sizeAmount;
-      tv.z = plane[j].Pos.Z;
-
-      bool bIsRight = (j == 1) || (j == 3);
-      bool bIsBottom = (j == 2) || (j == 3);
-
-      float width = (bIsRight) ? CharInfo.width : 0.0f;
-      float height = (bIsBottom) ? CharInfo.height : 0.0f;
-      tv.u = CharInfo.u + width;
-      tv.v = CharInfo.v + height;
-      Vertices.push_back(tv);
-    }
-
-    uint32 VertexOffset = i * 4;
-    for (uint32 index : IndexSet) {
-      Indices.push_back(index + VertexOffset);
-    }
+  FMeshDesc Desc{.VertexData = vertices.data(),
+                 .VertexDataSize =
+                     static_cast<uint32>(sizeof(FVertexData) * vertices.size()),
+                 .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+                 .VertexCount = static_cast<uint32>(vertices.size())};
+  TSharedPtr<FMesh> newMesh =
+      RendererRef ? RendererRef->CreateMesh(Desc) : nullptr;
+  if (newMesh) {
+    AllMeshMap[name] = newMesh;
   }
-
-  // 메시 빌드 추가하기
-  FMeshDesc MeshData{
-      .VertexData = Vertices.data(),
-      .VertexDataSize =
-          static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
-      .VertexStride = sizeof(FVertexData),
-      .VertexCount = static_cast<uint32>(Vertices.size()),
-      .IndexData = Indices.data(),
-      .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-      .IndexCount = static_cast<uint32>(Indices.size())};
-
-  TextMesh = RegisterMesh("Text", Renderer.CreateDynamicMesh(MeshData));
-  return TextMesh != nullptr;
-}
-
-bool FRenderResourceLibrary::CreateTextMaterial(FRenderer &Renderer) {
-  FWString Path = GetExecutableDirectory();
-
-    FMaterialDesc Desc = {
-        .VertexShaderFileName = Path + L"/Shader/ExampleVS.cso",
-        .PixelShaderFileName = Path + L"/Shader/TextPS.cso",
-    };
-
-  TextMaterial = RegisterMaterial("Text", Renderer.CreateMaterial(Desc));
-  if (!TextMaterial) {
-    return false;
-  }
-
-    TSharedPtr<FRenderPipeline> Pipeline =
-        GetPipeline(EBuiltinPipeline::Text);
-    if (!Pipeline) {
-        // TexturedPS.cso가 없거나 파이프라인 생성이 실패한 경우
-        return false;
-    }
-    TextMaterial->SetPipeLine(Pipeline);
-
-  // CreateTextures가 먼저 돌아야 여기서 찾을 수 있다
-  TextMaterial->SetTexture(GetTexture("koreanatlas"));
-
-  return true;
+  return newMesh;
 }

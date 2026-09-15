@@ -15,6 +15,7 @@
 
 
 void FEditor::Initialize(USceneManager *SceneManager) {
+    State.ReadFromFile();
   Gizmo.Initialize();
   Grid.Initialize();
   this->SceneManager = SceneManager;
@@ -105,11 +106,6 @@ void FEditor::ClearSelectionForGC() {
   Gizmo.HoveredHandle = EGizmoHandle::None;
 }
 
-void FEditor::SetCameraSensitivity(float Value)
-{
-    CameraSensitivity = Value;
-}
-
 void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
     if (!SceneManager || !SceneManager->CurrentScene) {
         return;
@@ -132,7 +128,7 @@ void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
 
         USceneComponent* RootComponent = NewActor->GetRootComponent();
         RootComponent->SetRelativeTransform(Transform);
-
+        NewActor->BeginPlay();
         SelectActor(NewActor);
     }
 }

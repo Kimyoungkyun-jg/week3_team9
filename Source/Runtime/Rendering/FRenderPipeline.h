@@ -7,17 +7,8 @@
 
 #include "Runtime/Core/IntTypes.h"
 
-// 내장 파이프라인 종류
-enum class EBuiltinPipeline : uint8 {
-  Simple_Solid,
-  Simple_Wireframe,
-  Textured,
-  Grid,
-  RotationGizmo,
-  Count,
-  Spotlight,
-  Text
-};
+// 내장 파이프라인 식별자 전방선언
+enum class EPipelineID : uint8;
 
 struct FRenderPipelineDesc {
   FWString VertexShaderFileName;
@@ -26,6 +17,7 @@ struct FRenderPipelineDesc {
   bool bEnableDepthWrite = true;               //기본 불투명
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;  //기본 뒷면 제거
   bool bAdditiveBlend = false;                 //기본 불투명
+  bool bIsInstancing = false;
 
   bool operator==(const FRenderPipelineDesc &) const = default;
 };

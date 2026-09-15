@@ -3,6 +3,7 @@
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/CoreUObject/USpotLightComponent.h"
 #include "Runtime/CoreUObject/UTextComponent.h"
+#include "Runtime/CoreUObject/UTextInstanceComponent.h"
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/Actors/AActor.h"
 #include "ThirdParty/Imgui/imgui.h"
@@ -94,16 +95,22 @@ void FImguiPropertyWindow::Process(FEditor& Editor)
 				}
 
 				// 컴포넌트별 속성 편집
-				if (Comp->IsA<UTextComponent>())
+				if (Comp->IsA<UTextInstanceComponent>())
 				{
-					auto* TextComp = static_cast<UTextComponent*>(Comp);
+					auto* TextComp = static_cast<UTextInstanceComponent*>(Comp);
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Text Settings");
-
-					static char Buffer[128] = "Hello Jungle!";
-					if (ImGui::InputText("Text Content", Buffer, sizeof(Buffer), ImGuiInputTextFlags_EnterReturnsTrue))
+					
+					static char utfBuffer[512]{};
+					WideCharToMultiByte(CP_UTF8, 0, TextComp->GetText().c_str(), -1, &utfBuffer[0], sizeof(utfBuffer), NULL, NULL);
+					
+					if (ImGui::InputText("Text Content", &utfBuffer[0], sizeof(utfBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
 					{
-						TextComp->SetText(Buffer);
+						FString Buffer{ &utfBuffer[0]};
+						uint32 convertResult = MultiByteToWideChar(CP_UTF8, 0, Buffer.c_str(), Buffer.length(), NULL, 0);
+						FWString newText(convertResult, 0);
+						MultiByteToWideChar(CP_UTF8, 0, Buffer.c_str(), Buffer.length(), newText.data(), convertResult);
+						TextComp->SetText(newText);
 					}
 				}
 

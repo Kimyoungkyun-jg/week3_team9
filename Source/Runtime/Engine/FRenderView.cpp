@@ -13,15 +13,17 @@
 
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
-void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV,
-                         FVector2 LengthUV, UPrimitiveComponent *Rendered,
-                         bool bHighlighted) {
+void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered,bool bHighlighted) {
   if (!Rendered) {
     return;
   }
 
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   Rendered->Render(Renderer, Camera, bHighlighted);
+  
+  Renderer.DrawTextInstances(Camera);
+  Renderer.ClearTextInstances();
+
 }
 
 void FRenderView::RenderGizmo(const FTransform &Transform,

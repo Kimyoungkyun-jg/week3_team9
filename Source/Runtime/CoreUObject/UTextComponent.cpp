@@ -2,6 +2,7 @@
 #include "Runtime/Engine/UScene.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/FRenderer.h"
+#include "Runtime/Engine/FArchive.h"
 #include "UClass.h"
 
 IMPLEMENT_UCLASS(UTextComponent, UBillBoardComp)
@@ -16,11 +17,14 @@ void UTextComponent::Register(UScene& Scene)
 
 	if (!Font) {
 		Font = MakeShared<FFont>();
-		Font->Initialize(16);
+
+        FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
+        Font->Deserialize(Path);
 	}
 
-	if (Resources) {
-		SetMaterial(Resources->GetTextMaterial());
+	if (!GetMaterial())
+	{
+		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Text) : nullptr);
 	}
 	RebuildTextMesh();
 }
@@ -29,96 +33,73 @@ void UTextComponent::Register(UScene& Scene)
 
 void UTextComponent::RebuildTextMesh() {
     if (Text.empty()) return;
-    
-    //첫 글자가 128 이상이면 한글, 미만이면 영어
-    const bool bIsKorean = (static_cast<unsigned char>(Text[0]) >= 128);
-
-    if (bIsKorean) {
-        SetTexture("koreanatlas");
-    }
-    else {
-        SetTexture("englishatlas");
-    }
-
-    FWString WideText;
-    if (bIsKorean) {
-        FString CleanText = Text.c_str();
-        int len = MultiByteToWideChar(CP_UTF8, 0, CleanText.data(), static_cast<int>(CleanText.size()), nullptr, 0);
-        if (len > 0) {
-            WideText.resize(len);
-            MultiByteToWideChar(CP_UTF8, 0, CleanText.data(), static_cast<int>(CleanText.size()), &WideText[0], len);
-        }
-        while (!WideText.empty() && (WideText.back() == L'\0' || WideText.back() == L'\r' || WideText.back() == L'\n')) {
-            WideText.pop_back();
-        }
-    }
 
     TArray<FVertexData> Vertices;
     TArray<uint32> Indices;
 
-    FTextVertex plane[4] = { { { 0.0f, -0.5f, 0.5f }, 0.0f, 0.0f },
-                            { { 0.0f, 0.5f, 0.5f }, 0.0f, 0.0f },
-                            { { 0.0f, -0.5f, -0.5f }, 0.0f, 0.0f },
-                            { { 0.0f, 0.5f, -0.5f }, 0.0f, 0.0f } };
-    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2, 0, 2, 1, 1, 2, 3 };
+    //FWString Text{ L"안   녕~ 하(Ha) 세 요yoyo" };    // 메시 임의 초기값
+    TArray<uint32> IndexSet = { 0, 1, 2, 1, 3, 2 };
 
-    // 텍스트 가운데 정렬
-    const float size = bIsKorean ? 1.0f : 0.55f;
-    const uint32 CharCount = bIsKorean ? static_cast<uint32>(WideText.length()) : static_cast<uint32>(Text.length());
-    const float totalWidth = (CharCount > 0) ? (CharCount - 1) * size : 0.0f;
-    const float startOffset = -totalWidth * 0.5f;
-
-    for (uint32 i = 0; i < CharCount; ++i) {
-        if (bIsKorean && (WideText[i] == L' ' || WideText[i] == L'\t')) {
+    float prevAdvance = 0.0f;
+    UINT blankCnt = 0;
+    for (uint16 i = 0; i < Text.length(); ++i)
+    {
+        const FCharacterInfo& CharInfo = Font->GetCharInfo(Text.at(i));
+        if (Text.at(i) == L' ')
+        {   // 공백일 경우 메시를 생성하지 않고 생성할 위치만 반영하기
+            prevAdvance += CharInfo.advance;
+            ++blankCnt;
             continue;
         }
-        if (!bIsKorean && (Text[i] == ' ' || Text[i] == '\t')) {
-            continue;
-        }
+        FVertexData tv[4]{};
 
-        FCharacterInfo CharInfo;
-        if (bIsKorean) {
-            CharInfo = Font->GetKrCharInfo(WideText[i]);
-        }
-        else {
-            CharInfo = Font->GetEngCharInfo(Text[i]);
-        }
+        tv[0].x = 0.0f;
+        tv[0].y = CharInfo.planeLeft + prevAdvance;
+        tv[0].z = -CharInfo.planeTop;
+        tv[0].u = CharInfo.u;
+        tv[0].v = CharInfo.v;
+        Vertices.push_back(tv[0]);
 
-        uint32 VertexOffset = static_cast<uint32>(Vertices.size());
-        for (uint32 j = 0; j < 4; ++j) {
-            FVertexData tv;
-            float sizeAmount = startOffset + size * i;
-            tv.x = plane[j].Pos.X;
-            tv.y = plane[j].Pos.Y + sizeAmount;
-            tv.z = plane[j].Pos.Z;
+        tv[1].x = 0.0f;
+        tv[1].y = CharInfo.planeRight + prevAdvance;
+        tv[1].z = -CharInfo.planeTop;
+        tv[1].u = CharInfo.u + CharInfo.width;
+        tv[1].v = CharInfo.v;
+        Vertices.push_back(tv[1]);
 
-            bool bIsRight = (j == 1) || (j == 3);
-            bool bIsBottom = (j == 2) || (j == 3);
+        tv[2].x = 0.0f;
+        tv[2].y = CharInfo.planeLeft + prevAdvance;
+        tv[2].z = -CharInfo.planeBottom;
+        tv[2].u = CharInfo.u;
+        tv[2].v = CharInfo.v + CharInfo.height;
+        Vertices.push_back(tv[2]);
 
-            float width = (bIsRight) ? CharInfo.width : 0.0f;
-            float height = (bIsBottom) ? CharInfo.height : 0.0f;
-            tv.u = CharInfo.u + width;
-            tv.v = CharInfo.v + height;
-            Vertices.push_back(tv);
-        }
+        tv[3].x = 0.0f;
+        tv[3].y = CharInfo.planeRight + prevAdvance;
+        tv[3].z = -CharInfo.planeBottom;
+        tv[3].u = CharInfo.u + CharInfo.width;
+        tv[3].v = CharInfo.v + CharInfo.height;
+        Vertices.push_back(tv[3]);
 
-        for (uint32 index : IndexSet) {
+        prevAdvance += CharInfo.advance;
+        uint32 VertexOffset = (i - blankCnt) * 4;
+        for (uint32 index : IndexSet)
+        {
             Indices.push_back(index + VertexOffset);
         }
     }
 
-
-
+    // 메시 빌드 추가하기
     FMeshDesc MeshData{
         .VertexData = Vertices.data(),
-        .VertexDataSize =
-            static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
+        .VertexDataSize = static_cast<uint32>(sizeof(FVertexData) * Vertices.size()),
         .VertexStride = sizeof(FVertexData),
         .VertexCount = static_cast<uint32>(Vertices.size()),
         .IndexData = Indices.data(),
         .IndexDataSize = static_cast<uint32>(sizeof(uint32) * Indices.size()),
-        .IndexCount = static_cast<uint32>(Indices.size())};
-
+        .IndexCount = static_cast<uint32>(Indices.size())
+    };
+    
     FRenderer* Renderer = FRenderResourceLibrary::Get().GetRenderer();
     if (!Renderer) {
         return;
@@ -132,6 +113,34 @@ void UTextComponent::RebuildTextMesh() {
         // 신규 메쉬 생성
         SetMesh(Renderer->CreateDynamicMesh(MeshData));
     }
+}
+
+void UTextComponent::Serialize(FArchive& Archive) const
+{
+    Super::Serialize(Archive);
+
+    Archive.SetWString("Text", Text);
+}
+
+void UTextComponent::Deserialize(const FArchive& Archive)
+{
+    Super::Deserialize(Archive);
+
+    if (!Archive.IsNull("Text"))
+    {
+        Text = Archive.GetWString("Text");
+    }
+
+    // 폰트 유효성 확인
+    if (!Font)
+    {
+        Font = MakeShared<FFont>();
+        FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
+        Font->Deserialize(Path);
+    }
+
+    // 텍스트 메쉬 재생성
+    RebuildTextMesh();
 }
 
 

@@ -1,205 +1,218 @@
 #include "UScene.h"
 
-#include "Runtime/CoreUObject/USceneComponent.h"
-#include "Runtime/CoreUObject/UPrimitiveComponent.h"
-#include "Runtime/Core/TArray.h"
 #include "Runtime/Core/FString.h"
-#include "Runtime/CoreUObject/UClass.h"
+#include "Runtime/Core/TArray.h"
 #include "Runtime/CoreUObject/FReferenceCollector.h"
+#include "Runtime/CoreUObject/UClass.h"
+#include "Runtime/CoreUObject/UPrimitiveComponent.h"
+#include "Runtime/CoreUObject/USceneComponent.h"
 #include "Runtime/Engine/FArchive.h"
 #include <algorithm>
 
 IMPLEMENT_UCLASS(UScene, UObject)
 UCLASS_META(UScene, SerializeName, "Scene")
 
-TArray<UPrimitiveComponent*> UScene::GetRenderComponents() const
-{
-	return RenderComponents;
+TArray<UPrimitiveComponent *> UScene::GetRenderComponents() const {
+  return RenderComponents;
 }
 
-void UScene::Initialize()
-{
-	if (bInitialized) { return; }
-	Super::Initialize();
-	bInitialized = true;
+void UScene::Initialize() {
+  if (bInitialized) {
+    return;
+  }
+  Super::Initialize();
+  bInitialized = true;
 }
 
-void UScene::Release()
-{
-	if (bHasBegunPlay) { EndPlay(); }
-	if (bActive) { Deactivate(); }
+void UScene::Release() {
+  if (bHasBegunPlay) {
+    EndPlay();
+  }
+  if (bActive) {
+    Deactivate();
+  }
 
-	while (!Actors.empty())
-	{
-		AActor* Actor = Actors.back();
-		Actors.pop_back();
-		DestroyObject(Actor);
-	}
+  while (!Actors.empty()) {
+    AActor *Actor = Actors.back();
+    Actors.pop_back();
+    DestroyObject(Actor);
+  }
 
-	RenderComponents.clear();
-	RenderResourceLibrary = nullptr;
-	bInitialized = false;
+  RenderComponents.clear();
+  RenderResourceLibrary = nullptr;
+  bInitialized = false;
 
-	Super::Release();
+  Super::Release();
 }
 
-void UScene::Activate()
-{
-	if (bActive) { return; }
+void UScene::Activate() {
+  if (bActive) {
+    return;
+  }
 
-	for (AActor* Actor : Actors)
-	{
-		if (Actor) { Actor->Register(*this); }
-	}
-	bActive = true;
+  for (AActor *Actor : Actors) {
+    if (Actor) {
+      Actor->Register(*this);
+    }
+  }
+  bActive = true;
 }
 
-void UScene::Deactivate()
-{
-	if (!bActive) { return; }
-	if (bHasBegunPlay) { EndPlay(); }
+void UScene::Deactivate() {
+  if (!bActive) {
+    return;
+  }
+  if (bHasBegunPlay) {
+    EndPlay();
+  }
 
-	for (auto It = Actors.rbegin(); It != Actors.rend(); ++It)
-	{
-		if (*It) { (*It)->Unregister(); }
-	}
-	bActive = false;
+  for (auto It = Actors.rbegin(); It != Actors.rend(); ++It) {
+    if (*It) {
+      (*It)->Unregister();
+    }
+  }
+  bActive = false;
 }
 
-void UScene::BeginPlay()
-{
-	if (!bActive || bHasBegunPlay) { return; }
+void UScene::BeginPlay() {
+  if (!bActive || bHasBegunPlay) {
+    return;
+  }
 
-	bHasBegunPlay = true;
-	for (AActor* Actor : Actors)
-	{
-		if (Actor) { Actor->BeginPlay(); }
-	}
+  bHasBegunPlay = true;
+  for (AActor *Actor : Actors) {
+    if (Actor) {
+      Actor->BeginPlay();
+    }
+  }
 }
 
-void UScene::Update(float DeltaTime)
-{
-	if (!bHasBegunPlay) { return; }
+void UScene::Update(float DeltaTime) {
+  if (!bHasBegunPlay) {
+    return;
+  }
 
-	for (AActor* Actor : Actors)
-	{
-		if (Actor) { Actor->Update(DeltaTime); }
-	}
+  for (AActor *Actor : Actors) {
+    if (Actor) {
+      Actor->Update(DeltaTime);
+    }
+  }
 }
 
-void UScene::EndPlay()
-{
-	if (!bHasBegunPlay) { return; }
+void UScene::EndPlay() {
+  if (!bHasBegunPlay) {
+    return;
+  }
 
-	for (auto It = Actors.rbegin(); It != Actors.rend(); ++It)
-	{
-		if (*It) { (*It)->EndPlay(); }
-	}
-	bHasBegunPlay = false;
+  for (auto It = Actors.rbegin(); It != Actors.rend(); ++It) {
+    if (*It) {
+      (*It)->EndPlay();
+    }
+  }
+  bHasBegunPlay = false;
 }
 
-void UScene::SetRenderResourceLibrary(FRenderResourceLibrary* InRenderResourceLibrary)
-{
-	RenderResourceLibrary = InRenderResourceLibrary;
+void UScene::SetRenderResourceLibrary(
+    FRenderResourceLibrary *InRenderResourceLibrary) {
+  RenderResourceLibrary = InRenderResourceLibrary;
 }
 
-void UScene::Serialize(FArchive& Archive) const
-{
-	Super::Serialize(Archive);
+void UScene::Serialize(FArchive &Archive) const {
+  Super::Serialize(Archive);
 
-	TArray<FArchive> ActorArchives;
+  TArray<FArchive> ActorArchives;
 
-	for (const auto& Item : Actors)
-	{
-		if (!Item) { continue; }
+  for (const auto &Item : Actors) {
+    if (!Item) {
+      continue;
+    }
 
-		FArchive ItemArchive;
-		Item->Serialize(ItemArchive);
-		ActorArchives.push_back(ItemArchive);
-	}
+    FArchive ItemArchive;
+    Item->Serialize(ItemArchive);
+    ActorArchives.push_back(ItemArchive);
+  }
 
-	Archive.SetArchiveArray("Actors", ActorArchives);
+  Archive.SetArchiveArray("Actors", ActorArchives);
 }
 
-void UScene::Deserialize(const FArchive& Archive)
-{
-	Super::Deserialize(Archive);
+void UScene::Deserialize(const FArchive &Archive) {
+  Super::Deserialize(Archive);
 
-	if (Archive.IsNull("Actors"))
-	{
-		// Actor 목록이 비어있음
-		return;
-	}
+  if (Archive.IsNull("Actors")) {
+    // Actor 목록이 비어있음
+    return;
+  }
 
-	TArray<FArchive> ActorArchives = Archive.GetArchiveArray("Actors");
+  TArray<FArchive> ActorArchives = Archive.GetArchiveArray("Actors");
 
-	for (const auto& Item : ActorArchives)
-	{
-		UClass* ClassType = UClass::FindByName(Item.GetString("Type"));
-		if (ClassType == nullptr) { continue; }
+  for (const auto &Item : ActorArchives) {
+    UClass *ClassType = UClass::FindByName(Item.GetString("Type"));
+    if (ClassType == nullptr) {
+      continue;
+    }
 
-		AActor* Actor = SpawnActor(ClassType);
-		if (!Actor) { continue; }
-		Actor->Deserialize(Item);
+    AActor *Actor = SpawnActor(ClassType);
+    if (!Actor) {
+      continue;
+    }
+    Actor->Deserialize(Item);
 
-		if (bActive) { Actor->Register(*this); }
-		if (bHasBegunPlay) { Actor->BeginPlay(); }
-	}
+    if (bActive) {
+      Actor->Register(*this);
+    }
+    if (bHasBegunPlay) {
+      Actor->BeginPlay();
+    }
+  }
 }
 
-void UScene::AddReferencedObjects(FReferenceCollector& Collector)
-{
-	UObject::AddReferencedObjects(Collector);
+void UScene::AddReferencedObjects(FReferenceCollector &Collector) {
+  UObject::AddReferencedObjects(Collector);
 
-	// 액터 참조 수집
-	for (AActor* Actor : Actors)
-		Collector.AddReferencedObject(Actor);
+  // 액터 참조 수집
+  for (AActor *Actor : Actors)
+    Collector.AddReferencedObject(Actor);
 
-	for (USceneComponent* Component : RenderComponents)
-		Collector.AddReferencedObject(Component);
+  for (USceneComponent *Component : RenderComponents)
+    Collector.AddReferencedObject(Component);
 }
 
-void UScene::AddRenderComponent(UPrimitiveComponent* prim)
-{
-	if (prim == nullptr) return;
+void UScene::AddRenderComponent(UPrimitiveComponent *prim) {
+  if (prim == nullptr)
+    return;
 
-	if (std::find(RenderComponents.begin(), RenderComponents.end(), prim) == RenderComponents.end())
-	{
-		RenderComponents.push_back(prim);
-	}
+  if (std::find(RenderComponents.begin(), RenderComponents.end(), prim) ==
+      RenderComponents.end()) {
+    RenderComponents.push_back(prim);
+  }
 }
 
-void UScene::RemoveRenderComponent(UPrimitiveComponent* prim)
-{
-	std::erase(RenderComponents, prim);
+void UScene::RemoveRenderComponent(UPrimitiveComponent *prim) {
+  std::erase(RenderComponents, prim);
 }
 
-void UScene::RemoveActor(AActor* Actor)
-{
-	std::erase(Actors, Actor);
+void UScene::RemoveActor(AActor *Actor) { std::erase(Actors, Actor); }
+
+void UScene::DestroyActor(AActor *Actor) {
+  if (Actor == nullptr)
+    return;
+
+  RemoveActor(Actor);
+  DestroyObject(Actor);
 }
 
-void UScene::DestroyActor(AActor* Actor)
-{
-	if (Actor == nullptr) return;
+AActor *UScene::SpawnActor(UClass *ClassType) {
+  UObject *Object = NewObject(ClassType);
+  AActor *Actor = Object->Cast<AActor>();
+  if (!Actor) {
+    DestroyObject(Object);
+    return nullptr;
+  }
+  Actor->Initialize();
+  Actor->Register(*this);
 
-	RemoveActor(Actor);
-	DestroyObject(Actor);
+  Actors.push_back(Actor);
+  // 스폰 즉시 비긴 플레이 호출
+  Actor->BeginPlay();
+  return Actor;
 }
-
-AActor* UScene::SpawnActor(UClass* ClassType)
-{
-	UObject* Object = NewObject(ClassType);
-	AActor* Actor = Object->Cast<AActor>();
-	if (!Actor)
-	{
-		DestroyObject(Object);
-		return nullptr;
-	}
-	Actor->Initialize();
-	Actor->Register(*this);
-
-	Actors.push_back(Actor);
-	return Actor;
-}
-

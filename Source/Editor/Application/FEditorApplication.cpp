@@ -18,6 +18,7 @@
 
 
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/TestTextActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
 #include "Runtime/CoreUObject/UTextComponent.h"
@@ -34,6 +35,13 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   this->CurrentScene = SceneManager->CurrentScene;
 
   Editor.Initialize(SceneManager);
+
+  
+
+  TestTextActor* actor1 = CurrentScene->SpawnActor<TestTextActor>();
+  TestTextActor* actor2 = CurrentScene->SpawnActor<TestTextActor>();
+
+
 
 
   FEditorViewport Viewport;
@@ -89,33 +97,37 @@ void FEditorApplication::Render() {
   for (auto &EditorViewport : EditorViewports) {
     if (RenderView) {
       RenderView->GetRenderer().SetRenderMode(EditorViewport.ViewMode);
-      RenderView->GetRenderer().UpdateLightConstants(
-          Editor.GlobalLight); // globallgiht udpate
+      RenderView->GetRenderer().UpdateLightConstants(Editor.GlobalLight, EditorViewport.ViewMode); // globallgiht udpate
     }
 
     RenderView->RenderGrid(EditorViewport.ViewportCamera,
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    if (EditorViewport.HasShowFlag(EEngineShowFlags::SF_Primitives))
+    for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
     {
-        for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
+        if (!PrimitiveComponent) continue;
+
+        if (!EditorViewport.HasShowFlag(PrimitiveComponent->GetShowFlag()))
         {
-            bool bSelected = true;
-
-            if (!PrimitiveComponent) { bSelected = false; }
-            else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
-            else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
-
-            RenderView->Render
-            (
-                EditorViewport.ViewportCamera,
-                EditorViewport.TopLeftUV,
-                EditorViewport.LengthUV,
-                PrimitiveComponent,
-                bSelected
-            );
+            continue;
         }
+
+
+        bool bSelected = true;
+
+        if (!PrimitiveComponent) { bSelected = false; }
+        else if (!PrimitiveComponent->GetActorOwner()) { bSelected = false; }
+        else if (PrimitiveComponent->GetActorOwner() != Editor.GetSelectedActor()) { bSelected = false; }
+
+        RenderView->Render
+        (
+            EditorViewport.ViewportCamera,
+            EditorViewport.TopLeftUV,
+            EditorViewport.LengthUV,
+            PrimitiveComponent,
+            bSelected
+        );
     }
 
 
@@ -125,8 +137,10 @@ void FEditorApplication::Render() {
         // AABB 그리기
         USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
         UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
-        if (PrimComp && PrimComp->GetMesh() && PrimComp->IsA<USpotLightComponent>())
+        if (PrimComp && PrimComp->GetMesh())
         {
+            if (PrimComp->IsA<USpotLightComponent>())
+            {
                 auto Mesh = PrimComp->GetMesh();
                 const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
                 const auto& Positions = Mesh->GetPositions();
@@ -142,14 +156,15 @@ void FEditorApplication::Render() {
                     RenderView->RenderLine(B, C, WireColor);
                     RenderView->RenderLine(C, A, WireColor);
                 }
-        }
-        else if (PrimComp && PrimComp->GetMesh())
-        {
-            // AABB 그리기
-            const FMesh& Mesh = *PrimComp->GetMesh();
-            const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-            FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-            RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+            }
+            else
+            {
+                // AABB 그리기
+                const FMesh& Mesh = *PrimComp->GetMesh();
+                const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+                FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
+                RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+            }
         }
     }
 

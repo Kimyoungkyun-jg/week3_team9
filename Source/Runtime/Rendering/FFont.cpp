@@ -1,10 +1,12 @@
 #include "FFont.h"
 #include "Runtime/Core/IntTypes.h"
-#include <windows.h>
+#include "Runtime/Core/FString.h"
+#include <filesystem>
+#include <fstream>
 
-void FFont::Initialize(float InNumberOfLine)
+void FFont::InitializeForASCII(float InNumberOfLine)
 {
-	// 영문 코드페이지 기준
+	// 16x16 코드페이지 437 기준
 	float uvSize = 1.0f / InNumberOfLine;
 	for (uint16 i = 0; i < 256; ++i)
 	{
@@ -17,49 +19,84 @@ void FFont::Initialize(float InNumberOfLine)
 		ci.width = uvSize;
 		ci.height = uvSize;
 
-		EngCharInfoMap[static_cast<char>(i)] = ci;
+		CharInfoMap[static_cast<char>(i)] = ci;
 	}
-
-	// 한글 아틀라스 셀 크기 기준
-	constexpr float krCellSize = 40.0f;
-	constexpr float krAtlasSize = 2048.0f;
-	constexpr float krUvStep = krCellSize / krAtlasSize;
-
-	uint16 krIndex = 0;
-	for (unsigned char b1 = 0xB0; b1 <= 0xC8; ++b1)
-	{
-		for (unsigned char b2 = 0xA1; b2 <= 0xFE; ++b2)
-		{
-			char mb[3] = { static_cast<char>(b1), static_cast<char>(b2), '\0' };
-			wchar_t wc = 0;
-			MultiByteToWideChar(949, 0, mb, 2, &wc, 1);
-
-			uint16 col = krIndex % 51;
-			uint16 row = krIndex / 51;
-
-			FCharacterInfo ci;
-			ci.u = col * krUvStep;
-			ci.v = row * krUvStep;
-			ci.width = krUvStep;
-			ci.height = krUvStep;
-
-			KrCharInfoMap[wc] = ci;
-			++krIndex;
-		}
-	}
-
 }
 
-const FCharacterInfo& FFont::GetEngCharInfo(char InCharacter) const
+void FFont::Deserialize(const FWString& path)
 {
-	auto it = EngCharInfoMap.find(InCharacter);
-	if (it != EngCharInfoMap.end())
+	std::ifstream f(path);
+	if (!f)
+	{
+		return;
+	}
+
+	std::stringstream buffer;
+	buffer << f.rdbuf();
+
+	json::JSON data = json::JSON::Load(buffer.str());
+
+	// atlas 자체 정보 
+	FString type = data["atlas"]["type"].ToString();
+	uint32 distanceRange = data["atlas"]["distanceRange"].ToInt();
+	uint32 dixtanceRangeMiddle = data["atlas"]["distanceRangeMiddle"].ToInt();
+	uint32 size = data["atlas"]["size"].ToInt();	
+	uint32 width = data["atlas"]["width"].ToInt();
+	uint32 height = data["atlas"]["height"].ToInt();
+	FString yOrigin = data["atlas"]["yOrigin"].ToString();
+
+	// metrics
+	uint32 emSize = data["metrics"]["emSize"].ToInt();
+	float lineHeight = data["metrics"]["lineHeight"].ToFloat();
+	float ascender = data["metrics"]["ascender"].ToFloat();
+	float descender = data["metrics"]["descender"].ToFloat();
+	float underlineY = data["metrics"]["underlineY"].ToFloat();
+	float underlineThickness = data["metrics"]["underlineThickness"].ToFloat();
+
+	// 문자
+	for (auto& glyph : data["glyphs"].ArrayRange())
+	{
+		FCharacterInfo info{};
+
+		uint32 unicode = glyph["unicode"].ToInt();
+		info.advance = glyph["advance"].ToFloat();
+
+		if (glyph.hasKey("planeBounds"))
+		{
+			info.planeLeft = glyph["planeBounds"]["left"].ToFloat();
+			info.planeTop = glyph["planeBounds"]["top"].ToFloat();
+			info.planeRight = glyph["planeBounds"]["right"].ToFloat();
+			info.planeBottom = glyph["planeBounds"]["bottom"].ToFloat();
+		}
+
+		if (glyph.hasKey("atlasBounds"))
+		{
+			float atlLeft = glyph["atlasBounds"]["left"].ToFloat();
+			float atlTop = glyph["atlasBounds"]["top"].ToFloat();
+			float atlRight = glyph["atlasBounds"]["right"].ToFloat();
+			float atlBot = glyph["atlasBounds"]["bottom"].ToFloat();
+
+
+			info.u = atlLeft / width;
+			info.v = atlTop / height;
+			info.width = (atlRight - atlLeft) / width;
+			info.height = (atlBot - atlTop) / height;
+		}
+
+		CharInfoMap.emplace(static_cast<char32_t>(unicode), info);
+	}
+}
+
+const FCharacterInfo& FFont::GetCharInfo(char32_t InCharacter) const
+{
+	auto it = CharInfoMap.find(InCharacter);
+	if (it != CharInfoMap.end())
 	{
 		return it->second;
 	}
 
-	auto fallbackIt = EngCharInfoMap.find('?');
-	if (fallbackIt != EngCharInfoMap.end())
+	auto fallbackIt = CharInfoMap.find('?');
+	if (fallbackIt != CharInfoMap.end())
 	{
 		return fallbackIt->second;
 	}
@@ -67,16 +104,3 @@ const FCharacterInfo& FFont::GetEngCharInfo(char InCharacter) const
 	static const FCharacterInfo defaultInfo{};
 	return defaultInfo;
 }
-
-const FCharacterInfo& FFont::GetKrCharInfo(wchar_t InCharacter) const
-{
-	auto it = KrCharInfoMap.find(InCharacter);
-	if (it != KrCharInfoMap.end())
-	{
-		return it->second;
-	}
-
-	static const FCharacterInfo defaultInfo{};
-	return defaultInfo;
-}
-

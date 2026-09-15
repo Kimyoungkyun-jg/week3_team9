@@ -19,6 +19,29 @@ struct FTextVertex
 };
 
 
+enum class EPipelineID : uint8 {
+  Simple_Solid,
+  Simple_Wireframe,
+  Textured,
+  Grid,
+  RotationGizmo,
+  Count,
+  Spotlight,
+  Text,
+  Instance_Text,
+};
+
+enum class EMaterialID : uint8
+{
+    Simple,
+    Grid,
+    RotGizmo,
+    Spotlight,
+    Text,
+    Textured,
+    Instance_Text,
+};
+
 class FRenderResourceLibrary final {
 public:
   // 전역 싱글톤 접근자
@@ -27,18 +50,26 @@ public:
   bool Initialize(FRenderer &Renderer);
 
   // 파이프라인 보관 맵
-  TMap<EBuiltinPipeline, TSharedPtr<FRenderPipeline>> AllPipelineMap;
+  TMap<EPipelineID, TSharedPtr<FRenderPipeline>> AllPipelineMap;
   // 메쉬 보관 맵
   TMap<FString, TSharedPtr<FMesh>> AllMeshMap;
-  // 머티리얼 보관 맵
-  TMap<FString, TSharedPtr<FMaterial>> AllMaterialMap;
+  // 머티리얼 보관 맵 (ID 기반)
+  TMap<EMaterialID, TSharedPtr<FMaterial>> AllMaterialMap;
   // 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
 
   // 파이프라인 조회
-  [[nodiscard]] TSharedPtr<FRenderPipeline> GetPipeline(EBuiltinPipeline Id) const {
+  [[nodiscard]] TSharedPtr<FRenderPipeline> GetPipeline(EPipelineID Id) const {
     auto it = AllPipelineMap.find(Id);
     if (it != AllPipelineMap.end())
+      return it->second;
+    return nullptr;
+  }
+
+  // 머티리얼 조회 (ID 기반 전용)
+  [[nodiscard]] TSharedPtr<FMaterial> GetMaterial(EMaterialID Id) const {
+    auto it = AllMaterialMap.find(Id);
+    if (it != AllMaterialMap.end())
       return it->second;
     return nullptr;
   }
@@ -59,33 +90,25 @@ public:
   }
 
   // 개별 메쉬 접근자
-  [[nodiscard]] TSharedPtr<FMesh> GetCubeMesh() const { return CubeMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetCylinderMesh() const { return CylinderMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetConeMesh() const { return ConeMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetSpotlightConeMesh() const { return SpotlightConeMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetArrowMesh() const { return ArrowMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetCircleMesh() const { return CircleMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetRotationGizmoMesh() const { return RotationGizmoMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetSquareArrowMesh() const { return SquareArrowMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetGridMesh() const { return GridMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetSphereMesh() const { return SphereMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetLineMesh() const { return LineMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetPlaneMesh() const { return PlaneMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetRectMesh() const { return RectMesh; }
-  [[nodiscard]] TSharedPtr<FMesh> GetTextMesh() const { return TextMesh; }
+  [[nodiscard]] TSharedPtr<FMesh> GetCubeMesh() const { return GetMesh("Cube"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetCylinderMesh() const { return GetMesh("Cylinder"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetConeMesh() const { return GetMesh("Cone"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetSpotlightConeMesh() const { return GetMesh("SpotlightCone"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetArrowMesh() const { return GetMesh("Arrow"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetCircleMesh() const { return GetMesh("Circle"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetRotationGizmoMesh() const { return GetMesh("RotationGizmo"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetSquareArrowMesh() const { return GetMesh("SquareArrow"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetGridMesh() const { return GetMesh("Grid"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetSphereMesh() const { return GetMesh("Sphere"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetLineMesh() const { return GetMesh("Line"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetPlaneMesh() const { return GetMesh("Plane"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetRectMesh() const { return GetMesh("Rect"); }
+  [[nodiscard]] TSharedPtr<FMesh> GetTextMesh() const { return GetMesh("Text"); }
 
-  // 머티리얼 조회
-  TSharedPtr<FMaterial> GetMaterial(const FString &name) const {
-    auto it = AllMaterialMap.find(name);
-    if (it != AllMaterialMap.end())
-      return it->second;
-    return nullptr;
-  }
-
-  // 머티리얼 등록
-  TSharedPtr<FMaterial> RegisterMaterial(const FString &name,
+  // 머티리얼 등록 (ID 기반 전용)
+  TSharedPtr<FMaterial> RegisterMaterial(EMaterialID Id,
                                          TSharedPtr<FMaterial> inMaterial) {
-    AllMaterialMap[name] = inMaterial;
+    AllMaterialMap[Id] = inMaterial;
     return inMaterial;
   }
 
@@ -101,50 +124,14 @@ public:
     return nullptr;
   }
 
-  // 개별 머티리얼 접근자
-  [[nodiscard]] TSharedPtr<FMaterial> GetSimpleMaterial() const {
-    return SimpleMaterial;
-  }
-  [[nodiscard]] TSharedPtr<FMaterial> GetGridMaterial() const {
-    return GridMaterial;
-  }
-  [[nodiscard]] TSharedPtr<FMaterial> GetRotationGizmoMaterial() const {
-    return RotationGizmoMaterial;
-  }
-  [[nodiscard]] TSharedPtr<FMaterial> GetSpotlightMaterial() const {
-    return SpotlightMaterial;
-  }
-  [[nodiscard]] TSharedPtr<FMaterial> GetTextMaterial() const {
-    return TextMaterial;
-  }
-
   // 메쉬 전체 해제
   void DestroyAllMeshes() {
     AllMeshMap.clear();
-    CubeMesh.reset();
-    CylinderMesh.reset();
-    ConeMesh.reset();
-    SpotlightConeMesh.reset();
-    ArrowMesh.reset();
-    CircleMesh.reset();
-    RotationGizmoMesh.reset();
-    SquareArrowMesh.reset();
-    GridMesh.reset();
-    SphereMesh.reset();
-    LineMesh.reset();
-    PlaneMesh.reset();
-    RectMesh.reset();
-    TextMesh.reset();
   }
 
   // 머티리얼 전체 해제
   void DestroyAllMaterials() {
     AllMaterialMap.clear();
-    SimpleMaterial.reset();
-    GridMaterial.reset();
-    RotationGizmoMaterial.reset();
-    SpotlightMaterial.reset();
-    TextMaterial.reset();
   }
 
   // 파이프라인 전체 해제
@@ -153,30 +140,19 @@ public:
   }
 
   // 전체 머티리얼 맵 조회
-  const TMap<FString, TSharedPtr<FMaterial>> &GetAllMaterials() const {
+  const TMap<EMaterialID, TSharedPtr<FMaterial>> &GetAllMaterials() const {
     return AllMaterialMap;
   }
 
   // 렌더러 참조 조회
   FRenderer *GetRenderer() const { return RendererRef; }
 
-  // 등록된 모든 머티리얼 이름 목록 반환
-  TArray<FString> GetMaterialNames() const {
-    TArray<FString> Names;
-    for (const auto &Pair : AllMaterialMap) {
-      Names.push_back(Pair.first);
-    }
-    return Names;
-  }
-
-  // 셰이더 파일 경로로 머티리얼 생성 및 맵에 등록
-  TSharedPtr<FMaterial> CreateAndRegisterMaterial(const FString &Name,
-                                                  const FWString &VsPath,
-                                                  const FWString &PsPath);
-
   // 정점 배열 메쉬 캐싱 생성
   TSharedPtr<FMesh> GetOrCreateMesh(const FString &name,
                                     const TArray<FVertexData> &vertices);
+
+
+
 
 private:
   bool InitializePipelines(FRenderer &Renderer);
@@ -197,85 +173,12 @@ private:
   bool CreatePlaneMesh(FRenderer &Renderer);
   bool CreateRectMesh(FRenderer &Renderer);
 
-  bool CreateSimpleMaterial(FRenderer &Renderer);
-  bool CreateGridMaterial(FRenderer &Renderer);
-  bool CreateRotationGizmoMaterial(FRenderer &Renderer);
-  bool CreateSpotlightMaterial(FRenderer &Renderer);
-  
-  // 시작시 1번만 호출
+  // 텍스처 및 머티리얼 일괄 초기화
   bool CreateTextures(FRenderer &Renderer);
-  // 텍스처를 샘플링하는 머티리얼. CreateTextures 이후에 호출해야 함
-  bool CreateTexturedMaterial(FRenderer& Renderer);
-  bool CreateCommonMaterial(FRenderer& Renderer, FString& textureName);
+  bool InitializeMaterials(FRenderer &Renderer);
 
-  // Text
-  bool CreateTextMesh(FRenderer& Renderer);
-  bool CreateTextMaterial(FRenderer& Renderer);
 
-  // 개별 리소스 멤버 변수
-  TSharedPtr<FMesh> CubeMesh;
-  TSharedPtr<FMesh> CylinderMesh;
-  TSharedPtr<FMesh> ConeMesh;
-  TSharedPtr<FMesh> SpotlightConeMesh;
-  TSharedPtr<FMesh> ArrowMesh;
-  TSharedPtr<FMesh> CircleMesh;
-  TSharedPtr<FMesh> RotationGizmoMesh;
-  TSharedPtr<FMesh> SquareArrowMesh;
-  TSharedPtr<FMesh> GridMesh;
-  TSharedPtr<FMesh> SphereMesh;
-  TSharedPtr<FMesh> LineMesh;
-  TSharedPtr<FMesh> PlaneMesh;
-  TSharedPtr<FMesh> RectMesh;
-  TSharedPtr<FMesh> TextMesh;
 
-  TSharedPtr<FMaterial> SimpleMaterial;
-  TSharedPtr<FMaterial> GridMaterial;
-  TSharedPtr<FMaterial> RotationGizmoMaterial;
-  TSharedPtr<FMaterial> SpotlightMaterial;
-  TSharedPtr<FMaterial> TextMaterial;
 
   FRenderer *RendererRef = nullptr;
 };
-
-#include "FRenderer.h"
-
-inline TSharedPtr<FMesh>
-FRenderResourceLibrary::GetOrCreateMesh(const FString &name,
-                                        const TArray<FVertexData> &vertices) {
-  auto it = AllMeshMap.find(name);
-  if (it != AllMeshMap.end())
-    return it->second;
-
-  FMeshDesc Desc{.VertexData = vertices.data(),
-                 .VertexDataSize =
-                     static_cast<uint32>(sizeof(FVertexData) * vertices.size()),
-                 .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
-                 .VertexCount = static_cast<uint32>(vertices.size())};
-  TSharedPtr<FMesh> newMesh =
-      RendererRef ? RendererRef->CreateMesh(Desc) : nullptr;
-  if (newMesh) {
-    AllMeshMap[name] = newMesh;
-  }
-  return newMesh;
-}
-
-inline TSharedPtr<FMaterial> FRenderResourceLibrary::CreateAndRegisterMaterial(
-    const FString &Name, const FWString &VsPath, const FWString &PsPath) {
-  auto it = AllMaterialMap.find(Name);
-  if (it != AllMaterialMap.end())
-    return it->second;
-
-  if (!RendererRef)
-    return nullptr;
-
-  FMaterialDesc Desc = {
-      .VertexShaderFileName = VsPath,
-      .PixelShaderFileName = PsPath,
-  };
-
-  TSharedPtr<FMaterial> NewMat = RendererRef->CreateMaterial(Desc);
-  if (NewMat) {
-    AllMaterialMap[Name] = NewMat;
-  }
-  return NewMat;
-}
