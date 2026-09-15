@@ -17,6 +17,7 @@ public:
 	static inline FString DefaultFileName = "editor.ini";
 
 private:
+
 	// Camera
 	float CameraSensitivity = 0.5f;
 	float CameraSpeed = 10.0f;

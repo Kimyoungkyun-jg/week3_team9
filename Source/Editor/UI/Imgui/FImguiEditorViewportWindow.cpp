@@ -167,13 +167,17 @@ void FImguiEditorViewportWindow::UpdateCamera(FEditor &Editor, FEditorViewport &
 
     FCamera &Camera = Viewport.ViewportCamera;
     CameraController.UpdateMouseInput(Camera);
+    Editor.State.SetCameraPitch(Camera.Pitch);
+    Editor.State.SetCameraYaw(Camera.Yaw);
 
     // 우클릭 중에는 WASD 가 카메라 비행에 쓰이므로 단축키와 겹치지 않게 나눈다.
     if (FInputManager::Get().IsMouseDown(EMouseButton::Right))
     {
         CameraController.UpdateKeyInput(Camera, DeltaTime);
+        Editor.State.SetCameraLocation(Camera.Position);
         return;
     }
+
 
     // 기즈모를 드래그하는 중에는 모드가 바뀌면 안 된다.
     if (!Editor.GetGizmo().IsInteracting())

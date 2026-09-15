@@ -92,11 +92,6 @@ void FImguiControlPanelWindow::ActorSpawnSetting(FEditor& Editor)
         const int Count = (spawnCount < 1) ? 1 : spawnCount;
         Editor.SpawnActorToCurrentScene(SelectedActorClass, Count);
     }
-
-
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(180.0f);
-    ImGui::InputInt("##SpawnCount", &spawnCount);
     ImGui::SameLine();
     ImGui::Text("Number of spawn");
 }
@@ -186,28 +181,40 @@ void FImguiControlPanelWindow::CameraSetting(FEditor& Editor)
         ImGui::SameLine();
         ImGui::Text("FOV");
 
-
-        FVector CameraLocation = Editor.State.GetCameraLocation();
         ImGui::SetNextItemWidth(180.0f);
-        ImGui::DragFloat3("##CameraLocation", &CameraLocation.X, 0.05f, 0.0f, 0.0f, "%.3f");
+        ImGui::DragFloat3("##CameraLocation", &Camera.Position.X, 0.05f, 0.0f, 0.0f, "%.3f");
         ImGui::SameLine();
         ImGui::Text("Camera Location");
-        Editor.State.SetCameraLocation(CameraLocation);
 
+        ImGui::SetNextItemWidth(40.0f);
+        ImGui::Text("Pitch");
+        ImGui::SameLine();
 
-
-        FVector CameraRotation
-        {
+        ImGui::SetNextItemWidth(50.0f);
+        ImGui::DragFloat(
+            "##CameraPitch",
+            &Camera.Pitch,
+            0.5f,
             0.0f,
-            Editor.State.GetCameraPitch(),
-            Editor.State.GetCameraYaw(),
-        };
-        ImGui::SetNextItemWidth(180.0f);
-        if (ImGui::DragFloat3("##CameraRotation", &CameraRotation.X, 0.5f, 0.0f, 0.0f, "%.2f"))
-        {
-            Camera.Pitch = CameraRotation[1];
-            Camera.Yaw = CameraRotation[2];
-        }
+            0.0f,
+            "%.2f"
+        );
+        ImGui::SameLine();
+
+        ImGui::SetNextItemWidth(40.0f);
+        ImGui::Text("Yaw");
+        ImGui::SameLine();
+
+        ImGui::SetNextItemWidth(50.0f);
+        ImGui::DragFloat(
+            "##CameraYaw",
+            &Camera.Yaw,
+            0.5f,
+            0.0f,
+            0.0f,
+            "%.2f"
+        );
+
         ImGui::SameLine();
         ImGui::Text("Camera Rotation");
     }
