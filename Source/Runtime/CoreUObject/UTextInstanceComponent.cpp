@@ -21,7 +21,7 @@ void UTextInstanceComponent::Register(UScene& InScene)
 	}
 
 	if (!GetMesh()) {
-		SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
+		SetMesh(Resources ? Resources->GetMesh(EMeshID::Rect) : nullptr);
 	}
 	if (!GetMaterial()) {
 		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
@@ -39,7 +39,7 @@ void UTextInstanceComponent::Update(float delta)
 }
 
 void UTextInstanceComponent::RebuildTextMesh() {
-    Instances.clear();
+    TextInstances.clear();
     Width = 0;
     Height = 0;
 
@@ -147,7 +147,7 @@ void UTextInstanceComponent::RebuildTextMesh() {
         Data.UVScale = FVector2(CharInfo.width, CharInfo.height);
         Data.UVOffset = FVector2(tv[0].u, tv[0].v);
        
-        Instances.push_back(Data);
+        TextInstances.push_back(Data);
         prevAdvance += CharInfo.advance;
     }
 }
@@ -155,22 +155,18 @@ void UTextInstanceComponent::RebuildTextMesh() {
 
 void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) 
 {
-	if (!GetMesh() || !GetMaterial() || Instances.empty()) {
+	if (!GetMesh() || !GetMaterial() || TextInstances.empty()) {
 		return;
 	}
 
-    FMatrix CameraRotation = Camera.GetRotationMatrix();
-    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f);
-    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f);
-
     FTransform Transform = GetGlobalTransform();
 
-    TArray<FInstanceData> RenderInstances = Instances;
+    TArray<FInstanceData> RenderInstances = TextInstances;
     for (auto& Instance : RenderInstances)
     {
         Instance.Center = Transform.Location;
         Instance.Size = FVector2{ Transform.Scale3D.Y, Transform.Scale3D.Z };
     }
 
-	renderer.AddTextInstanceArray(RenderInstances);
+    renderer.AddTextInstanceArray(RenderInstances, GetMesh()->MeshId, GetMaterial()->MaterialId);
 }

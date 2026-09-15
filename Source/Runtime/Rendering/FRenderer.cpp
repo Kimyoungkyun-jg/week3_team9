@@ -609,38 +609,35 @@ void FRenderer::UpdateLightConstants(FLightConstants& Constants, const EViewMode
     Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
 }
 
-void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances)
+void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances, const EMeshID& MeshId, const EMaterialID& MaterialId)
 {
-    TextInstanceData.insert(TextInstanceData.end(), Instances.begin(), Instances.end());
-}
-
-void FRenderer::DrawTextInstances(const FCamera& Camera)
-{
-    if (TextInstanceData.empty()) return;
-
-    const UINT InstanceCount = static_cast<UINT>(TextInstanceData.size());
-    const UINT RequiredSize = InstanceCount * sizeof(FInstanceData);
-
-    // 버퍼 크기가 부족하면 재생성
-    if (RequiredSize > TextInstanceBufferSize)
+    // 빈 데이터 전달 시 조기 반환
+    if (Instances.empty())
     {
-        TextInstanceBuffer.Reset();
-
-        D3D11_BUFFER_DESC Desc{};
-        Desc.ByteWidth = RequiredSize;
-        Desc.Usage = D3D11_USAGE_DYNAMIC;
-        Desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-        if (FAILED(Device->CreateBuffer(&Desc, nullptr, &TextInstanceBuffer))) return;
-        TextInstanceBufferSize = RequiredSize;
+        return;
+    }
+    auto& ResLib = FRenderResourceLibrary::Get();
+    // 머티리얼 리소스 존재 여부 확인
+    if (!ResLib.GetMaterial(MaterialId))
+    {
+        UE_LOG_WARN("[FRenderer] 유효하지 않은 머티리얼 ID 인스턴스 등록 시도");
+        return;
+    }
+    // 메시 리소스 존재 여부 확인
+    if (!ResLib.GetMesh(MeshId))
+    {
+        UE_LOG_WARN("[FRenderer] 유효하지 않은 메시 ID 인스턴스 등록 시도");
+        return;
     }
 
-    // 인스턴스 데이터 업로드
-    D3D11_MAPPED_SUBRESOURCE MappedResource{};
-    if (FAILED(Context->Map(TextInstanceBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource))) return;
-    std::memcpy(MappedResource.pData, TextInstanceData.data(), RequiredSize);
-    Context->Unmap(TextInstanceBuffer.Get(), 0);
+    auto& TargetArray = ResLib.GetInstancingArray(MaterialId, MeshId);
+    TargetArray.reserve(TargetArray.size() + Instances.size());
+    TargetArray.insert(TargetArray.end(), Instances.begin(), Instances.end());
+}
+
+void FRenderer::DrawInstances(const FCamera& Camera)
+{
+    auto& ResLib = FRenderResourceLibrary::Get();
 
     // 상수 버퍼 업데이트
     FInstancedBillboardConstants SC{};
@@ -653,30 +650,74 @@ void FRenderer::DrawTextInstances(const FCamera& Camera)
     SC.VP = Camera.CreateViewProjectionMatrix();
     UpdateBuffer(SC);
 
-    TSharedPtr<FMaterial> DefaultMat = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Text);
-
-    // 파이프라인 바인딩
-    TSharedPtr<FRenderPipeline> Pipeline = DefaultMat->GetPipeline();
-    if (Pipeline)
+    // 배치 키(MaterialID, MeshID) 순회
+    for (const auto& [BatchKey, InstanceData] : ResLib.AllInstancingArrayMap)
     {
-        Pipeline->Bind(*Context.Get());
+        if (InstanceData.empty()) continue;
+
+        const UINT InstanceCount = static_cast<UINT>(InstanceData.size());
+        const UINT RequiredSize = InstanceCount * sizeof(FInstanceData);
+
+        // 버퍼 크기 부족 시 동적 확장
+        if (RequiredSize > TextInstanceBufferSize)
+        {
+            InstanceBuffer.Reset();
+            D3D11_BUFFER_DESC Desc{};
+            Desc.ByteWidth = RequiredSize;
+            Desc.Usage = D3D11_USAGE_DYNAMIC;
+            Desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+            Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+            if (FAILED(Device->CreateBuffer(&Desc, nullptr, &InstanceBuffer))) continue;
+            TextInstanceBufferSize = RequiredSize;
+        }
+
+        // 인스턴스 데이터 업로드
+        D3D11_MAPPED_SUBRESOURCE MappedResource{};
+        if (FAILED(Context->Map(InstanceBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource))) continue;
+        std::memcpy(MappedResource.pData, InstanceData.data(), RequiredSize);
+        Context->Unmap(InstanceBuffer.Get(), 0);
+
+        // 머티리얼 및 파이프라인 바인딩
+        auto Material = ResLib.GetMaterial(BatchKey.MaterialID);
+        if (!Material) continue;
+
+        TSharedPtr<FRenderPipeline> Pipeline = Material->GetPipeline();
+        if (Pipeline)
+        {
+            Pipeline->Bind(*Context.Get());
+        }
+        Material->BindResources(*Context.Get());
+
+        // 메시 조회 및 바인딩
+        auto Mesh = ResLib.GetMesh(BatchKey.MeshID);
+        if (!Mesh) continue;
+        Mesh->BindResources(*Context.Get());
+
+        // 슬롯 1에 인스턴스 버퍼 바인딩
+        UINT Stride = sizeof(FInstanceData);
+        UINT Offset = 0;
+        Context->IASetVertexBuffers(1, 1, InstanceBuffer.GetAddressOf(), &Stride, &Offset);
+
+        // 인스턴스 렌더링 호출
+        if (Mesh->HasIndices())
+        {
+            Context->DrawIndexedInstanced(Mesh->GetIndexCount(), InstanceCount, 0, 0, 0);
+        }
+        else
+        {
+            Context->DrawInstanced(Mesh->VertexCount, InstanceCount, 0, 0);
+        }
     }
-
-    // 메쉬 및 머티리얼 바인딩
-    DefaultMat->BindResources(*Context.Get());
-    auto RectMesh = FRenderResourceLibrary::Get().GetRectMesh();
-    if (!RectMesh) return;
-    RectMesh->BindResources(*Context.Get());
-
-    // 슬롯1에 인스턴스 버퍼 바인딩
-    UINT Stride = sizeof(FInstanceData);
-    UINT Offset = 0;
-    Context->IASetVertexBuffers(1, 1, TextInstanceBuffer.GetAddressOf(), &Stride, &Offset);
-
-    Context->DrawIndexedInstanced(RectMesh->GetIndexCount(), InstanceCount, 0, 0, 0);
 }
 
 void FRenderer::ClearTextInstances()
 {
-    TextInstanceData.clear();
+    for (auto& [BatchKey, InstanceArray] : FRenderResourceLibrary::Get().AllInstancingArrayMap)
+    {
+        InstanceArray.clear();
+    }
+
+    FRenderResourceLibrary::Get().DestroyAllInstancingArray();
 }
+

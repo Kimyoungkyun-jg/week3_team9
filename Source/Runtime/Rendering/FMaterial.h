@@ -10,6 +10,7 @@
 
 class FRenderer;
 class FRenderResourceLibrary;
+enum class EMaterialID : uint8;
 
 
 
@@ -32,6 +33,8 @@ public:
   // 원본 머터리얼에서 텍스처 교체 함수
   bool SetTextureByName(const FString& InTextureName);
 
+
+  EMaterialID MaterialId;
 private:
   void BindResources(ID3D11DeviceContext &Context) const;
 

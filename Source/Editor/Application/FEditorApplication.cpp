@@ -18,6 +18,7 @@
 
 
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/AInstancingActor.h"
 #include "Runtime/Actors/TestTextActor.h"
 #include "Runtime/CoreUObject/UPlaneComp.h"
 #include "Runtime/CoreUObject/USphereComp.h"
@@ -35,14 +36,6 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   this->CurrentScene = SceneManager->CurrentScene;
 
   Editor.Initialize(SceneManager);
-
-  
-
-  TestTextActor* actor1 = CurrentScene->SpawnActor<TestTextActor>();
-  TestTextActor* actor2 = CurrentScene->SpawnActor<TestTextActor>();
-
-
-
 
   FEditorViewport Viewport;
   Viewport.ViewportCamera.Position = FVector{-3.0f, 3.0f, 2.0f};
