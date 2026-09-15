@@ -40,9 +40,9 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false,
      D3D11_CULL_NONE, true},
     {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
-    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 1},
+    {EPipelineID::Instance_Text, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 2},
     {EPipelineID::Billboard, L"BillboardVS.cso", L"TexturedPS.cso" },
-    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 2 },
+    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"TexturedPS.cso", true, D3D11_CULL_BACK, false, 2 },
 };
 
 // 머티리얼 정보 엔트리

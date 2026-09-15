@@ -653,7 +653,7 @@ void FRenderer::DrawTextInstances(const FCamera& Camera)
     SC.VP = Camera.CreateViewProjectionMatrix();
     UpdateBuffer(SC);
 
-    TSharedPtr<FMaterial> DefaultMat = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Billboard);
+    TSharedPtr<FMaterial> DefaultMat = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Text);
 
     // 파이프라인 바인딩
     TSharedPtr<FRenderPipeline> Pipeline = DefaultMat->GetPipeline();

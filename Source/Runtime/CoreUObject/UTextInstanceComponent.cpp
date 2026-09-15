@@ -24,7 +24,7 @@ void UTextInstanceComponent::Register(UScene& InScene)
 		SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
 	}
 	if (!GetMaterial()) {
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Billboard) : nullptr);
+		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
 	}
 
 	RebuildTextMesh();
