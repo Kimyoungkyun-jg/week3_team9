@@ -9,6 +9,7 @@
 struct FCamera;
 class FGizmo;
 class FGrid;
+class AActor;
 
 class FRenderView final {
 	FRenderer& Renderer;
@@ -26,5 +27,9 @@ public:
 	void RenderBoxMinMax(const FVector& Min, const FVector& Max, const FVector4& Color);
 	void RenderSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments = 16);
 	void RenderUUIDText(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, UTextInstanceComponent* textcomp);
-	void RenderVerticetoline();
+	
+	void RenderOutline(const FCamera& Camera, const AActor* SelectedActor);
+	void DrawStencilMask(const FCamera& Camera, const AActor* SelectedActor);
+	void RenderPostProcess(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, AActor* SelectedActor);
+	void ChangeToBackBuffer(); //이걸해줘야 화면이 제대로 나옴
 };

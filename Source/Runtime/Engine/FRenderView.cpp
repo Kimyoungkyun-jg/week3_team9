@@ -8,6 +8,8 @@
 #include "Runtime/Math/FVector2.h"
 #include "Runtime/Rendering/FRenderer.h"
 #include "Runtime/Rendering/ShaderConstants.h"
+#include "Runtime/Actors/AActor.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include <fstream>
 
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
@@ -77,4 +79,50 @@ void FRenderView::RenderUUIDText(const FCamera &Camera, FVector2 TopLeftUV,
   Renderer.DrawTextInstances(Camera, textcomp->GetMesh()->MeshId,
                              textcomp->GetMaterial()->MaterialId);
   Renderer.ClearTextInstances();
+}
+
+void FRenderView::RenderOutline(const FCamera& Camera, const AActor* SelectedActor) {
+    DrawStencilMask(Camera, SelectedActor);
+    Renderer.RenderOutline();
+}
+
+void FRenderView::DrawStencilMask(const FCamera& Camera, const AActor* SelectedActor)
+{
+    if (!SelectedActor) return;
+
+    // Stencil write는 editor scene의 color target과 DSV가 함께 바인딩된
+    // 상태에서만 유효하다. 이전 패스의 OM 상태에 의존하지 않는다.
+    Renderer.BindEditorViewportRenderTargets();
+
+    USceneComponent* RootComp = SelectedActor->GetRootComponent();
+    if (!RootComp) return;
+
+    UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+    if (!PrimComp || !PrimComp->GetMesh()) return;
+
+    // 메쉬 모델 행렬과 상수 버퍼 준비
+    const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+    FObjectConstants Constants{};
+    Constants.World = ModelMatrix;
+    Constants.MVP = Constants.World * Camera.CreateViewProjectionMatrix();
+
+    // 마스크용 머티리얼로 스텐실 기록
+    auto OutlineMaterial = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Outline);
+    if (OutlineMaterial) {
+        OutlineMaterial->GetPipeline()->SetStencilRef(1);
+        Renderer.Draw(*PrimComp->GetMesh(), *OutlineMaterial, Constants, 0, false);
+    }
+}
+
+void FRenderView::RenderPostProcess(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, AActor* SelectedActor)
+{
+    // 에디터 뷰포트 설정 후 후처리 수행
+    Renderer.SetViewportUV(TopLeftUV, LengthUV);
+    RenderOutline(Camera, SelectedActor);
+}
+
+void FRenderView::ChangeToBackBuffer()
+{
+    ID3D11RenderTargetView* BackBufferRTV = Renderer.GetBackBuffer();
+    Renderer.GetContext()->OMSetRenderTargets(1, &BackBufferRTV, nullptr);
 }

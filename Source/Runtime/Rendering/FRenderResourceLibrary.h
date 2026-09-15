@@ -31,7 +31,9 @@ enum class EPipelineID : uint8 {
   Instance_Billboard,
   Billboard,
   Gizmo,
-  SelectedActor_Text
+  SelectedActor_Text,
+  Outline,
+  PostProcess
 };
 
 enum class EMeshID : uint8 {
@@ -64,7 +66,8 @@ enum class EMaterialID : uint8 {
   Gizmo,
   SelectedActor_Text,
   Instance_Billboard,
-  Billboard
+  Billboard,
+  Outline
 };
 
 // 인스턴싱 배치 키 구조체
@@ -75,10 +78,10 @@ struct FInstanceBatchKey {
   bool operator==(const FInstanceBatchKey &Other) const = default;
 };
 
-template <>
-struct std::hash<FInstanceBatchKey> {
+template <> struct std::hash<FInstanceBatchKey> {
   size_t operator()(const FInstanceBatchKey &Key) const noexcept {
-    return (static_cast<size_t>(Key.MaterialID) << 16) | static_cast<size_t>(Key.MeshID);
+    return (static_cast<size_t>(Key.MaterialID) << 16) |
+           static_cast<size_t>(Key.MeshID);
   }
 };
 
@@ -98,14 +101,14 @@ public:
   // 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
 
-  //에디터용 아이콘 텍스쳐 보관 맵
+  // 에디터용 아이콘 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllEditorTextureMap;
 
   // 인스턴싱 배치 배열 맵
   TMap<FInstanceBatchKey, TArray<FInstanceData>> AllInstancingArrayMap;
 
   // 인스턴싱 배열 조회
-  TArray<FInstanceData>& GetInstancingArray(EMaterialID MatId, EMeshID MeshId) {
+  TArray<FInstanceData> &GetInstancingArray(EMaterialID MatId, EMeshID MeshId) {
     return AllInstancingArrayMap[{MatId, MeshId}];
   }
 
@@ -185,15 +188,15 @@ public:
   }
 
   // 머티리얼 등록 (ID 기반 전용)
-  TSharedPtr<FMaterial> RegisterMaterial(EMaterialID Id, TSharedPtr<FMaterial> inMaterial);
+  TSharedPtr<FMaterial> RegisterMaterial(EMaterialID Id,
+                                         TSharedPtr<FMaterial> inMaterial);
 
   void RegisterTexture(const FString &name, TSharedPtr<FTexture> texture) {
     AllTextureMap[name] = texture;
   }
 
-  void RegisterEditTexture(const FString& name, TSharedPtr<FTexture> texture)
-  {
-      AllEditorTextureMap[name] = texture;
+  void RegisterEditTexture(const FString &name, TSharedPtr<FTexture> texture) {
+    AllEditorTextureMap[name] = texture;
   }
 
   // 텍스처 조회. 없으면 nullptr
@@ -204,11 +207,11 @@ public:
     return nullptr;
   }
 
-  [[nodiscard]] TSharedPtr<FTexture> GetEditTexture(const FString& name) const {
-      auto it = AllEditorTextureMap.find(name);
-      if (it != AllEditorTextureMap.end())
-          return it->second;
-      return nullptr;
+  [[nodiscard]] TSharedPtr<FTexture> GetEditTexture(const FString &name) const {
+    auto it = AllEditorTextureMap.find(name);
+    if (it != AllEditorTextureMap.end())
+      return it->second;
+    return nullptr;
   }
 
   // 메쉬 전체 해제
@@ -234,12 +237,11 @@ public:
   TSharedPtr<FMesh> GetOrCreateMesh(const EMeshID &ID,
                                     const TArray<FVertexData> &vertices);
 
-
-
-
 private:
   bool InitializePipelines(FRenderer &Renderer);
   bool CreateSolidWireframePipeline(FRenderer &Renderer);
+  bool CreateOutlinePipeline(FRenderer &Renderer);
+  bool CreatePostProcessPipeline(FRenderer &Renderer);
 
   bool CreateCubeMesh(FRenderer &Renderer);
   bool CreateCylinderMesh(FRenderer &Renderer, float Height, uint32 SliceCount,
@@ -261,7 +263,7 @@ private:
   // 텍스처 및 머티리얼 일괄 초기화
   bool CreateTextures(FRenderer &Renderer);
   bool InitializeMaterials(FRenderer &Renderer);
-  bool CreateEditTextures(FRenderer& Renderer);
+  bool CreateEditTextures(FRenderer &Renderer);
 
   FRenderer *RendererRef = nullptr;
 };

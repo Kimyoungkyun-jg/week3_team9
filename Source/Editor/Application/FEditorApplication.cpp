@@ -97,7 +97,7 @@ void FEditorApplication::Render() {
                            EditorViewport.TopLeftUV, EditorViewport.LengthUV,
                            Editor.GetGrid()); // 그리드 그리기
 
-    for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())
+    for (auto& PrimitiveComponent : SceneManager->CurrentScene->GetRenderComponents())//씬에 등록된 component들 순회
     {
         if (!PrimitiveComponent) continue;
 
@@ -125,7 +125,7 @@ void FEditorApplication::Render() {
 
 
 
-    if (Editor.ObjectSelected())
+    if (Editor.ObjectSelected()) //선택된 객체 판단
     {
         // AABB 그리기
         USceneComponent* RootComp = Editor.GetSelectedActor()->GetRootComponent();
@@ -159,13 +159,20 @@ void FEditorApplication::Render() {
                 RenderView->RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
             }
         }
+
     }
+
+
 
     RenderView->GetRenderer().FlushLineBatch(
         EditorViewport.ViewportCamera
-            .CreateViewProjectionMatrix()); // line batch 일괄 flush
+        .CreateViewProjectionMatrix()); // line batch 일괄 flush
+
+    RenderView->RenderPostProcess(EditorViewport.ViewportCamera, EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetSelectedActor()); //포스트 프로세싱
 
     if (Editor.ObjectSelected()) {
+
+
       // 기즈모 그리기
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,

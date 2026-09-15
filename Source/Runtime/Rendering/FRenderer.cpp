@@ -16,7 +16,8 @@
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
-      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers()) {
+      !InitializeBackBufferAndDepthStencil() ||
+      !InitializeEditorViewportRenderTarget() || !InitializeConstantBuffers()) {
     Shutdown();
     return false;
   }
@@ -48,13 +49,17 @@ void FRenderer::Shutdown() {
 
 void FRenderer::BeginFrame() {
   Context->RSSetViewports(1, &Viewport);
-  Context->OMSetRenderTargets(1, BackBufferRTV.GetAddressOf(),
-                              DepthStencilView.Get());
+  BindEditorViewportRenderTargets();
 
   constexpr float ClearColor[] = {0.05f, 0.05f, 0.08f, 1.0f};
-  Context->ClearRenderTargetView(BackBufferRTV.Get(), ClearColor);
+  Context->ClearRenderTargetView(EditorViewPortRTV.Get(), ClearColor);
   Context->ClearDepthStencilView(
       DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+}
+
+void FRenderer::BindEditorViewportRenderTargets() {
+  Context->OMSetRenderTargets(1, EditorViewPortRTV.GetAddressOf(),
+                              DepthStencilView.Get());
 }
 
 void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV) {
@@ -128,13 +133,18 @@ void FRenderer::OnWindowSize(UINT Width, UINT Height) {
   Context->OMSetRenderTargets(0, nullptr, nullptr);
   BackBufferRTV.Reset();
   DepthStencilView.Reset();
+  DepthStencilSRV.Reset();
   DepthStencilBuffer.Reset();
+  EditorViewPortRTV.Reset();
+  EditorViewPortSRV.Reset();
+  renderTexture.Reset();
 
   SwapChain->ResizeBuffers(0, Width, Height, DXGI_FORMAT_UNKNOWN, 0);
   Viewport.Width = static_cast<float>(Width);
   Viewport.Height = static_cast<float>(Height);
 
   InitializeBackBufferAndDepthStencil();
+  InitializeEditorViewportRenderTarget();
 }
 
 void FRenderer::FlushLineBatch(const FMatrix &ViewProjection) {
@@ -513,18 +523,21 @@ bool FRenderer::InitializeBackBufferAndDepthStencil() {
     return false;
   }
 
+  const UINT Width = static_cast<UINT>(Viewport.Width);
+  const UINT Height = static_cast<UINT>(Viewport.Height);
+
   D3D11_TEXTURE2D_DESC DepthStencilDesc = {
-      .Width = static_cast<UINT>(Viewport.Width),
-      .Height = static_cast<UINT>(Viewport.Height),
+      .Width = Width,
+      .Height = Height,
       .MipLevels = 1u,
       .ArraySize = 1u,
-      .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      .Format = DXGI_FORMAT_R24G8_TYPELESS,
       .SampleDesc =
           {
               .Count = 1u,
           },
       .Usage = D3D11_USAGE_DEFAULT,
-      .BindFlags = D3D11_BIND_DEPTH_STENCIL,
+      .BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE,
   };
 
   Result =
@@ -533,8 +546,66 @@ bool FRenderer::InitializeBackBufferAndDepthStencil() {
     return false;
   }
 
-  Result = Device->CreateDepthStencilView(DepthStencilBuffer.Get(), nullptr,
+  D3D11_DEPTH_STENCIL_VIEW_DESC DsvDesc{
+      .Format = DXGI_FORMAT_D24_UNORM_S8_UINT,
+      .ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D,
+  };
+  Result = Device->CreateDepthStencilView(DepthStencilBuffer.Get(), &DsvDesc,
                                           &DepthStencilView);
+  if (FAILED(Result)) {
+    return false;
+  }
+
+  D3D11_SHADER_RESOURCE_VIEW_DESC StencilSrvDesc{
+      .Format = DXGI_FORMAT_X24_TYPELESS_G8_UINT,
+      .ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D,
+      .Texture2D = {.MostDetailedMip = 0, .MipLevels = 1},
+  };
+  Result = Device->CreateShaderResourceView(DepthStencilBuffer.Get(),
+                                            &StencilSrvDesc, &DepthStencilSRV);
+  if (FAILED(Result)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool FRenderer::InitializeEditorViewportRenderTarget() {
+  if (!Device) {
+    return false;
+  }
+
+  const UINT Width = static_cast<UINT>(Viewport.Width);
+  const UINT Height = static_cast<UINT>(Viewport.Height);
+  if (Width == 0 || Height == 0) {
+    return false;
+  }
+
+  D3D11_TEXTURE2D_DESC ColorTexDesc{
+      .Width = Width,
+      .Height = Height,
+      .MipLevels = 1u,
+      .ArraySize = 1u,
+      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+      .SampleDesc = {.Count = 1u},
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
+  };
+
+  HRESULT Result =
+      Device->CreateTexture2D(&ColorTexDesc, nullptr, &renderTexture);
+  if (FAILED(Result)) {
+    return false;
+  }
+
+  Result = Device->CreateRenderTargetView(renderTexture.Get(), nullptr,
+                                          &EditorViewPortRTV);
+  if (FAILED(Result)) {
+    return false;
+  }
+
+  Result = Device->CreateShaderResourceView(renderTexture.Get(), nullptr,
+                                            &EditorViewPortSRV);
   if (FAILED(Result)) {
     return false;
   }
@@ -790,4 +861,27 @@ void FRenderer::ClearTextInstances() {
   }
 
   FRenderResourceLibrary::Get().DestroyAllInstancingArray();
+}
+
+void FRenderer::RenderOutline()
+{
+    // 백버퍼 뷰포트 및 토폴로지 복구
+    Context->RSSetViewports(1, &Viewport);
+    Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Context->IASetInputLayout(nullptr);
+    ID3D11Buffer* NullVB = nullptr;
+    UINT Zero = 0;
+    Context->IASetVertexBuffers(0, 1, &NullVB, &Zero, &Zero);
+
+    Context->OMSetRenderTargets(1, BackBufferRTV.GetAddressOf(), nullptr);
+    // 씬 텍스처와 스텐실 텍스처 바인딩
+    ID3D11ShaderResourceView* SRVs[] = { EditorViewPortSRV.Get(), DepthStencilSRV.Get() };
+    Context->PSSetShaderResources(0, 2, SRVs);
+        
+    FRenderResourceLibrary::Get().GetPipeline(EPipelineID::PostProcess)->Bind(*Context.Get());
+    Context->Draw(3, 0);
+
+    // 슬롯 해제
+    ID3D11ShaderResourceView* NullSRVs[] = { nullptr, nullptr };
+    Context->PSSetShaderResources(0, 2, NullSRVs);
 }
