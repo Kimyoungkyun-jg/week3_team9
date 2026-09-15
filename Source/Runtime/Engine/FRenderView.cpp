@@ -90,8 +90,6 @@ void FRenderView::DrawStencilMask(const FCamera& Camera, const AActor* SelectedA
 {
     if (!SelectedActor) return;
 
-    // Stencil write는 editor scene의 color target과 DSV가 함께 바인딩된
-    // 상태에서만 유효하다. 이전 패스의 OM 상태에 의존하지 않는다.
     Renderer.BindEditorViewportRenderTargets();
 
     USceneComponent* RootComp = SelectedActor->GetRootComponent();
@@ -118,11 +116,7 @@ void FRenderView::RenderPostProcess(const FCamera& Camera, FVector2 TopLeftUV, F
 {
     // 에디터 뷰포트 설정 후 후처리 수행
     Renderer.SetViewportUV(TopLeftUV, LengthUV);
+    
     RenderOutline(Camera, SelectedActor);
 }
 
-void FRenderView::ChangeToBackBuffer()
-{
-    ID3D11RenderTargetView* BackBufferRTV = Renderer.GetBackBuffer();
-    Renderer.GetContext()->OMSetRenderTargets(1, &BackBufferRTV, nullptr);
-}

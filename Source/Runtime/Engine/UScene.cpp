@@ -212,7 +212,5 @@ AActor *UScene::SpawnActor(UClass *ClassType) {
   Actor->Register(*this);
 
   Actors.push_back(Actor);
-  // 스폰 즉시 비긴 플레이 호출
-  Actor->BeginPlay();
   return Actor;
 }
