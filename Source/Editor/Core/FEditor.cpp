@@ -22,6 +22,7 @@ void FEditor::Initialize(USceneManager *SceneManager) {
   
 
   SelectedActorTextComp = NewObject<UTextInstanceComponent>();
+  SelectedActorTextComp->SetInheritRotation(false);
   SelectedActorTextComp->SetMesh(FRenderResourceLibrary::Get().GetMesh(EMeshID::Rect));
   SelectedActorTextComp->SetMaterial(FRenderResourceLibrary::Get().GetMaterial(EMaterialID::SelectedActor_Text));
   SelectedActorTextComp->SetFont();

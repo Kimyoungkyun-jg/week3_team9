@@ -36,7 +36,8 @@ public:
 
 	virtual void Serialize(FArchive& Archive) const override;
 	virtual void Deserialize(const FArchive& Archive) override;
-
+    
+    void SetInheritRotation(bool bInherit) { bInheritRotation = bInherit; }
 protected:
 	USceneComponent() = default;
 
@@ -50,8 +51,9 @@ public:
 	//void SetRelativeTransformFromGlobal(const FTransform& GlobalTransform);
 
 protected:
-  AActor* ActorOwner = nullptr;
-  USceneComponent* SceneOwner = nullptr;
-  UScene* Scene = nullptr;
-  bool bHasBegunPlay = false;
+    AActor* ActorOwner = nullptr;
+    USceneComponent* SceneOwner = nullptr;
+    UScene* Scene = nullptr;
+    bool bHasBegunPlay = false;
+    bool bInheritRotation = true;
 };

@@ -110,8 +110,19 @@ FTransform USceneComponent::GetGlobalTransform() const //나중에 부모 rootco
         return RelativeTransform;
     }
 
-    //부모(RootComponent)의 월드 트랜스폼 가져오기
     FTransform ParentWorld = ActorOwner->GetRootComponent()->GetGlobalTransform();
-    //부모 트랜스폼 * 내 상대 트랜스폼
+    
+    if (!bInheritRotation)
+    {
+        // 부모 회전 무시
+        FTransform Result;
+        Result.Scale3D = FVector(
+            ParentWorld.Scale3D.X * RelativeTransform.Scale3D.X,
+            ParentWorld.Scale3D.Y * RelativeTransform.Scale3D.Y,
+            ParentWorld.Scale3D.Z * RelativeTransform.Scale3D.Z);
+        Result.Rotation = RelativeTransform.Rotation; // 자신의 회전만 사용
+        Result.Location = ParentWorld.Location + RelativeTransform.Location; // 월드 축 기준 오프셋
+        return Result;
+    }
     return ParentWorld * RelativeTransform;
 }

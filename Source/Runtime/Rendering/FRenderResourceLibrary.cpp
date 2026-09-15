@@ -94,7 +94,16 @@ constexpr FPipelineEntry pipelineTable[] = {
         .PixelShader = L"UnlightPS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
+    {
+        .Id = EPipelineID::SelectedActor_Text,
+        .VertexShader = L"InstanceVS.cso",
+        .PixelShader = L"MsdfTextPS.cso",
+        .bDepthWrite = false,
+        .BlendMode = EBlendMode::Translucent,
+        .bIsInstancing = true,
+    },
 };
+
 
 // 머티리얼 정보 엔트리
 struct FMaterialEntry {
@@ -152,6 +161,11 @@ constexpr FMaterialEntry materialTable[] = {
     {
         .Id = EMaterialID::Outline,
         .PipelineID = EPipelineID::Outline,
+    },
+    {
+        .Id = EMaterialID::SelectedActor_Text,
+        .PipelineID = EPipelineID::SelectedActor_Text,
+        .TextureName = "maplestorybold",
     },
 };
 

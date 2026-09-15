@@ -29,24 +29,14 @@ void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Cam
 	Instances.clear();
 
 	FMatrix WorldMatrix = GetGlobalTransform().ToMatrix();
-	const auto& Positions = GetMesh()->GetPositions();
-	TArray<FVector> WorldPositions;
-	
-	WorldPositions.reserve(Positions.size());
-	for (const FVector& LocalPos : Positions)
+
+	FInstanceData Data
 	{
-		// 정점 좌표 변환 (W = 1.0f 기준)
-		FVector WorldPos = WorldMatrix.TransformPointRow(LocalPos);
-		FMatrix PosMatrix = FMatrix::MakeTranslation(WorldPos);
-		FInstanceData Data
-		{
-			.World = PosMatrix,
-			.Color = FVector4(GetColor(), 1.0f),
-		};
+		.World = WorldMatrix,
+		.Color = FVector4(GetColor(), 1.0f),
+	};
 
-		Instances.push_back(Data);
-	}
-
+	Instances.push_back(Data);
 
 	renderer.AddTextInstanceArray(Instances, GetMesh()->MeshId, GetMaterial()->MaterialId);
 }
