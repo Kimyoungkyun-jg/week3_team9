@@ -58,8 +58,7 @@ void FRenderer::BeginFrame() {
 }
 
 void FRenderer::BindEditorViewportRenderTargets() {
-  Context->OMSetRenderTargets(1, EditorViewPortRTV.GetAddressOf(),
-                              DepthStencilView.Get());
+  Context->OMSetRenderTargets(1, EditorViewPortRTV.GetAddressOf(),DepthStencilView.Get());
 }
 
 void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV) {
@@ -866,9 +865,13 @@ void FRenderer::ClearTextInstances() {
 void FRenderer::RenderOutline()
 {
     // 백버퍼 뷰포트 및 토폴로지 복구
+
+
     Context->RSSetViewports(1, &Viewport);
     Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     Context->IASetInputLayout(nullptr);
+    
+    
     ID3D11Buffer* NullVB = nullptr;
     UINT Zero = 0;
     Context->IASetVertexBuffers(0, 1, &NullVB, &Zero, &Zero);
