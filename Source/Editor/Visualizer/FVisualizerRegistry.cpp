@@ -27,9 +27,19 @@ FVisualizerRegistry::FVisualizerRegistry()
 
 IVisualizer* FVisualizerRegistry::FindVisualizer(UClass* ClassType)
 {
-	auto Item = Map.find(ClassType);
+	// 비트 마스크 연산을 냅두고 이걸 써도 되는걸까..
+	while (ClassType != nullptr)
+	{
+		auto Item = Map.find(ClassType);
 
-	if (Item == Map.end()) { return Visualizers[0].get(); }
+		if (Item == Map.end())
+		{
+			ClassType = ClassType->GetSuperClass();
+			continue;
+		}
 
-	return Item->second;
+		return Item->second;
+	}
+
+	return Visualizers[0].get(); // FPrimitiveVisualizer
 }
