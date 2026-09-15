@@ -129,26 +129,10 @@ TSharedPtr<FTexture> FImguiContentsDrawer::GetOrLoadThumbnail(const FContentEntr
 		return nullptr;
 	}
 
-	int W = 0, H = 0, ChannelsInFile = 0;
-	unsigned char* Pixels = stbi_load(Item.Path.string().c_str(), &W, &H, &ChannelsInFile, 4);
 	++LoadsThisFrame;
 
-	if (!Pixels)
-	{
-		// 실패한 파일을 매 프레임 다시 시도하지 않도록 빈 항목으로 막아 둔다.
-		Lib.RegisterTexture(Key, nullptr);
-		return nullptr;
-	}
-
-	FTextureDesc Desc{
-		.PixelData = Pixels,
-		.Width = static_cast<uint32>(W),
-		.Height = static_cast<uint32>(H),
-		.RowPitch = static_cast<uint32>(W) * 4u,
-	};
-
-	TSharedPtr<FTexture> Texture = Renderer->CreateTexture(Desc);
-	stbi_image_free(Pixels);
+	TSharedPtr<FTexture> Texture = Renderer->CreateTexture(Item.Path.wstring().c_str());
+	//stbi_image_free(Pixels);
 
 	// 성공이든 실패든 등록해 둔다. 실패면 nullptr이 캐시되어 재시도를 막는다.
 	Lib.RegisterTexture(Key, Texture);

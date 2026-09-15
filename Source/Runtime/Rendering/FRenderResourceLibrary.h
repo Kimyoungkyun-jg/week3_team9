@@ -28,6 +28,7 @@ enum class EPipelineID : uint8 {
   Text,
   Instance_Text,
   Instance_Simple,
+  Gizmo
   Instance_Billboard,
   Billboard,
   Gizmo,

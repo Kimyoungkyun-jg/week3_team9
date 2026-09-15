@@ -1,5 +1,7 @@
 #include "FArchive.h"
 
+#include "Runtime/Utility/WindowsUtil.h"
+
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -75,15 +77,16 @@ void FArchive::SetString(const FString& Key, const FString& Value)
 	Object[Key] = Value;
 }
 
-
 FWString FArchive::GetWString(const FString& Key) const
 {
-	return Object.at(Key).get<FWString>();
+	FString Result = Object.at(Key).get<FString>();
+	return WindowsUtil::ToWString(Result);
 }
 
 void FArchive::SetWString(const FString& Key, const FWString& Value)
 {
-	Object[Key] = Value;
+	FString Result = WindowsUtil::ToString(Value);
+	Object[Key] = Result;
 }
 
 bool FArchive::IsNull(const FString& Key) const

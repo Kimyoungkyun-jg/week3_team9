@@ -258,8 +258,16 @@ float FGizmo::CalculateGizmoScale(const FVector& GizmoLocation, const FCamera& C
 {
 	constexpr float ScalePerDistance = 0.15f;
 
-	FVector ToTarget = GizmoLocation - Camera.Position;
+	// 직교투영은 거리가 화면상 크기에 영향을 주지 않는다.
+	// 거리를 곱하면 멀어질수록 기즈모가 커지므로, 뷰 높이를 기준으로 삼는다.
+	if (Camera.Projection.ProjectionType == EProjectionType::Orthographic)
+	{
 
+		constexpr float ScalePerViewHeight = 0.15f;
+		return Camera.Projection.Height * ScalePerViewHeight;
+	}
+
+	FVector ToTarget = GizmoLocation - Camera.Position;
 	return ToTarget.Size() * ScalePerDistance;
 }
 

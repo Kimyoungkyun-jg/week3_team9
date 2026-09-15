@@ -253,7 +253,31 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
-  <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp"><Filter>Source\Runtime\Actors</Filter></ClCompile></ItemGroup>
+    <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Core\FConfigArchive.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Core\FEditorState.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiContentsDrawer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\UI\Imgui\FImguiDragDrop.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\AInstancingActor.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\ATextRenderActor.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Utility\WindowsUtil.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
       <Filter>Source\Runtime\Rendering</Filter>
@@ -323,6 +347,9 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\FString.h">
       <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\EBlendMode.h">
+      <Filter>Source\Runtime\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Rendering\FRenderPipeline.h">
       <Filter>Source\Runtime\Rendering</Filter>
@@ -488,7 +515,19 @@
     <ClInclude Include="Source\Runtime\Actors\TestTextActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
-  <ClInclude Include="Source\Runtime\Actors\AAnimatedBillboardActor.h"><Filter>Source\Runtime\Actors</Filter></ClInclude></ItemGroup>
+    <ClInclude Include="Source\Runtime\Actors\AAnimatedBillboardActor.h">
+      <Filter>Source\Runtime\Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\Core\EditorConstant.h" />
+    <ClInclude Include="Source\Editor\Core\FConfigArchive.h" />
+    <ClInclude Include="Source\Editor\Core\FEditorState.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiContentsDrawer.h" />
+    <ClInclude Include="Source\Editor\UI\Imgui\FImguiDragDrop.h" />
+    <ClInclude Include="Source\Runtime\Actors\AInstancingActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\ATextRenderActor.h" />
+    <ClInclude Include="Source\Runtime\Utility\WindowsUtil.h" />
+    <ClInclude Include="Source\ThirdParty\mINI\ini.h" />
+  </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
       <Filter>Shader</Filter>
