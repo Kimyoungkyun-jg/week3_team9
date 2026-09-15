@@ -20,6 +20,7 @@
 class FTexture;
 struct FTextureDesc;
 struct FCamera;
+class UTextInstanceComponent;
 
 inline FWString GetExecutableDirectory() {
   wchar_t Buffer[256];
@@ -76,6 +77,7 @@ public:
   // 텍스트 인스턴싱
   void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const EMeshID& MeshId, const EMaterialID& MaterialId);
   void DrawInstances(const FCamera& Camera);
+  void DrawTextInstances(const FCamera& Camera, const EMeshID& MeshId, const EMaterialID& MaterialId);
   void ClearTextInstances();
 
 

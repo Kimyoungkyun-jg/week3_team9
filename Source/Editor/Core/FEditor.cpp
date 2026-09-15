@@ -15,9 +15,17 @@
 
 
 void FEditor::Initialize(USceneManager *SceneManager) {
-    State.ReadFromFile();
+  State.ReadFromFile();
   Gizmo.Initialize();
   Grid.Initialize();
+
+  
+
+  SelectedActorTextComp = NewObject<UTextInstanceComponent>();
+  SelectedActorTextComp->SetMesh(FRenderResourceLibrary::Get().GetMesh(EMeshID::Rect));
+  SelectedActorTextComp->SetMaterial(FRenderResourceLibrary::Get().GetMaterial(EMaterialID::SelectedActor_Text));
+  SelectedActorTextComp->SetFont();
+
   this->SceneManager = SceneManager;
 }
 
@@ -79,6 +87,13 @@ bool FEditor::SelectActor(AActor *Actor) {
 
   SelectedActor = Actor;
   if (SelectedActor) {
+      
+    SelectedActorTextComp->SetActorOwner(SelectedActor);
+    FTransform RelativeTrans;
+    RelativeTrans.Location = FVector{ 0.0f, 0.0f, 1.5f }; 
+    SelectedActorTextComp->SetRelativeTransform(RelativeTrans);
+    SelectedActorTextComp->SetText(L"UUID : " + std::to_wstring(SelectedActor->GetUUID()));
+
     SelectedTransform = SelectedActor->GetTransform();
     SelectedEulerDegDisplay = SelectedTransform.Rotation.GetEulerXYZ();
   }

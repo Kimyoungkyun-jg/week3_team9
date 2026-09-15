@@ -176,6 +176,10 @@ void FEditorApplication::Render() {
       RenderView->RenderGizmo(
           Editor.SelectedTransform, EditorViewport.ViewportCamera,
           EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
+
+      RenderView->RenderUUIDText(
+          EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
+          EditorViewport.LengthUV, Editor.GetTextcomp());
     }
 
     // 선택 객체 하이라이트 렌더

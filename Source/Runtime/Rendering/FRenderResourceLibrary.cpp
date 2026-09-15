@@ -41,6 +41,7 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true,D3D11_CULL_BACK, false, true},
     {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, true},
     {EPipelineID::Gizmo, L"ExampleVS.cso", L"UnlightPS.cso"},
+    {EPipelineID::SelectedActor_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", false, D3D11_CULL_BACK, false, true},
 };
 
 // 머티리얼 정보 엔트리
@@ -61,6 +62,7 @@ constexpr FMaterialEntry materialTable[] = {
     {EMaterialID::Instance_Text, EPipelineID::Instance_Text, "maplestorybold"},
     {EMaterialID::Instance_Simple, EPipelineID::Instance_Simple},
     {EMaterialID::Gizmo, EPipelineID::Gizmo},
+    {EMaterialID::SelectedActor_Text, EPipelineID::SelectedActor_Text, "maplestorybold"},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -835,6 +837,7 @@ bool FRenderResourceLibrary::CreateInstancingArrayMap() {
   // 기본 배치 키 등록
   AllInstancingArrayMap[{EMaterialID::Instance_Text, EMeshID::Rect}] = {};
   AllInstancingArrayMap[{EMaterialID::Instance_Simple, EMeshID::Cube}] = {};
+  AllInstancingArrayMap[{EMaterialID::SelectedActor_Text, EMeshID::Rect}] = {};
   return true;
 }
 

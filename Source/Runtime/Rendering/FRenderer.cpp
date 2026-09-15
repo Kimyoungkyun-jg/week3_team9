@@ -700,6 +700,76 @@ void FRenderer::DrawInstances(const FCamera& Camera)
     }
 }
 
+void FRenderer::DrawTextInstances(const FCamera& Camera, const EMeshID& MeshId, const EMaterialID& MaterialId)
+{
+    auto& ResLib = FRenderResourceLibrary::Get();
+
+    // 상수 버퍼 업데이트
+    FObjectConstants SC;
+    SC.MVP = Camera.CreateViewProjectionMatrix();
+    UpdateBuffer(SC);
+
+
+    TArray<FInstanceData> InstanceData = FRenderResourceLibrary::Get().GetInstancingArray(MaterialId, MeshId);
+
+    if (InstanceData.empty()) return;
+
+    const UINT InstanceCount = static_cast<UINT>(InstanceData.size());
+    const UINT RequiredSize = InstanceCount * sizeof(FInstanceData);
+
+    // 버퍼 크기 부족 시 동적 확장
+    if (RequiredSize > TextInstanceBufferSize)
+    {
+        InstanceBuffer.Reset();
+        D3D11_BUFFER_DESC Desc{};
+        Desc.ByteWidth = RequiredSize;
+        Desc.Usage = D3D11_USAGE_DYNAMIC;
+        Desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+        if (FAILED(Device->CreateBuffer(&Desc, nullptr, &InstanceBuffer))) return;
+        TextInstanceBufferSize = RequiredSize;
+    }
+
+    // 인스턴스 데이터 업로드
+    D3D11_MAPPED_SUBRESOURCE MappedResource{};
+    if (FAILED(Context->Map(InstanceBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource))) return;
+    std::memcpy(MappedResource.pData, InstanceData.data(), RequiredSize);
+    Context->Unmap(InstanceBuffer.Get(), 0);
+
+    // 머티리얼 및 파이프라인 바인딩
+    auto Material = ResLib.GetMaterial(MaterialId);
+    if (!Material) return;
+
+    TSharedPtr<FRenderPipeline> Pipeline = Material->GetPipeline();
+    if (Pipeline)
+    {
+        Pipeline->Bind(*Context.Get());
+    }
+    Material->BindResources(*Context.Get());
+
+    // 메시 조회 및 바인딩
+    auto Mesh = ResLib.GetMesh(MeshId);
+    if (!Mesh) return;
+    Mesh->BindResources(*Context.Get());
+
+    // 슬롯 1에 인스턴스 버퍼 바인딩
+    UINT Stride = sizeof(FInstanceData);
+    UINT Offset = 0;
+    Context->IASetVertexBuffers(1, 1, InstanceBuffer.GetAddressOf(), &Stride, &Offset);
+
+    // 인스턴스 렌더링 호출
+    if (Mesh->HasIndices())
+    {
+        Context->DrawIndexedInstanced(Mesh->GetIndexCount(), InstanceCount, 0, 0, 0);
+    }
+    else
+    {
+        Context->DrawInstanced(Mesh->VertexCount, InstanceCount, 0, 0);
+    }
+
+}
+
 void FRenderer::ClearTextInstances()
 {
     for (auto& [BatchKey, InstanceArray] : FRenderResourceLibrary::Get().AllInstancingArrayMap)

@@ -21,6 +21,7 @@ public:
 	void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
 
 
+	void SetFont();
 
 	void RebuildTextMesh();
 

@@ -11,6 +11,7 @@
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/Engine/USceneManager.h"
 #include "Runtime/Rendering/ShaderConstants.h"
+#include "Runtime/CoreUObject/UTextInstanceComponent.h"
 
 enum class EEditorPrimitiveType : uint8 {
   Cube,
@@ -66,6 +67,8 @@ public:
 
   void ClearSelectionForGC();
 
+  UTextInstanceComponent* GetTextcomp() { return SelectedActorTextComp; }
+
 private:
   USceneManager *SceneManager =
       nullptr; // 씬을 다중으로 가질 수 있도록 구조개선 가능-이경우 에디터쪽에
@@ -75,4 +78,5 @@ private:
   FGizmo Gizmo;
   FGrid Grid;
   TWeakObjectPtr<AActor> SelectedActor;
+  TWeakObjectPtr<UTextInstanceComponent> SelectedActorTextComp;
 };

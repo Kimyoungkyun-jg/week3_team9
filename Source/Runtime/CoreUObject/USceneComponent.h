@@ -21,6 +21,7 @@ public:
     
     AActor* GetActorOwner() const { return ActorOwner; }
     USceneComponent* GetSceneOwner() const { return SceneOwner; }
+    void SetActorOwner(AActor* Owner) { ActorOwner = Owner; } //selectedacotor 한테 textcomponent 바로 붙여야해서 만듦
 
     virtual void Register(UScene& InScene);
     virtual void BeginPlay();

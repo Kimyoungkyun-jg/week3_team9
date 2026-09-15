@@ -40,6 +40,8 @@ void FRenderView::RenderGrid(const FCamera &Camera, FVector2 TopLeftUV,
   Grid.DrawLine(Renderer, Camera);
 }
 
+
+
 void FRenderView::RenderLine(const FVector &Start, const FVector &End,
                              const FVector4 &Color) {
   FLineBatcher &LineBatcher = Renderer.GetLineBatcher();
@@ -64,3 +66,13 @@ void FRenderView::RenderSphere(const FVector &Center, float Radius,
   FLineBatcher &LineBatcher = Renderer.GetLineBatcher();
   LineBatcher.DrawSphere(Center, Radius, Color, Segments);
 }
+
+void FRenderView::RenderUUIDText(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, UTextInstanceComponent* textcomp)
+{
+    Renderer.SetViewportUV(TopLeftUV, LengthUV);
+    Renderer.ClearDepth();
+    textcomp->Render(Renderer, Camera, false);
+    Renderer.DrawTextInstances(Camera, textcomp->GetMesh()->MeshId, textcomp->GetMaterial()->MaterialId);
+    Renderer.ClearTextInstances();
+}
+

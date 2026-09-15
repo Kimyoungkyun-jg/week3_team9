@@ -12,11 +12,7 @@ void UTextInstanceComponent::Register(UScene& InScene)
 {
 	FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
 
-	if (!Font) {
-        Font = MakeShared<FFont>();
-        FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
-        Font->Deserialize(Path);
-	}
+    SetFont();
 
 	if (!GetMesh()) {
 		SetMesh(Resources ? Resources->GetMesh(EMeshID::Rect) : nullptr);
@@ -34,6 +30,15 @@ void UTextInstanceComponent::Register(UScene& InScene)
 void UTextInstanceComponent::Update(float delta)
 {
     RebuildTextMesh();
+}
+
+void UTextInstanceComponent::SetFont()
+{
+    if (!Font) {
+        Font = MakeShared<FFont>();
+        FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
+        Font->Deserialize(Path);
+    }
 }
 
 void UTextInstanceComponent::RebuildTextMesh() {
@@ -137,5 +142,5 @@ void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, 
         Instance.Word = Instance.Word * BillboardWorld;
     }
 
-    Super::Render(renderer, Camera, bHighlighted);
+    renderer.AddTextInstanceArray(RenderInstances, GetMesh()->MeshId, GetMaterial()->MaterialId);
 }

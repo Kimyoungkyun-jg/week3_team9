@@ -3,6 +3,7 @@
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/Geometry/FTransform.h"
 #include "Runtime/Math/FVector2.h"
+#include "Runtime/CoreUObject/UTextInstanceComponent.h"
 #include "Runtime/Rendering/FRenderer.h"
 
 struct FCamera;
@@ -24,5 +25,6 @@ public:
 	void RenderBoxCenterExtent(const FVector& Center, const FVector& Extent, const FVector4& Color);
 	void RenderBoxMinMax(const FVector& Min, const FVector& Max, const FVector4& Color);
 	void RenderSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments = 16);
+	void RenderUUIDText(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, UTextInstanceComponent* textcomp);
 	void RenderVerticetoline();
 };
