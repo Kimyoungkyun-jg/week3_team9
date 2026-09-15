@@ -20,7 +20,7 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 Len
   }
 
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
-  Rendered->Render(Renderer, Camera, bHighlighted);
+  Rendered->Render(Renderer, Camera, bHighlighted, sceneView);
 
   Renderer.DrawInstances(Camera);
   Renderer.ClearTextInstances();
@@ -66,14 +66,14 @@ void FRenderView::RenderSphere(const FVector &Center, float Radius,
 }
 
 void FRenderView::RenderUUIDText(const FCamera &Camera, FVector2 TopLeftUV,
-                                 FVector2 LengthUV,
-                                 UTextInstanceComponent *textcomp) {
+                                 FVector2 LengthUV, UTextInstanceComponent *textcomp, const FSceneView& SceneView)
+{
   if (!textcomp || !textcomp->GetMesh() || !textcomp->GetMaterial()) {
     return;
   }
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   Renderer.ClearDepth();
-  textcomp->Render(Renderer, Camera, false);
+  textcomp->Render(Renderer, Camera, false, SceneView);
   Renderer.DrawTextInstances(Camera, textcomp->GetMesh()->MeshId,
                              textcomp->GetMaterial()->MaterialId);
   Renderer.ClearTextInstances();

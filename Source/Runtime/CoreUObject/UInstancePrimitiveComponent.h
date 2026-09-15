@@ -13,7 +13,7 @@ class UInstancePrimitiveComponent : public UPrimitiveComponent {
 
 public:
     void Register(UScene& Scene) override;
-    void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) override;
+    void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) override;
 
     // 인스턴스 위치/색상 추가 (Actor 1개가 N개 위치를 직접 관리)
     void AddInstance(const FVector& WorldPosition, const FVector4& Color = {1,1,1,1});

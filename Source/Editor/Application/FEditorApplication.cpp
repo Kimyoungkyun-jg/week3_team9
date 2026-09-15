@@ -129,7 +129,7 @@ void FEditorApplication::Render() {
 
         // 인스턴스 데이터 누적만 수행 (DrawInstances는 루프 밖에서 일괄 호출)
         RenderView->GetRenderer().SetViewportUV(EditorViewport.TopLeftUV, EditorViewport.LengthUV);
-        PrimitiveComponent->Render(RenderView->GetRenderer(), EditorViewport.ViewportCamera, bSelected);
+        PrimitiveComponent->Render(RenderView->GetRenderer(), EditorViewport.ViewportCamera, bSelected, sceneview);
     }
 
     // 모든 컴포넌트 누적 후 한 번에 드로우
@@ -197,7 +197,7 @@ void FEditorApplication::Render() {
 
       RenderView->RenderUUIDText(
           EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
-          EditorViewport.LengthUV, Editor.GetTextcomp());
+          EditorViewport.LengthUV, Editor.GetTextcomp(),sceneview);
     }
 
     // 선택 객체 하이라이트 렌더
