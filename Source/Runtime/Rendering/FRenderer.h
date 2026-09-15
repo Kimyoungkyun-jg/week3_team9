@@ -74,9 +74,10 @@ public:
   void UpdateLightConstants(FLightConstants &Constants, const EViewModeIndex InMode);
 
   // 텍스트 인스턴싱
-  void AddTextInstanceArray(const TArray<FInstanceData>& Instances);
-  void DrawTextInstances(const FCamera& Camera);
+  void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const EMeshID& MeshId, const EMaterialID& MaterialId);
+  void DrawInstances(const FCamera& Camera);
   void ClearTextInstances();
+
 
 private:
   bool InitializeDeviceAndSwapChain(HWND Window);
@@ -111,14 +112,12 @@ private:
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
 
   // 텍스트 인스턴싱 버퍼
-  TArray<FInstanceData> TextInstanceData;
-  Microsoft::WRL::ComPtr<ID3D11Buffer> TextInstanceBuffer;
+
+  Microsoft::WRL::ComPtr<ID3D11Buffer> InstanceBuffer;
   UINT TextInstanceBufferSize = 0;
 
   EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
-
-
-
+  
 public:
   // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
   template <typename TConstants>
@@ -143,6 +142,7 @@ public:
       Context->Draw(Mesh.VertexCount, 0);
     }
   }
+
 
 private:
   // 어느 상수 타입이든 b0 버퍼 하나에 써 넣는다.

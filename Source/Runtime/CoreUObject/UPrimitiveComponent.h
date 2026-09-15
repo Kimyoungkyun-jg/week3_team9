@@ -49,6 +49,7 @@ public:
 
 
   virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
+
 protected:
   UPrimitiveComponent() = default;
 

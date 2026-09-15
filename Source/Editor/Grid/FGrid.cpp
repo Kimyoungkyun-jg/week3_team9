@@ -16,9 +16,9 @@
 
 void FGrid::Initialize() {
   auto &RenderResources = FRenderResourceLibrary::Get();
-  GridMesh = RenderResources.GetMesh("Grid");
+  GridMesh = RenderResources.GetMesh(EMeshID::Grid);
   GridMaterial = RenderResources.GetMaterial(EMaterialID::Grid);
-  LineMesh = RenderResources.GetMesh("Arrow");
+  LineMesh = RenderResources.GetMesh(EMeshID::Arrow);
   LineMaterial = RenderResources.GetMaterial(EMaterialID::Simple);
 }
 

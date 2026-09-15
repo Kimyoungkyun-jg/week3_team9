@@ -19,7 +19,7 @@ void UTextInstanceComponent::Register(UScene& InScene)
 	}
 
 	if (!GetMesh()) {
-		SetMesh(Resources ? Resources->GetMesh("Rect") : nullptr);
+		SetMesh(Resources ? Resources->GetMesh(EMeshID::Rect) : nullptr);
 	}
 	if (!GetMaterial()) {
 		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
@@ -137,5 +137,5 @@ void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, 
         Instance.Word = Instance.Word * BillboardWorld;
     }
 
-	renderer.AddTextInstanceArray(RenderInstances);
+    Super::Render(renderer, Camera, bHighlighted);
 }

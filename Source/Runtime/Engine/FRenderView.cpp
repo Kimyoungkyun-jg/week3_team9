@@ -21,7 +21,7 @@ void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 Len
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   Rendered->Render(Renderer, Camera, bHighlighted);
   
-  Renderer.DrawTextInstances(Camera);
+  Renderer.DrawInstances(Camera);
   Renderer.ClearTextInstances();
 
 }
