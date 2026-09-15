@@ -31,8 +31,8 @@ private:
 	TSharedPtr<FFont> Font;
 	FWString Text = L"Hello Jungle World!";
 
-	int32 Width = 0;
-	int32 Height = 0;
+	float Width = 0.0f;
+	float Height = 0.0f;
 
 	TArray<FInstanceData> Instances;
 
