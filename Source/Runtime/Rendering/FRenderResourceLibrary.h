@@ -120,6 +120,14 @@ public:
     return nullptr;
   }
 
+  // 머티리얼 조회 (ID 기반 전용)
+  [[nodiscard]] TSharedPtr<FMaterial> GetEditMaterial(EMaterialID Id) const {
+      auto it = AllMaterialMap.find(Id);
+      if (it != AllMaterialMap.end())
+          return it->second;
+      return nullptr;
+  }
+
   // 메쉬 조회
   TSharedPtr<FMesh> GetMesh(const EMeshID &ID) const {
     auto it = AllMeshMap.find(ID);

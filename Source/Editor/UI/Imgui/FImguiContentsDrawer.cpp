@@ -13,11 +13,6 @@
 #include "FImguiDragDrop.h"
 FImguiContentsDrawer::FImguiContentsDrawer() : LeftPanelWidth(200.0f)
 {
-
-
-
-
-
 	RootPath = std::filesystem::current_path() / "Resources";
 	CurrentPath = RootPath;
 
