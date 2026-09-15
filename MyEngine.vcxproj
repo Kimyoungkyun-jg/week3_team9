@@ -628,5 +628,8 @@
     <PreBuildEvent>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Convert Png to dds</Message>
     </PreBuildEvent>
+    <PreBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">call "$(ProjectDir)ConvertTextures.bat"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
 </Project>

@@ -101,7 +101,7 @@ TSharedPtr<FTexture> FImguiContentsDrawer::GetOrLoadThumbnail(const FContentEntr
 	{
 		return nullptr;
 	}
-	if (Item.Extension != ".png" && Item.Extension != ".jpg" && Item.Extension != ".jpeg")
+	if (Item.Extension != ".dds" && Item.Extension != ".png" && Item.Extension != ".jpg" && Item.Extension != ".jpeg")
 	{
 		return nullptr;
 	}
