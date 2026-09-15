@@ -11,6 +11,12 @@
 #include "ThirdParty/Imgui/imgui_impl_dx11.h"
 #include "ThirdParty/Imgui/imgui_impl_win32.h"
 #include <string>
+#include "FImguiDragDrop.h"
+#include "Runtime/Rendering/FMaterial.h"
+#include "Runtime/Rendering/FTexture.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
+
+
 
 void FImguiPropertyWindow::Process(FEditor& Editor)
 {
@@ -159,7 +165,51 @@ void FImguiPropertyWindow::Process(FEditor& Editor)
 							SelectedActor->SetColor(CurrentColor);
 						}
 					}
+					// ---------------- 텍스처 슬롯 ----------------
+					constexpr float SlotSize = 64.0f;
+					TSharedPtr<FMaterial> Material = PrimComp->GetMaterial();
+					TSharedPtr<FTexture> CurrentTexture = Material ? Material->GetTexture() : nullptr;
+
+					ImGui::Spacing();
+					ImGui::TextDisabled("Texture");
+
+					if (CurrentTexture && CurrentTexture->GetSRV())
+					{
+						// ImGui 1.93의 ImTextureID는 ImU64라서 포인터를 정수로 한 번 거친다.
+						const ImTextureID TexId = static_cast<ImTextureID>(
+							reinterpret_cast<intptr_t>(CurrentTexture->GetSRV()));
+						ImGui::Image(TexId, ImVec2(SlotSize, SlotSize));
+					}
+					else
+					{
+						// 비어 있어도 드롭받을 아이템은 있어야 하므로 자리를 만든다.
+						ImGui::Button("No\nTexture", ImVec2(SlotSize, SlotSize));
+					}
+
+					// 드롭 타깃은 아이템을 그린 직후여야 한다.
+					if (ImGui::BeginDragDropTarget())
+					{
+						if (const ImGuiPayload* Payload =
+							ImGui::AcceptDragDropPayload(ContentDragPayloadType))
+						{
+							// 타입 이름이 같아도 크기가 다르면 다른 구조체일 수 있다.
+							if (Payload->DataSize == static_cast<int>(sizeof(FContentDragPayload)))
+							{
+								const auto* Dropped =
+									static_cast<const FContentDragPayload*>(Payload->Data);
+
+								if (Dropped->Kind == FContentDragPayload::EKind::Texture)
+								{
+									Material->SetTextureByName(Dropped->Key);
+								}
+							}
+						}
+						ImGui::EndDragDropTarget();
+					}
 				}
+
+				
+
 
 				ImGui::PopID();
 				ImGui::Spacing();

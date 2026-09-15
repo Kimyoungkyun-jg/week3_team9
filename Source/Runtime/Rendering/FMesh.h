@@ -9,6 +9,7 @@
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 
 class FRenderer;
+enum class EMeshID : uint8;
 
 class FMesh final
 {
@@ -24,7 +25,7 @@ public:
 
 	// 버퍼 데이터 갱신
 	bool UpdateBuffers(ID3D11Device* Device, ID3D11DeviceContext* Context, const struct FMeshDesc& Desc);
-
+	EMeshID MeshId;
 private:
 	void BindResources(ID3D11DeviceContext& Context) const;
 

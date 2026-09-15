@@ -11,7 +11,7 @@ UCLASS_META(UPlaneComp, MeshName, "Plane")
 
 void UPlaneComp::Register(UScene &InScene) {
   FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh("Plane") : nullptr);
+  SetMesh(Resources ? Resources->GetMesh(EMeshID::Plane) : nullptr);
   SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Simple) : nullptr);
   Super::Register(InScene);
 }

@@ -16,9 +16,9 @@
 
 void FGrid::Initialize() {
   auto &RenderResources = FRenderResourceLibrary::Get();
-  GridMesh = RenderResources.GetMesh("Grid");
+  GridMesh = RenderResources.GetMesh(EMeshID::Grid);
   GridMaterial = RenderResources.GetMaterial(EMaterialID::Grid);
-  LineMesh = RenderResources.GetMesh("Arrow");
+  LineMesh = RenderResources.GetMesh(EMeshID::Arrow);
   LineMaterial = RenderResources.GetMaterial(EMaterialID::Simple);
 }
 
@@ -40,7 +40,7 @@ void FGrid::Draw(FRenderer &Renderer, const FCamera &Camera) {
   C.MVP = World * VP; // 스왑은 UpdateGridConstants 가 함
   C.CellSize = CellSize;
 
-  Renderer.Draw(*GridMesh, *GridMaterial, C, false);
+  Renderer.Draw(*GridMesh, *GridMaterial, C, 0, false);
 
   if (!LineMesh || !LineMaterial)
     return;

@@ -49,10 +49,10 @@ public:
 
 
   virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
+
 protected:
   UPrimitiveComponent() = default;
 
-private:
   TSharedPtr<FMesh> PrimitiveMesh;
   TSharedPtr<FMaterial> PrimitiveMaterial;
   TSharedPtr<FAxisAlignedBoundingBox> BoundingBox;

@@ -10,7 +10,7 @@
 #include "ThirdParty/stb/stb_image.h"
 #include <algorithm>
 #include <cctype>
-
+#include "FImguiDragDrop.h"
 FImguiContentsDrawer::FImguiContentsDrawer() : LeftPanelWidth(200.0f)
 {
 
@@ -212,7 +212,15 @@ void FImguiContentsDrawer::RenderContentView()
 
 		const TSharedPtr<FTexture> Thumbnail = GetOrLoadThumbnail(Item);
 
-		if (Thumbnail && Thumbnail->GetSRV())
+		// 폴더는 썸네일이 없으므로 에디터 아이콘으로 대신한다.
+		// 아이콘이 없으면 DisplayImage가 nullptr이 되어 아래 else로 떨어진다.
+		TSharedPtr<FTexture> DisplayImage = Thumbnail;
+		if (Item.bIsDirectory)
+		{
+			DisplayImage = FRenderResourceLibrary::Get().GetEditTexture("foldericon");
+		}
+
+		if (DisplayImage && DisplayImage->GetSRV())          
 		{
 			// 선택 상태를 배경색으로 표시한다.
 			const ImGuiStyle& S = ImGui::GetStyle();
@@ -221,7 +229,7 @@ void FImguiContentsDrawer::RenderContentView()
 
 			// ImGui 1.93의 ImTextureID는 ImU64라서 포인터를 정수로 한 번 거쳐야 한다.
 			const ImTextureID TexId =
-				static_cast<ImTextureID>(reinterpret_cast<intptr_t>(Thumbnail->GetSRV()));
+				static_cast<ImTextureID>(reinterpret_cast<intptr_t>(DisplayImage->GetSRV()));
 
 			if (ImGui::ImageButton("##thumb", TexId, ImVec2(ThumbnailSize, ThumbnailSize)))
 			{
@@ -242,6 +250,41 @@ void FImguiContentsDrawer::RenderContentView()
 			{
 				SelectedPath = Item.Path;
 			}
+		}
+
+		if (!Item.bIsDirectory && ImGui::BeginDragDropSource())
+		{
+			FContentDragPayload DragData;
+			DragData.Kind = Thumbnail ? FContentDragPayload::EKind::Texture
+				: FContentDragPayload::EKind::Unknown;
+
+			const FString PathUtf8 = WideToUTF8(Item.Path.wstring());
+			std::snprintf(DragData.Path, sizeof(DragData.Path), "%s", PathUtf8.c_str());
+
+			FString Key = Item.Path.stem().string();
+			std::transform(Key.begin(), Key.end(), Key.begin(),
+				[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+			std::snprintf(DragData.Key, sizeof(DragData.Key), "%s", Key.c_str());
+
+			// ImGui가 내부 버퍼로 복사하므로 지역 변수를 넘겨도 된다.
+			ImGui::SetDragDropPayload(ContentDragPayloadType, &DragData, sizeof(DragData));
+
+			// 드래그 중 마우스를 따라다닐 미리보기
+			if (Thumbnail && Thumbnail->GetSRV())
+			{
+				const ImTextureID PreviewId =
+					static_cast<ImTextureID>(reinterpret_cast<intptr_t>(Thumbnail->GetSRV()));
+				ImGui::Image(PreviewId, ImVec2(48.0f, 48.0f));
+				ImGui::SameLine();
+			}
+			ImGui::TextUnformatted(Item.DisplayName.c_str());
+
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::IsItemHovered() && !ImGui::IsDragDropActive())
+		{
+			ImGui::SetTooltip("%s", Item.DisplayName.c_str());
 		}
 
 		// 더블클릭은 Selectable 반환값이 아니라 항목 위에서 직접 판정한다.
