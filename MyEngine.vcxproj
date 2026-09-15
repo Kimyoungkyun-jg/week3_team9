@@ -628,7 +628,7 @@
   <ImportGroup Label="ExtensionTargets" />
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\"</Command>
+      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\"  &amp; if exist "$(SolutionDir)Resources\Textures\Fonts" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\"</Command>
       <Message>Copying textures to output directory...</Message>
     </PostBuildEvent>
     <ClCompile>
