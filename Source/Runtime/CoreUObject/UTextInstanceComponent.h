@@ -1,6 +1,5 @@
 #pragma once
 
-#include "UInstancePrimitiveComponent.h"
 #include "Runtime/Rendering/FFont.h"
 #include "Runtime/CoreUObject/UInstancePrimitiveComponent.h"
 
@@ -25,12 +24,18 @@ public:
 
 	void RebuildTextMesh();
 
+	// Object -> World 변환 행렬 생성
+	virtual FMatrix GetRenderMatrix(const FCamera& Camera) const override;
+
 	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) override;
 
 	virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_BillboardText; }
 
 	virtual void Serialize(FArchive& Archive) const override;
 	virtual void Deserialize(const FArchive& Archive) override;
+
+	float GetWidth() const { return Width; }
+	float GetHeight() const { return Height; }
 
 private:
 	TSharedPtr<FFont> Font;

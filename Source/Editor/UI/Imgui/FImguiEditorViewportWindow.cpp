@@ -168,6 +168,7 @@ void FImguiEditorViewportWindow::HandlePicking(
   const bool bHit = FRayCastingManager::RayIntersectsMeshes(
       FRayCastingManager::CreateRayFromScreenPosition(
           Viewport.ViewportCamera, LocalMousePixels, ViewportSizePixels),
+      Viewport.ViewportCamera,
       Components, HitComponent, ImpactPoint);
 
 

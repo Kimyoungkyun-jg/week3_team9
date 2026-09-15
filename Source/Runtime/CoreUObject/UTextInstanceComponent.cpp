@@ -11,6 +11,29 @@
 
 IMPLEMENT_UCLASS(UTextInstanceComponent, UInstancePrimitiveComponent)
 
+
+namespace
+{
+    FMatrix GetRenderMatrix(const FTransform& Transform, const FCamera& Camera)
+    {
+        FMatrix CameraRotation = Camera.GetRotationMatrix();
+        FVector ViewForward = CameraRotation.TransformPointRow(FVector{ 1.0f, 0.0f, 0.0f }, 0.0f); // X+
+        FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f); // Y+
+        FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f); // Z+
+
+        FVector Up = ViewUp * Transform.Scale3D.Z;
+        FVector Right = ViewRight * Transform.Scale3D.Y;
+
+        return FMatrix
+        {
+            FVector4{ ViewForward, 0.0f },
+            FVector4{ Right, 0.0f },
+            FVector4{ Up, 0.0f },
+            FVector4{ Transform.Location, 1.0f },
+        };
+    }
+}
+
 void UTextInstanceComponent::Register(UScene& InScene)
 {
 	FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
@@ -167,6 +190,15 @@ void UTextInstanceComponent::RebuildTextMesh() {
     }
 }
 
+FMatrix UTextInstanceComponent::GetRenderMatrix(const FCamera& Camera) const
+{
+    FTransform Transform = GetGlobalTransform();
+
+    FMatrix ScaleTransform = FMatrix::MakeScale({ 1.0f, Width, Height });
+    FMatrix ModelMatrix = ::GetRenderMatrix(Transform, Camera);
+
+    return ScaleTransform * ModelMatrix;
+}
 
 void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
 {
@@ -175,22 +207,7 @@ void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, 
 	}
 
     FTransform Transform = GetGlobalTransform();
-
-    FMatrix CameraRotation = Camera.GetRotationMatrix();
-    FVector ViewForward = CameraRotation.TransformPointRow(FVector{ 1.0f, 0.0f, 0.0f }, 0.0f); // X+
-    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f); // Y+
-    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f); // Z+
-
-    FVector Up = ViewUp * Transform.Scale3D.Z;
-    FVector Right = ViewRight * Transform.Scale3D.Y;
-
-    FMatrix ModelMatrix
-    {
-        FVector4{ ViewForward, 0.0f },
-        FVector4{ Right, 0.0f },
-        FVector4{ Up, 0.0f },
-        FVector4{ Transform.Location, 1.0f },
-    };
+    FMatrix ModelMatrix = ::GetRenderMatrix(Transform, Camera);
 
     TArray<FInstanceData> RenderInstances;
     for (auto& Instance : Instances)
