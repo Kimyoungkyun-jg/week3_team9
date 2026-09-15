@@ -53,7 +53,7 @@ void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Cam
     }
     else
     {
-        // 배열 기반 - Actor 1개가 N개 위치 관리 (UObject 오버헤드 없음)
+        //Actor 1개가 N개 위치 관리 (UObject 오버헤드 없음)
         Instances.reserve(InstanceTransforms.size());
         for (const auto& Entry : InstanceTransforms)
         {
