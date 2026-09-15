@@ -40,6 +40,7 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
     {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true,D3D11_CULL_BACK, false, true},
     {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, true},
+    {EPipelineID::Gizmo, L"ExampleVS.cso", L"UnlightPS.cso"},
 };
 
 // 머티리얼 정보 엔트리
@@ -59,6 +60,7 @@ constexpr FMaterialEntry materialTable[] = {
     {EMaterialID::Textured, EPipelineID::Textured, "uv-test"},
     {EMaterialID::Instance_Text, EPipelineID::Instance_Text, "maplestorybold"},
     {EMaterialID::Instance_Simple, EPipelineID::Instance_Simple},
+    {EMaterialID::Gizmo, EPipelineID::Gizmo},
 };
 
 bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
@@ -852,6 +854,14 @@ bool FRenderResourceLibrary::InitializeMaterials(FRenderer &Renderer) {
     RegisterMaterial(Entry.Id, Material);
   }
   return true;
+}
+
+TSharedPtr<FMaterial> FRenderResourceLibrary::RegisterMaterial(EMaterialID Id, TSharedPtr<FMaterial> inMaterial) {
+  if (inMaterial) {
+    inMaterial->MaterialId = Id;
+  }
+  AllMaterialMap[Id] = inMaterial;
+  return inMaterial;
 }
 
 bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {

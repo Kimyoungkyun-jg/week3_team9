@@ -27,7 +27,8 @@ enum class EPipelineID : uint8 {
   Spotlight,
   Text,
   Instance_Text,
-  Instance_Simple
+  Instance_Simple,
+  Gizmo
 };
 
 enum class EMeshID : uint8 {
@@ -56,7 +57,8 @@ enum class EMaterialID : uint8 {
   Text,
   Textured,
   Instance_Text,
-  Instance_Simple
+  Instance_Simple,
+  Gizmo
 };
 
 // 인스턴싱 배치 키 구조체
@@ -174,11 +176,7 @@ public:
   }
 
   // 머티리얼 등록 (ID 기반 전용)
-  TSharedPtr<FMaterial> RegisterMaterial(EMaterialID Id, TSharedPtr<FMaterial> inMaterial) {
-    inMaterial->MaterialId = Id;
-    AllMaterialMap[Id] = inMaterial;
-    return inMaterial;
-  }
+  TSharedPtr<FMaterial> RegisterMaterial(EMaterialID Id, TSharedPtr<FMaterial> inMaterial);
 
   void RegisterTexture(const FString &name, TSharedPtr<FTexture> texture) {
     AllTextureMap[name] = texture;

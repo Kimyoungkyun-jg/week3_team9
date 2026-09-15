@@ -20,7 +20,7 @@ void FGizmo::Initialize()
 	RotationGizmoMesh = RenderResources.GetMesh(EMeshID::RotGizmo);
 	SquareArrowMesh = RenderResources.GetMesh(EMeshID::SquareArrow);
 
-	Material = RenderResources.GetMaterial(EMaterialID::Simple);
+	Material = RenderResources.GetMaterial(EMaterialID::Gizmo);
 	RotationGizmoMaterial = RenderResources.GetMaterial(EMaterialID::RotGizmo);
 }
 
