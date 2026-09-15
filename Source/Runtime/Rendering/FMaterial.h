@@ -4,10 +4,22 @@
 #include "FTexture.h"
 #include "Runtime/Core/FString.h"
 #include "Runtime/Core/PointerTypes.h"
+#include "Runtime/Core/TMap.h"
 #include "Vertices.h"
 #include <d3d11.h>
 
+
 class FRenderer;
+class FRenderResourceLibrary;
+enum class EMaterialID : uint8;
+
+
+
+
+
+
+
+
 
 class FMaterial final {
   friend class FRenderer;
@@ -23,6 +35,11 @@ public:
   void SetTexture(const TSharedPtr<FTexture>& InTexture);
   [[nodiscard]] TSharedPtr<FTexture> GetTexture() const { return Texture; }
 
+  // 원본 머터리얼에서 텍스처 교체 함수
+  bool SetTextureByName(const FString& InTextureName);
+
+
+  EMaterialID MaterialId;
 private:
   void BindResources(ID3D11DeviceContext &Context) const;
 

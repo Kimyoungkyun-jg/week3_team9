@@ -12,5 +12,5 @@ protected:
 	explicit UCubeComp() = default;
 
 public:
-	void OnRegister(UScene& Scene) override;
+	void Register(UScene& InScene) override;
 };

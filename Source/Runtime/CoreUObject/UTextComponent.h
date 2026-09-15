@@ -1,28 +1,29 @@
 #pragma once
 
-#include "UBillBoardComp.h"
 #include "Runtime/Rendering/FFont.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "UBillBoardComp.h"
 
-
-
-class UTextComponent :
-    public UBillBoardComp
-{
-    GENERATED_BODY()
-    DECLARE_UCLASS(UTextComponent, UBillBoardComp)
+class UTextComponent : public UBillBoardComp {
+  GENERATED_BODY()
+  DECLARE_UCLASS(UTextComponent, UBillBoardComp)
 
 public:
-    void SetText(const FString& InText) { Text = InText; RebuildTextMesh(); }
-    void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
+  void SetText(const FWString &InText) {
+    Text = InText;
+    RebuildTextMesh();
+  }
+  [[nodiscard]] const FWString &GetText() const { return Text; }
+  void SetFont(TSharedPtr<FFont> InFont) { Font = InFont; }
 
-    void OnRegister(UScene& Scene) override;
+  void Register(UScene& Scene) override;
+  void RebuildTextMesh();
 
-    void RebuildTextMesh();
+  void Serialize(FArchive& Archive) const override;
+  virtual void Deserialize(const FArchive& Archive) override;
 private:
-    TSharedPtr<FFont> Font;
-    FString Text = "Hello Jungle World!";
+  TSharedPtr<FFont> Font;
+  FWString Text = L"안녕하세요!";
 
-    FMeshDesc MeshData;
+  FMeshDesc MeshData;
 };
-

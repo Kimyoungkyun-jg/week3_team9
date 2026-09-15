@@ -1,6 +1,9 @@
 #include "FMaterial.h"
 #include "FRenderer.h"
+#include "FRenderResourceLibrary.h"
+#include "Runtime/Core/Log.h"
 #include <d3d11.h>
+#include <algorithm>
 
 void FMaterial::SetPipeLine(const TSharedPtr<FRenderPipeline>& InPipeline)
 {
@@ -11,6 +14,25 @@ void FMaterial::SetPipeLine(const TSharedPtr<FRenderPipeline>& InPipeline)
 void FMaterial::SetTexture(const TSharedPtr<FTexture>& InTexture)
 {
     Texture = InTexture;
+}
+
+
+bool FMaterial::SetTextureByName(const FString& InTextureName)
+{
+    auto& lib = FRenderResourceLibrary::Get();
+    
+    FString LowerKey = InTextureName;
+    std::transform(LowerKey.begin(), LowerKey.end(), LowerKey.begin(), ::tolower);
+
+    auto it = lib.GetTexture(LowerKey);
+    if (it == nullptr)
+    {
+        UE_LOG("[Material] Texture '%s' not found in texture map.", LowerKey.c_str());
+        return false;
+    }
+
+    SetTexture(it);
+    return true;
 }
 
 void FMaterial::BindResources(ID3D11DeviceContext& Context) const

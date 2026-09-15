@@ -5,8 +5,8 @@
 
 #include <limits>
 
-// Note: 언젠가는 OBB를 추가로 구현해야할지도
 class FMesh;
+struct FMatrix;
 
 struct FAxisAlignedBoundingBox
 {
@@ -19,12 +19,13 @@ struct FAxisAlignedBoundingBox
 
 	FVector Max
 	{
-		std::numeric_limits<float>::min(),
-		std::numeric_limits<float>::min(),
-		std::numeric_limits<float>::min(),
+		std::numeric_limits<float>::lowest(),
+		std::numeric_limits<float>::lowest(),
+		std::numeric_limits<float>::lowest(),
 	};
 
 	FAxisAlignedBoundingBox() = default;
-
 	FAxisAlignedBoundingBox(const FMesh& Mesh);
+	FAxisAlignedBoundingBox(const FMesh& Mesh, const FMatrix& ModelMatrix);	
+	
 };

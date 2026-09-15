@@ -6,10 +6,9 @@ IMPLEMENT_UCLASS(UConeComp, UPrimitiveComponent)
 UCLASS_META(UConeComp, DisplayName, "Cone")
 UCLASS_META(UConeComp, MeshName, "Cone")
 
-void UConeComp::OnRegister(UScene& Scene)
-{
-	UPrimitiveComponent::OnRegister(Scene);
-
-	SetMesh(Scene.GetRenderResourceLibrary().GetMesh("Cone"));
-	SetMaterial(Scene.GetRenderResourceLibrary().GetMaterial("Simple"));
+void UConeComp::Register(UScene &InScene) {
+  FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
+  SetMesh(Resources ? Resources->GetMesh(EMeshID::Cone) : nullptr);
+  SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Simple) : nullptr);
+  Super::Register(InScene);
 }

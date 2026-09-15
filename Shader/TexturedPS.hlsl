@@ -8,17 +8,24 @@ struct PS_INPUT
     float4 Position : SV_Position;
     float4 Color : COLOR;
     float2 UV : TEXCOORD0;
+    float3 Normal : NORMAL; // 법선
 };
 
 float4 MainPS(PS_INPUT Input) : SV_Target
 {
     float4 Sampled = DiffuseTexture.Sample(DiffuseSampler, Input.UV);
-
-    // 투명 배경 날리기 (텍스트 여백 / 빌보드 여백 제거)
-    clip(Sampled.a - 0.1f);
-    // 정점 색상 반영 (글자 색상 틴트)
-    float3 TintedColor = Sampled.rgb * Input.Color.rgb;
     
-    float3 FinalColor = lerp(Sampled.rgb, ColorOverride, ColorOverrideAmount);
+    // 하이라이트 색상 보간
+    float3 Tint = lerp(float3(1.0f, 1.0f, 1.0f), ColorOverride, ColorOverrideAmount);
+    float3 BaseColor = Sampled.rgb * Tint;
+    
+    // 조명 계산 및 양면 음영 보정
+    float3 N = normalize(Input.Normal);
+    float NdotL = saturate(abs(dot(N, -normalize(LightDirection))));
+    float3 Diffuse = LightColor * (Intensity * NdotL);
+    float3 Ambient = LightColor * max(AmbientIntensity, 0.4f);
+    float3 DirectionalLight = max(Ambient + Diffuse, 0.5f);
+
+    float3 FinalColor = BaseColor * DirectionalLight;
     return float4(FinalColor, Sampled.a);
 }

@@ -1,22 +1,24 @@
 #include "FRenderer.h"
+#include "FRenderResourceLibrary.h"
 
 #include "FMaterial.h"
 #include "FMesh.h"
 #include "FRenderPipeline.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Rendering/FTexture.h"
+#include "Runtime/Engine/FCamera.h"
 #include "ShaderConstants.h"
 #include "Vertices.h"
 #include <Windows.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
+#include "ThirdParty/DirectXTK/Inc/DDSTextureLoader.h"
 
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
-      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers() ||
-      !InitializePipeLines()) {
+      !InitializeBackBufferAndDepthStencil() || !InitializeConstantBuffers()) {
     Shutdown();
     return false;
   }
@@ -34,7 +36,6 @@ void FRenderer::Shutdown() {
 
   LineBatcher.Shutdown();
 
-  AllPipelineMap.clear();
   b0ConstantBuffer.Reset();
   FrameConstantBuffer.Reset();
 
@@ -209,6 +210,76 @@ TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   return Mesh;
 }
 
+TSharedPtr<FMesh> FRenderer::CreateDynamicMesh(const FMeshDesc& Desc) { 
+    if (!Desc.VertexData || Desc.VertexCount == 0 || Desc.VertexDataSize == 0 ||
+        Desc.VertexStride == 0) {
+        return nullptr;
+    }
+    if (Desc.IndexCount > 0 && (!Desc.IndexData || Desc.IndexDataSize == 0)) {
+        return nullptr;
+    }
+
+    auto Mesh = TSharedPtr<FMesh>{ new FMesh() };
+    D3D11_BUFFER_DESC VertexBufferDesc = {
+        .ByteWidth = Desc.VertexDataSize,
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_VERTEX_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+    };
+
+    D3D11_SUBRESOURCE_DATA VertexData = {
+        .pSysMem = Desc.VertexData,
+    };
+
+    HRESULT Result =
+        Device->CreateBuffer(&VertexBufferDesc, &VertexData, &Mesh->VertexBuffer);
+    if (FAILED(Result)) {
+        return nullptr;
+    }
+    Mesh->VertexCount = Desc.VertexCount;
+    Mesh->VertexStride = Desc.VertexStride;
+    Mesh->VertexBufferSize = Desc.VertexDataSize;
+
+    if (Desc.IndexCount > 0 && Desc.IndexData) {
+        D3D11_BUFFER_DESC IndexBufferDesc = {
+            .ByteWidth = Desc.IndexDataSize,
+            .Usage = D3D11_USAGE_DEFAULT,
+            .BindFlags = D3D11_BIND_INDEX_BUFFER,
+        };
+
+        D3D11_SUBRESOURCE_DATA IndexData = {
+            .pSysMem = Desc.IndexData,
+        };
+
+        Result =
+            Device->CreateBuffer(&IndexBufferDesc, &IndexData, &Mesh->IndexBuffer);
+        if (FAILED(Result)) {
+            return nullptr;
+        }
+    }
+    Mesh->IndexCount = Desc.IndexCount;
+    Mesh->IndexBufferSize = Desc.IndexDataSize;
+
+    const auto* vertices = static_cast<const FVertexData*>(Desc.VertexData);
+
+    Mesh->Positions.reserve(Desc.VertexCount);
+    for (uint32 i = 0; i < Desc.VertexCount; ++i) {
+        Mesh->Positions.push_back(
+            FVector{ vertices[i].x, vertices[i].y, vertices[i].z });
+    }
+
+    if (Desc.IndexCount > 0) {
+        const auto* indices = static_cast<const uint32*>(Desc.IndexData);
+        Mesh->Indices.assign(indices, indices + Desc.IndexCount);
+    }
+
+    Mesh->Topology = Desc.bIsLine ? D3D11_PRIMITIVE_TOPOLOGY_LINELIST
+        : D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+    Mesh->LocalBounds = FAxisAlignedBoundingBox{ *Mesh.get() };
+    return Mesh;
+}
+
 TSharedPtr<FMaterial> FRenderer::CreateMaterial(const FMaterialDesc &Desc) {
   TSharedPtr<FMaterial> Material{new FMaterial()};
   return Material;
@@ -239,11 +310,20 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  Result = Device->CreateInputLayout(
-      FVertexLayouts::Layout, FVertexLayouts::NumElements,
-      Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  if (Desc.bIsInstancing)
+  {
+      Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+  else
+  {
+      Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+
+
   if (FAILED(Result)) {
-    return nullptr;
+      return nullptr;
   }
 
   Result = D3DReadFileToBlob(Desc.PixelShaderFileName.c_str(), &Blob);
@@ -262,7 +342,7 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
       .FillMode = (RenderMode == EViewModeIndex::VMI_Wireframe)
                       ? D3D11_FILL_WIREFRAME
                       : D3D11_FILL_SOLID,
-      .CullMode = D3D11_CULL_BACK,
+      .CullMode = Desc.CullMode,
       .FrontCounterClockwise = false,
   };
 
@@ -274,12 +354,63 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
 
   D3D11_DEPTH_STENCIL_DESC DepthStencilDesc{
       .DepthEnable = Desc.bEnableDepthTest,
-      .DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
+      .DepthWriteMask = Desc.bEnableDepthWrite ? D3D11_DEPTH_WRITE_MASK_ALL
+                                               : D3D11_DEPTH_WRITE_MASK_ZERO,
       .DepthFunc = D3D11_COMPARISON_LESS,
   };
 
   Result = Device->CreateDepthStencilState(&DepthStencilDesc,
                                            &Pipeline->DepthStencilState);
+  if (FAILED(Result)) {
+    return nullptr;
+  }
+
+  // 블렌드 상태 생성
+  D3D11_BLEND_DESC BlendDesc{};
+  BlendDesc.AlphaToCoverageEnable = false;
+  BlendDesc.IndependentBlendEnable = false;
+  auto &RenderTargetBlend = BlendDesc.RenderTarget[0];
+
+  switch (Desc.BlendMode) {
+  case EBlendMode::Opaque:
+  case EBlendMode::Masked:
+    RenderTargetBlend.BlendEnable = false;
+    break;
+
+  case EBlendMode::Translucent:
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    break;
+
+  case EBlendMode::Additive:
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_ZERO;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    break;
+
+  case EBlendMode::PremultipliedAlpha:
+    RenderTargetBlend.BlendEnable = true;
+    RenderTargetBlend.SrcBlend = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOp = D3D11_BLEND_OP_ADD;
+    RenderTargetBlend.SrcBlendAlpha = D3D11_BLEND_ONE;
+    RenderTargetBlend.DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+    RenderTargetBlend.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    break;
+  }
+
+  RenderTargetBlend.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+  Result = Device->CreateBlendState(&BlendDesc, &Pipeline->BlendState);
   if (FAILED(Result)) {
     return nullptr;
   }
@@ -301,118 +432,29 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   return Pipeline;
 }
 
-TSharedPtr<FTexture> FRenderer::CreateTexture(FTextureDesc &desc) {
+TSharedPtr<FTexture> FRenderer::CreateTexture(const wchar_t* path){
   auto Texture = TSharedPtr<FTexture>{new FTexture()};
-
-  D3D11_TEXTURE2D_DESC TextureDesc = {
-      .Width = desc.Width,
-      .Height = desc.Height,
-      .MipLevels = 1u,
-      .ArraySize = 1u,
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .SampleDesc = {.Count = 1u},
-      .Usage = D3D11_USAGE_DEFAULT,
-      .BindFlags = D3D11_BIND_SHADER_RESOURCE,
-  };
-
-  D3D11_SUBRESOURCE_DATA InitialData = {
-      .pSysMem = desc.PixelData,
-      .SysMemPitch = desc.RowPitch,
-  };
-
-  HRESULT Result =
-      Device->CreateTexture2D(&TextureDesc, &InitialData, &Texture->Texture2D);
-  if (FAILED(Result)) {
-    return nullptr;
+  Microsoft::WRL::ComPtr<ID3D11Resource> TempResource;
+  HRESULT hr = DirectX::CreateDDSTextureFromFile(Device.Get(), path, TempResource.GetAddressOf(), Texture->TextureSRV.GetAddressOf());
+  if (FAILED(hr)) {
+      return nullptr;
   }
 
-  Result = Device->CreateShaderResourceView(Texture->Texture2D.Get(), nullptr,
-                                            &Texture->TextureSRV);
-  if (FAILED(Result)) {
-    return nullptr;
+  hr = TempResource.As(&Texture->Texture2D);
+  if (FAILED(hr)) {
+      return nullptr;
   }
 
+  D3D11_TEXTURE2D_DESC desc;
+  Texture->Texture2D->GetDesc(&desc);
   Texture->Width = desc.Width;
   Texture->Height = desc.Height;
 
   return Texture;
 }
 
-TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EBuiltinPipeline Id) const {
-  auto it = AllPipelineMap.find(Id);
-  if (it != AllPipelineMap.end()) {
-    return it->second;
-  }
-  return nullptr;
-}
-
-bool FRenderer::CreateSolidWireframePipeline() {
-  const FWString Path = GetExecutableDirectory();
-  const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
-  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
-
-  if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-    return false;
-  }
-
-  FRenderPipelineDesc Desc = {
-      .VertexShaderFileName = VsPath,
-      .PixelShaderFileName = PsPath,
-      .bEnableDepthTest = true,
-  };
-
-  // 솔리드 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> SolidPipeline =
-      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
-  if (SolidPipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Solid] = SolidPipeline;
-  }
-
-  // 와이어프레임 파이프라인 생성 및 등록
-  TSharedPtr<FRenderPipeline> WireframePipeline =
-      CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
-  if (WireframePipeline) {
-    AllPipelineMap[EBuiltinPipeline::Simple_Wireframe] = WireframePipeline;
-  }
-
-  return SolidPipeline != nullptr && WireframePipeline != nullptr;
-}
-
-bool FRenderer::InitializePipeLines() {
-  // 솔리드 및 와이어프레임 파이프라인 개별 생성
-  CreateSolidWireframePipeline();
-
-  const FWString Path = GetExecutableDirectory();
-
-  for (const FPipelineEntry &Entry : pipelineTable) {
-    // 이미 등록된 경우 건너뜀
-    if (AllPipelineMap.find(Entry.Id) != AllPipelineMap.end()) {
-      continue;
-    }
-
-    const FWString VsPath = Path + L"/Shader/" + Entry.VertexShader;
-    const FWString PsPath = Path + L"/Shader/" + Entry.PixelShader;
-
-    // 셰이더 파일 미존재 시 건너뜀
-    if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
-      continue;
-    }
-
-    FRenderPipelineDesc PipelineDesc = {
-        .VertexShaderFileName = VsPath,
-        .PixelShaderFileName = PsPath,
-        .bEnableDepthTest = true,
-    };
-
-    TSharedPtr<FRenderPipeline> Pipeline =
-        CreateRenderPipeline(PipelineDesc, EViewModeIndex::VMI_Lit);
-    if (!Pipeline) {
-      return false;
-    }
-
-    AllPipelineMap[Entry.Id] = Pipeline;
-  }
-  return true;
+TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EPipelineID Id) const {
+  return FRenderResourceLibrary::Get().GetPipeline(Id);
 }
 
 bool FRenderer::InitializeDeviceAndSwapChain(HWND Window) {
@@ -530,64 +572,151 @@ bool FRenderer::InitializeConstantBuffers()
 
   Result = Device->CreateBuffer(&FrameConstantBufferDesc, nullptr,
                                 &FrameConstantBuffer);
+
+
   if (FAILED(Result)) {
-    return false;
+      return false;
   }
+
+  D3D11_BUFFER_DESC lightbufferDesc = {
+      .ByteWidth = sizeof(FLightConstants),
+      .Usage = D3D11_USAGE_DEFAULT,
+      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+  };
+
+
+
+  Result = Device->CreateBuffer(&lightbufferDesc, nullptr, &LightConstantBuffer);
+
+  if (FAILED(Result)) {
+      return false;
+  }
+
+
+
+
 
   return true;
 }
 
-//bool FRenderer::InitializeGridConstantBuffers() {
-//  D3D11_BUFFER_DESC GridConstantBufferDesc = {
-//      .ByteWidth = sizeof(FGridConstants),
-//      .Usage = D3D11_USAGE_DYNAMIC,
-//      .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-//      .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-//  };
-//
-//  HRESULT Result = Device->CreateBuffer(&GridConstantBufferDesc, nullptr,
-//                                        &GridConstantBuffer);
-//  if (FAILED(Result)) {
-//    return false;
-//  }
-//
-//  return true;
-//}
-//
-//void FRenderer::UpdateObjectConstants(const FObjectConstants &Constants) {
-//  static const FMatrix UnrealClipToD3DClip{
-//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-//
-//  // 언리얼 Clip -> D3D Clip 좌표 변환
-//  FObjectConstants ShaderConstants = Constants;
-//  ShaderConstants.MVP *= UnrealClipToD3DClip;
-//
-//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-//  Context->Map(ObjectConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-//               &MappedResource);
-//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-//  Context->Unmap(ObjectConstantBuffer.Get(), 0);
-//
-//  Context->VSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-//  Context->PSSetConstantBuffers(0, 1, ObjectConstantBuffer.GetAddressOf());
-//}
-//
-//void FRenderer::UpdateGridConstants(const FGridConstants &Constants) {
-//  static const FMatrix UnrealClipToD3DClip{
-//      FVector{0.0f, 0.0f, 1.0f}, FVector{1.0f, 0.0f, 0.0f},
-//      FVector{0.0f, 1.0f, 0.0f}, FVector{0.0f, 0.0f, 0.0f}};
-//
-//  // 언리얼 Clip -> D3D Clip 좌표 변환
-//  FGridConstants ShaderConstants = Constants;
-//  ShaderConstants.MVP *= UnrealClipToD3DClip;
-//
-//  D3D11_MAPPED_SUBRESOURCE MappedResource{};
-//  Context->Map(GridConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0,
-//               &MappedResource);
-//  memcpy(MappedResource.pData, &ShaderConstants, sizeof(ShaderConstants));
-//  Context->Unmap(GridConstantBuffer.Get(), 0);
-//
-//  Context->VSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-//  Context->PSSetConstantBuffers(0, 1, GridConstantBuffer.GetAddressOf());
-//}
+void FRenderer::UpdateLightConstants(FLightConstants& Constants, const EViewModeIndex InMode)
+{
+    if (InMode == EViewModeIndex::VMI_Unlit)
+    {
+        Constants.Intensity = 0;
+    }
+    else
+    {
+        Constants.Intensity = 1.0f;
+    }
+
+    Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants, 0, 0);
+    Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
+}
+
+void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances, const EMeshID& MeshId, const EMaterialID& MaterialId)
+{
+    // 빈 데이터 전달 시 조기 반환
+    if (Instances.empty())
+    {
+        return;
+    }
+    auto& ResLib = FRenderResourceLibrary::Get();
+    // 머티리얼 리소스 존재 여부 확인
+    if (!ResLib.GetMaterial(MaterialId))
+    {
+        UE_LOG_WARN("[FRenderer] 유효하지 않은 머티리얼 ID 인스턴스 등록 시도");
+        return;
+    }
+    // 메시 리소스 존재 여부 확인
+    if (!ResLib.GetMesh(MeshId))
+    {
+        UE_LOG_WARN("[FRenderer] 유효하지 않은 메시 ID 인스턴스 등록 시도");
+        return;
+    }
+
+    auto& TargetArray = ResLib.GetInstancingArray(MaterialId, MeshId);
+    TargetArray.reserve(TargetArray.size() + Instances.size());
+    TargetArray.insert(TargetArray.end(), Instances.begin(), Instances.end());
+}
+
+void FRenderer::DrawInstances(const FCamera& Camera)
+{
+    auto& ResLib = FRenderResourceLibrary::Get();
+
+    // 상수 버퍼 업데이트
+    FObjectConstants SC{};
+    SC.MVP = Camera.CreateViewProjectionMatrix();
+    UpdateBuffer(SC);
+
+    // 배치 키(MaterialID, MeshID) 순회
+    for (const auto& [BatchKey, InstanceData] : ResLib.AllInstancingArrayMap)
+    {
+        if (InstanceData.empty()) continue;
+
+        const UINT InstanceCount = static_cast<UINT>(InstanceData.size());
+        const UINT RequiredSize = InstanceCount * sizeof(FInstanceData);
+
+        // 버퍼 크기 부족 시 동적 확장
+        if (RequiredSize > TextInstanceBufferSize)
+        {
+            InstanceBuffer.Reset();
+            D3D11_BUFFER_DESC Desc{};
+            Desc.ByteWidth = RequiredSize;
+            Desc.Usage = D3D11_USAGE_DYNAMIC;
+            Desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+            Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+            if (FAILED(Device->CreateBuffer(&Desc, nullptr, &InstanceBuffer))) continue;
+            TextInstanceBufferSize = RequiredSize;
+        }
+
+        // 인스턴스 데이터 업로드
+        D3D11_MAPPED_SUBRESOURCE MappedResource{};
+        if (FAILED(Context->Map(InstanceBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource))) continue;
+        std::memcpy(MappedResource.pData, InstanceData.data(), RequiredSize);
+        Context->Unmap(InstanceBuffer.Get(), 0);
+
+        // 머티리얼 및 파이프라인 바인딩
+        auto Material = ResLib.GetMaterial(BatchKey.MaterialID);
+        if (!Material) continue;
+
+        TSharedPtr<FRenderPipeline> Pipeline = Material->GetPipeline();
+        if (Pipeline)
+        {
+            Pipeline->Bind(*Context.Get());
+        }
+        Material->BindResources(*Context.Get());
+
+        // 메시 조회 및 바인딩
+        auto Mesh = ResLib.GetMesh(BatchKey.MeshID);
+        if (!Mesh) continue;
+        Mesh->BindResources(*Context.Get());
+
+        // 슬롯 1에 인스턴스 버퍼 바인딩
+        UINT Stride = sizeof(FInstanceData);
+        UINT Offset = 0;
+        Context->IASetVertexBuffers(1, 1, InstanceBuffer.GetAddressOf(), &Stride, &Offset);
+
+        // 인스턴스 렌더링 호출
+        if (Mesh->HasIndices())
+        {
+            Context->DrawIndexedInstanced(Mesh->GetIndexCount(), InstanceCount, 0, 0, 0);
+        }
+        else
+        {
+            Context->DrawInstanced(Mesh->VertexCount, InstanceCount, 0, 0);
+        }
+    }
+}
+
+void FRenderer::ClearTextInstances()
+{
+    for (auto& [BatchKey, InstanceArray] : FRenderResourceLibrary::Get().AllInstancingArrayMap)
+    {
+        InstanceArray.clear();
+    }
+
+    FRenderResourceLibrary::Get().DestroyAllInstancingArray();
+}
+

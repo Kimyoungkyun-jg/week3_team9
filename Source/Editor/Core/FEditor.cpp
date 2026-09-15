@@ -1,5 +1,10 @@
 #include "FEditor.h"
 #include "Runtime/Actors/AActor.h"
+#include "Runtime/Actors/ACubeActor.h"
+#include "Runtime/Actors/ASphereActor.h"
+#include "Runtime/Actors/ACylinderActor.h"
+#include "Runtime/Actors/ABillboardActor.h"
+#include "Runtime/Actors/ASpotlightActor.h"
 #include "Runtime/CoreUObject/UCubeComp.h"
 #include "Runtime/CoreUObject/UCylinderComp.h"
 #include "Runtime/CoreUObject/UObject.h"
@@ -9,22 +14,21 @@
 #include <numbers>
 
 
-void FEditor::Initialize(FRenderResourceLibrary *RendererLibrary,
-                         USceneManager *SceneManager) {
-  Gizmo.Initialize(*RendererLibrary);
-  Grid.Initialize(*RendererLibrary);
-  this->RendererLibrary = RendererLibrary;
+void FEditor::Initialize(USceneManager *SceneManager) {
+    State.ReadFromFile();
+  Gizmo.Initialize();
+  Grid.Initialize();
   this->SceneManager = SceneManager;
+}
+
+FRenderResourceLibrary *FEditor::GetRendererLibrary() {
+  return &FRenderResourceLibrary::Get();
 }
 
 void FEditor::Process() {
   // 씬의 액터 업데이트
   if (SceneManager && SceneManager->CurrentScene) {
-    for (AActor *Actor : SceneManager->CurrentScene->GetActors()) {
-      if (Actor) {
-        Actor->Update(FTimeManager::Get().GetDeltaTime());
-      }
-    }
+    SceneManager->CurrentScene->Update(FTimeManager::Get().GetDeltaTime());
   }
 
   if (SelectedActor) {
@@ -34,12 +38,14 @@ void FEditor::Process() {
 
 void FEditor::NewScene() {
   SelectedActor = nullptr;
-  SceneManager->SetScene(NewObject<UScene>(*RendererLibrary));
+  SceneManager->SetScene(NewObject<UScene>());
 }
 
 void FEditor::SaveScene(const FString &Path) { SceneManager->SaveScene(Path); }
 
-void FEditor::LoadScene(const FString &Path) {
+void FEditor::LoadScene(const FString &Path) 
+{
+
   // 씬 로드
   SceneManager->LoadScene(Path);
   SelectedActor = nullptr;
@@ -100,44 +106,29 @@ void FEditor::ClearSelectionForGC() {
   Gizmo.HoveredHandle = EGizmoHandle::None;
 }
 
-UPrimitiveComponent *FEditor::SpawnPrimitive(EEditorPrimitiveType Type) {
-  if (!SceneManager || !SceneManager->CurrentScene) {
-    return nullptr;
-  }
+void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
+    if (!SceneManager || !SceneManager->CurrentScene) {
+        return;
+    }
 
-  UPrimitiveComponent *Component = nullptr;
-  switch (Type) {
-  case EEditorPrimitiveType::Cube:
-    Component = NewObject<UCubeComp>();
-    break;
-  case EEditorPrimitiveType::Cylinder:
-    Component = NewObject<UCylinderComp>();
-    break;
-  case EEditorPrimitiveType::Sphere:
-    Component = NewObject<USphereComp>();
-    break;
-  }
+    if (Size <= 0) { return; }
 
-  if (!Component) {
-    return nullptr;
-  }
+    for (int i = 0; i < Size; ++i)
+    {
+        // 오프셋 적용
+        static int SpawnSerial = 0;
+        const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
 
-  // 오프셋 적용
-  static int SpawnSerial = 0;
-  const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
-  FTransform Transform
-  {
-      FVector{Offset, 0.0f, 0.0f},
-      FQuaternion::Identity(),
-      FVector{0.5f, 0.5f, 0.5f},
-  };
+        FTransform Transform;
+        Transform.Location = FVector{ Offset, 0.0f, 0.0f };
+        Transform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
-  Component->SetRelativeTransform(Transform);
+        AActor* NewActor = SceneManager->CurrentScene->SpawnActor(Type);
+        if (!NewActor) { return; }
 
-  // 액터를 스폰하고 컴포넌트를 루트로 장착
-  AActor *NewActor = SceneManager->CurrentScene->SpawnActor<AActor>();
-  NewActor->SetRootComponent(Component);
-
-  SelectActor(NewActor);
-  return Component;
+        USceneComponent* RootComponent = NewActor->GetRootComponent();
+        RootComponent->SetRelativeTransform(Transform);
+        NewActor->BeginPlay();
+        SelectActor(NewActor);
+    }
 }
