@@ -2,6 +2,7 @@
 
 #include "UInstancePrimitiveComponent.h"
 #include "Runtime/Rendering/FFont.h"
+#include "Runtime/CoreUObject/UInstancePrimitiveComponent.h"
 
 class UTextInstanceComponent : public UInstancePrimitiveComponent
 {
@@ -33,4 +34,8 @@ private:
 	TSharedPtr<FFont> Font;
 	FWString Text = L"Hello Jungle World!";
 
+	float Width = 0.0f;
+	float Height = 0.0f;
+
+	TArray<FInstanceData> TextInstances;
 };

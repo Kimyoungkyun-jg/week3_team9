@@ -27,7 +27,7 @@ struct FPipelineEntry {
   bool bDepthWrite = true;
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;
   bool bAdditiveBlend = false;
-  bool bIsInstancing = false;
+  int32 Type = 0; // 0 : Default / 1 : Instance / 2: BillboardInstance
 };
 
 // 기본 파이프라인 테이블
@@ -38,8 +38,10 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EPipelineID::RotationGizmo, L"RotationGizmoVS.cso",L"RotationGizmoPS.cso"},
     {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false, D3D11_CULL_NONE, true},
     {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
-    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true,D3D11_CULL_BACK, false, true},
-    {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, true},
+    {EPipelineID::Billboard, L"BillboardVS.cso", L"TexturedPS.cso" },
+    {EPipelineID::Instance_Text, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 2},
+    {EPipelineID::Instance_Simple, L"InstanceVS.cso", L"ExamplePS.cso", true, D3D11_CULL_BACK, false, 1},
+    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"TexturedPS.cso", true, D3D11_CULL_BACK, false, 2 },
     {EPipelineID::Gizmo, L"ExampleVS.cso", L"UnlightPS.cso"},
     {EPipelineID::SelectedActor_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", false, D3D11_CULL_BACK, false, true},
 };
@@ -57,10 +59,12 @@ constexpr FMaterialEntry materialTable[] = {
     {EMaterialID::Grid, EPipelineID::Grid},
     {EMaterialID::RotGizmo, EPipelineID::RotationGizmo},
     {EMaterialID::Spotlight, EPipelineID::Spotlight},
-    {EMaterialID::Text, EPipelineID::Text, "maplestorybold"},
-    {EMaterialID::Textured, EPipelineID::Textured, "uv-test"},
-    {EMaterialID::Instance_Text, EPipelineID::Instance_Text, "maplestorybold"},
+    {EMaterialID::Text,  EPipelineID::Text, "maplestorybold"},
+    {EMaterialID::Textured,  EPipelineID::Textured, "uv-test"},
+    {EMaterialID::Billboard,  EPipelineID::Billboard, "uv-test"},
+    {EMaterialID::Instance_Text,  EPipelineID::Instance_Text, "maplestorybold" },
     {EMaterialID::Instance_Simple, EPipelineID::Instance_Simple},
+    {EMaterialID::Instance_Billboard,  EPipelineID::Instance_Billboard, "maplestorybold"},
     {EMaterialID::Gizmo, EPipelineID::Gizmo},
     {EMaterialID::SelectedActor_Text, EPipelineID::SelectedActor_Text, "maplestorybold"},
 };
@@ -122,7 +126,7 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
         .bEnableDepthWrite = Entry.bDepthWrite,
         .CullMode = Entry.CullMode,
         .bAdditiveBlend = Entry.bAdditiveBlend,
-        .bIsInstancing = Entry.bIsInstancing,
+        .Type = Entry.Type,
     };
 
     TSharedPtr<FRenderPipeline> Pipeline =
@@ -148,7 +152,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
       !CreateRectMesh(Renderer) || !CreateTextures(Renderer) ||
-      !InitializeMaterials(Renderer) || !CreateInstancingArrayMap()) {
+      !InitializeMaterials(Renderer) || !CreateInstancingArrayMap() ||
+      !CreateEditTextures(Renderer)) {
     return false;
   }
 
@@ -859,6 +864,70 @@ bool FRenderResourceLibrary::InitializeMaterials(FRenderer &Renderer) {
   return true;
 }
 
+bool FRenderResourceLibrary::CreateEditTextures(FRenderer& Renderer)
+{
+    const std::filesystem::path ExeDir(GetExecutableDirectory());
+    const std::filesystem::path ProjectRoot =
+        ExeDir.parent_path().parent_path().parent_path();
+
+    TArray<std::filesystem::path> SearchRoots = {
+        ProjectRoot / L"Edit",
+        std::filesystem::current_path() / L"Edit",
+        ExeDir / L"Edit",
+    };
+
+    for (const auto& Root : SearchRoots) {
+        std::error_code Ec;
+        if (!std::filesystem::exists(Root, Ec)) {
+            continue;
+        }
+
+        for (const auto& Entry :
+            std::filesystem::recursive_directory_iterator(Root, Ec)) {
+            if (!Entry.is_regular_file(Ec))
+                continue;
+
+            FWString Ext = Entry.path().extension().wstring();
+            std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+            if (Ext != L".png" && Ext != L".jpg" && Ext != L".jpeg")
+                continue;
+
+            // 확장자 제거
+            FString KeyWide = Entry.path().stem().string();
+            std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
+                ::tolower);
+
+            // 이미 로드된 텍스처 건너뜀
+            if (AllEditorTextureMap.find(KeyWide) != AllEditorTextureMap.end()) {
+                continue;
+            }
+
+            int W = 0, H = 0, ChannelsInFile = 0;
+            unsigned char* Pixels =
+                stbi_load(Entry.path().string().c_str(), &W, &H, &ChannelsInFile, 4);
+            if (!Pixels)
+                continue;
+
+            FTextureDesc Desc{
+                .PixelData = Pixels,
+                .Width = static_cast<uint32>(W),
+                .Height = static_cast<uint32>(H),
+                .RowPitch = static_cast<uint32>(W) * 4u,
+            };
+
+            TSharedPtr<FTexture> Texture = Renderer.CreateTexture(Desc);
+            stbi_image_free(Pixels);
+
+            if (!Texture)
+                continue;
+
+            RegisterEditTexture(KeyWide, Texture);
+        }
+    }
+
+    return true;
+}
+
 TSharedPtr<FMaterial> FRenderResourceLibrary::RegisterMaterial(EMaterialID Id, TSharedPtr<FMaterial> inMaterial) {
   if (inMaterial) {
     inMaterial->MaterialId = Id;
@@ -867,7 +936,8 @@ TSharedPtr<FMaterial> FRenderResourceLibrary::RegisterMaterial(EMaterialID Id, T
   return inMaterial;
 }
 
-bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) {
+bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer) 
+{
   const std::filesystem::path ExeDir(GetExecutableDirectory());
   const std::filesystem::path ProjectRoot =
       ExeDir.parent_path().parent_path().parent_path();

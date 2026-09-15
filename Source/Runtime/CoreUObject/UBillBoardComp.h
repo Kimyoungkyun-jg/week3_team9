@@ -22,12 +22,10 @@ protected:
   FVector2 UVOffset{0.0f, 0.0f};
 
 public:
-	void Register(UScene& InScene) override;
-	// 빌보드 회전 계산
-	void CalculateRotate(const FCamera& Camera, FObjectConstants& InputConstant);
+	virtual void Register(UScene& InScene) override;
 
   // 빌보드 렌더링
-  void Render(FRenderer &renderer, const FCamera &Camera,
+  virtual void Render(FRenderer &renderer, const FCamera &Camera,
               const bool &bHighlighted) override;
 
   virtual void SetTexture(FString texture); // 원본 머터리얼을 건드리지 않고

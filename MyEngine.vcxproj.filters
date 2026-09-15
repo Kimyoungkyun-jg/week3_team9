@@ -157,6 +157,9 @@
     <ClCompile Include="Source\Runtime\Engine\FTimeManager.cpp">
       <Filter>Source\Runtime\Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Engine\FCamera.cpp">
+      <Filter>Source\Runtime\Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Engine\FRayCastingManager.cpp">
       <Filter>Source\Runtime\Engine</Filter>
     </ClCompile>
@@ -250,7 +253,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
-  </ItemGroup>
+  <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp"><Filter>Source\Runtime\Actors</Filter></ClCompile></ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
       <Filter>Source\Runtime\Rendering</Filter>
@@ -485,7 +488,7 @@
     <ClInclude Include="Source\Runtime\Actors\TestTextActor.h">
       <Filter>Source\Runtime\Actors</Filter>
     </ClInclude>
-  </ItemGroup>
+  <ClInclude Include="Source\Runtime\Actors\AAnimatedBillboardActor.h"><Filter>Source\Runtime\Actors</Filter></ClInclude></ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\ExamplePS.hlsl">
       <Filter>Shader</Filter>

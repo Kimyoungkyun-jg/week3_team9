@@ -10,10 +10,13 @@ IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 void UInstancePrimitiveComponent::Register(UScene& Scene)
 {
 	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
-	if (!GetMesh()) {
+	if (!PrimitiveMesh)
+	{
 		SetMesh(Resources ? Resources->GetMesh(EMeshID::Cube) : nullptr);
 	}
-	if (!GetMaterial()) {
+	
+	if (!PrimitiveMaterial)
+	{
 		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Simple) : nullptr);
 	}
 
