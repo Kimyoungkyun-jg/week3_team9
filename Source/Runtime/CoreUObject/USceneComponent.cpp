@@ -87,7 +87,7 @@ void USceneComponent::Deserialize(const FArchive& Archive)
     {
         Rotation[i] *= RadToDeg;
     }
-    RelativeTransform.Rotation.FromEulerXYZDeg(Rotation);
+    RelativeTransform.Rotation = FQuaternion::FromEulerXYZDeg(Rotation);
 
     // Scale
     RelativeTransform.Scale3D = Archive.GetVector("Scale");
