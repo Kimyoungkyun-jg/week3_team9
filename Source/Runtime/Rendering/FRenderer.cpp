@@ -309,9 +309,14 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  if (Desc.bIsInstancing)
+  if (Desc.Type == 1)
   {
       Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
+          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  }
+  else if (Desc.Type == 2)
+  {
+      Result = Device->CreateInputLayout(FVertexInstancedBillboardLayouts::Layout, FVertexInstancedBillboardLayouts::NumElements,
           Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
   }
   else
@@ -638,11 +643,17 @@ void FRenderer::DrawTextInstances(const FCamera& Camera)
     Context->Unmap(TextInstanceBuffer.Get(), 0);
 
     // 상수 버퍼 업데이트
-    FObjectConstants SC;
-    SC.MVP = Camera.CreateViewProjectionMatrix();
+    FInstancedBillboardConstants SC{};
+    FMatrix CameraRotation = Camera.GetRotationMatrix();
+    FVector ViewUp = CameraRotation.TransformPointRow(FVector{ 0.0f, 0.0f, 1.0f }, 0.0f);
+    FVector ViewRight = CameraRotation.TransformPointRow(FVector{ 0.0f, 1.0f, 0.0f }, 0.0f);
+
+    SC.ViewRight = ViewRight;
+    SC.ViewUp = ViewUp;
+    SC.VP = Camera.CreateViewProjectionMatrix();
     UpdateBuffer(SC);
 
-    TSharedPtr<FMaterial> DefaultMat = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Text);
+    TSharedPtr<FMaterial> DefaultMat = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Instance_Billboard);
 
     // 파이프라인 바인딩
     TSharedPtr<FRenderPipeline> Pipeline = DefaultMat->GetPipeline();

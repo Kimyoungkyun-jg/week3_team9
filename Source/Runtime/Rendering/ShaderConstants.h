@@ -68,13 +68,9 @@ static_assert(sizeof(FBillboardConstants) % 16 == 0);
 struct FInstancedBillboardConstants {
 	FMatrix VP;
 
-	FVector Center{ 0.0f, 0.0f, 0.0f };
-	float Padding1;
 	FVector ViewRight{ 0.0f, 0.0f, 0.0f };
-	float Padding2;
+	float Padding1;
 	FVector ViewUp{ 0.0f, 0.0f, 0.0f };
-	float Padding3;
-	FVector2 BillboardSize{ 1.0f, 1.0f };
-	FVector2 Padding4;
+	float Padding2;
 };
 static_assert(sizeof(FInstancedBillboardConstants) % 16 == 0);

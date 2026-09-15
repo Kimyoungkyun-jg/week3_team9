@@ -27,7 +27,7 @@ struct FPipelineEntry {
   bool bDepthWrite = true;
   D3D11_CULL_MODE CullMode = D3D11_CULL_BACK;
   bool bAdditiveBlend = false;
-  bool bIsInstancing = false;
+  int32 Type = 0; // 0 : Default / 1 : Instance / 2: BillboardInstance
 };
 
 // 기본 파이프라인 테이블
@@ -40,9 +40,9 @@ constexpr FPipelineEntry pipelineTable[] = {
     {EPipelineID::Spotlight, L"ExampleVS.cso", L"SpotlightPS.cso", false,
      D3D11_CULL_NONE, true},
     {EPipelineID::Text, L"ExampleVS.cso", L"MsdfTextPS.cso"},
-    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, true},
+    {EPipelineID::Instance_Text, L"InstanceVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 1},
     {EPipelineID::Billboard, L"BillboardVS.cso", L"TexturedPS.cso" },
-    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, true },
+    {EPipelineID::Instance_Billboard, L"InstancedBillboardVS.cso", L"MsdfTextPS.cso", true, D3D11_CULL_BACK, false, 2 },
 };
 
 // 머티리얼 정보 엔트리
@@ -122,7 +122,7 @@ bool FRenderResourceLibrary::InitializePipelines(FRenderer &Renderer) {
         .bEnableDepthWrite = Entry.bDepthWrite,
         .CullMode = Entry.CullMode,
         .bAdditiveBlend = Entry.bAdditiveBlend,
-        .bIsInstancing = Entry.bIsInstancing,
+        .Type = Entry.Type,
     };
 
     TSharedPtr<FRenderPipeline> Pipeline =

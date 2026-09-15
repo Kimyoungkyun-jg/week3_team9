@@ -4,14 +4,10 @@ cbuffer InstancedBillboardConstants : register(b0)
 {
     row_major float4x4 VP;
     
-    float3 Center; 
-    float Padding1;
     float3 ViewRight;
-    float Padding2;
+    float Padding1;
     float3 ViewUp;
-    float Padding3;
-    float2 BillboardSize;
-    float2 Padding4;
+    float Padding2;
 }
 
 struct VS_INPUT
@@ -24,8 +20,9 @@ struct VS_INPUT
 
     // 인스턴스 데이터
     row_major float4x4 InstanceWorld : INSTANCE_WORLD;
-    row_major float4x4 InstanceWorldModel : INSTANCE_WORLDMODEL;
     float4 InstanceColor : INSTANCE_COLOR;
+    float3 InstanceCenter : INSTANCE_CENTER;
+    float2 BillboardSize : INSTANCE_SIZE;
     float2 InstanceUVScale : INSTANCE_UV_SCALE;
     float2 InstanceUVOffset : INSTANCE_UV_OFFSET;
 };
@@ -42,9 +39,11 @@ PS_INPUT MainVS(VS_INPUT Input)
 {
     PS_INPUT Output;
     
-    float3 VertexPosition = Center
-    + ViewRight * Input.Position.y * BillboardSize.x
-    + ViewUp * Input.Position.z * BillboardSize.y;
+    float3 GlyphLocalPosition = mul(float4(Input.Position, 1.0f), Input.InstanceWorld).xyz;
+    
+    float3 VertexPosition = Input.InstanceCenter
+    + ViewRight * GlyphLocalPosition.y * Input.BillboardSize.x
+    + ViewUp * GlyphLocalPosition.z * Input.BillboardSize.y;
   
     Output.Position = mul(float4(VertexPosition, 1.0f), VP);
     Output.Color = Input.InstanceColor;
