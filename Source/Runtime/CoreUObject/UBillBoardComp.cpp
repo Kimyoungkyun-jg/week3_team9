@@ -70,7 +70,7 @@ void UBillBoardComp::Render(FRenderer& renderer, const FCamera& Camera, const bo
   Constants.MVP = ModelMatrix * VP;
   Constants.World = ModelMatrix;
 
-  Constants.VP = SceneView.ViewProj;
+
 
   // UV 반영
   Constants.UVScale = UVScale;
