@@ -14,9 +14,7 @@
 
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
 
-void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV,
-                         FVector2 LengthUV, UPrimitiveComponent *Rendered,
-                         bool bHighlighted) {
+void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered, FSceneView& sceneView,bool bHighlighted) {
   if (!Rendered) {
     return;
   }
@@ -121,3 +119,33 @@ void FRenderView::RenderPostProcess(const FCamera &Camera, FVector2 TopLeftUV,
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   RenderOutline(Camera, SelectedActor);
 }
+void FRenderView::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV)
+{
+    Renderer.SetViewportUV(TopLeftUV, LengthUV);
+}
+
+void FRenderView::SetRenderMode(EViewModeIndex InMode)
+{
+    Renderer.SetRenderMode(InMode);
+}
+
+void FRenderView::UpdateLightConstants(FLightConstants& Constants, const EViewModeIndex InMode)
+{
+    Renderer.UpdateLightConstants(Constants, InMode);
+}
+
+void FRenderView::DrawInstances(const FCamera& Camera)
+{
+    Renderer.DrawInstances(Camera);
+}
+
+void FRenderView::ClearTextInstances()
+{
+    Renderer.ClearTextInstances();
+}
+
+void FRenderView::FlushLineBatch(const FMatrix& ViewProjection)
+{
+    Renderer.FlushLineBatch(ViewProjection);
+}
+

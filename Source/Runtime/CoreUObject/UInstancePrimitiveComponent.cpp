@@ -33,7 +33,7 @@ void UInstancePrimitiveComponent::ClearInstances()
     InstanceTransforms.clear();
 }
 
-void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted)
+void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
 {
     if (!GetMesh() || !GetMaterial()) return;
 

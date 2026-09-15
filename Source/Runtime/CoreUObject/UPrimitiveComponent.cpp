@@ -24,15 +24,14 @@ void UPrimitiveComponent::Unregister()
 
 	Super::Unregister();
 }
-void UPrimitiveComponent::Render(FRenderer &renderer, const FCamera &Camera,
-                                 const bool &bHighlighted) {
+void UPrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) {
 
   if (!GetMesh() || !GetMaterial()) {
     return;
   }
 
-  const FMatrix VP = Camera.CreateViewProjectionMatrix();
-  const FMatrix World = GetRenderMatrix(Camera);
+  const FMatrix VP = SceneView.ViewProj;
+  const FMatrix World = GetRenderMatrix(SceneView.Camera);
 
   FObjectConstants Constants;
   Constants.MVP = World * VP;

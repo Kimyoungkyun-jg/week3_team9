@@ -390,6 +390,7 @@
     <ClInclude Include="Source\Editor\Core\FConfigArchive.h" />
     <ClInclude Include="Source\Editor\Core\FEditor.h" />
     <ClInclude Include="Source\Editor\Core\FEditorState.h" />
+    <ClInclude Include="Source\Runtime\Engine\FSceneView.h" />
     <ClInclude Include="Source\Editor\Grid\FGrid.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiContentsDrawer.h" />
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiConsoleWindow.h" />
@@ -624,7 +625,7 @@
   <ImportGroup Label="ExtensionTargets" />
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\"</Command>
+      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\"  &amp; if exist "$(SolutionDir)Resources\Textures\Fonts" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\"</Command>
       <Message>Copying textures to output directory...</Message>
     </PostBuildEvent>
     <ClCompile>
@@ -635,6 +636,9 @@
     </PreBuildEvent>
     <PreBuildEvent>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Convert Png to dds</Message>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">call "$(ProjectDir)ConvertTextures.bat"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
 </Project>

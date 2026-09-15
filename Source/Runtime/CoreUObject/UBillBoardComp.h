@@ -25,8 +25,7 @@ public:
 	virtual void Register(UScene& InScene) override;
 
   // 빌보드 렌더링
-  virtual void Render(FRenderer &renderer, const FCamera &Camera,
-              const bool &bHighlighted) override;
+  virtual void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) override;
 
   virtual void SetTexture(FString texture); // 원본 머터리얼을 건드리지 않고
                                             // instance로 생성해서 사용

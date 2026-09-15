@@ -168,7 +168,7 @@ void UTextInstanceComponent::RebuildTextMesh() {
 }
 
 
-void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted) 
+void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
 {
 	if (!GetMesh() || !GetMaterial() || Instances.empty()) {
 		return;

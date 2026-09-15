@@ -138,7 +138,7 @@ constexpr FMaterialEntry materialTable[] = {
     {
         .Id = EMaterialID::Textured,
         .PipelineID = EPipelineID::Textured,
-        .TextureName = "transparent-test",
+        .TextureName = "uv-test",
     },
     {
         .Id = EMaterialID::Billboard,
