@@ -8,11 +8,12 @@
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/CoreUObject/USpotLightComponent.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
+#include "Runtime/CoreUObject/UAnimatedBillboardComp.h"
 #include "Runtime/CoreUObject/UTextInstanceComponent.h"
 
 FVisualizerRegistry::FVisualizerRegistry()
 {
-	// FPrimitiveVisualizer는 Visualizers에서 반드시 0번 인덱스로 냅둘것
+	// 기본 프리미티브 비주얼라이저 등록
 	Visualizers.push_back(MakeUnique<FPrimitiveVisualizer>());
 	Map[UPrimitiveComponent::StaticClass()] = Visualizers.back().get();
 	
@@ -21,6 +22,7 @@ FVisualizerRegistry::FVisualizerRegistry()
 
 	Visualizers.push_back(MakeUnique<FBillboardVisualizer>());
 	Map[UBillBoardComp::StaticClass()] = Visualizers.back().get();
+	Map[UAnimatedBillboardComp::StaticClass()] = Visualizers.back().get();
 
 	Visualizers.push_back(MakeUnique<FTextVisualizer>());
 	Map[UTextInstanceComponent::StaticClass()] = Visualizers.back().get();

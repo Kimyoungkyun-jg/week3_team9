@@ -61,6 +61,14 @@ const FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Translucent,
     },
     {
+        .Id = FName("Billboard"),
+        .VertexShader = L"ExampleVS.cso",
+        .PixelShader = L"TexturedPS.cso",
+        .bDepthWrite = true,
+        .CullMode = D3D11_CULL_NONE,
+        .BlendMode = EBlendMode::Translucent,
+    },
+    {
         .Id = FName("RotationGizmo"),
         .VertexShader = L"RotationGizmoVS.cso",
         .PixelShader = L"RotationGizmoPS.cso",
@@ -144,7 +152,7 @@ const FMaterialEntry materialTable[] = {
     },
     {
         .Id = FName("Billboard"),
-        .PipelineID = FName("Textured"),
+        .PipelineID = FName("Billboard"),
         .TextureName = "uv-test",
     },
     {
