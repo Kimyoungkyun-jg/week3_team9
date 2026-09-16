@@ -16,7 +16,6 @@
 
 #include "ThirdParty/stb/stb_image.h"
 
-
 FRenderResourceLibrary &FRenderResourceLibrary::Get() {
   static FRenderResourceLibrary Instance;
   return Instance;
@@ -66,7 +65,7 @@ const FPipelineEntry pipelineTable[] = {
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"TexturedPS.cso",
         .bDepthWrite = true,
-        .CullMode = D3D11_CULL_NONE,
+        //.CullMode = D3D11_CULL_NONE,
         .BlendMode = EBlendMode::Translucent,
     },
     {
@@ -157,7 +156,7 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("Textured"),
         .PipelineID = FName("Textured"),
-        .TextureName = "uv-test",
+        .TextureName = "Question_Block",
     },
     {
         .Id = FName("Billboard"),
@@ -1164,7 +1163,7 @@ bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
   };
 
   // 양면 인덱스 배열
-  const TArray<uint32> Indices = {0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2};
+  const TArray<uint32> Indices = {0, 1, 2, 0, 2, 3};
 
   FMeshDesc MeshDesc{
       .VertexData = Vertices.data(),

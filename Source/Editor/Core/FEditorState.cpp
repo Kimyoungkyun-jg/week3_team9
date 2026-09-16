@@ -1,5 +1,6 @@
 #include "FEditorState.h"
 #include "Editor/Core/FConfigArchive.h"
+#include "Runtime/Core/Log.h"
 #include "ThirdParty/mIni/ini.h"
 
 void FEditorState::WriteToFile(FStringView FilePath) const

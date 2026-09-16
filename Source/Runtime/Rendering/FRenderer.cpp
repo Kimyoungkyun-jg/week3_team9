@@ -4,6 +4,7 @@
 #include "FMaterial.h"
 #include "FMesh.h"
 #include "FRenderPipeline.h"
+#include "Runtime/Core/Log.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Engine/FCamera.h"
 #include "Runtime/Rendering/FRenderQueue.h"

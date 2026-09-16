@@ -301,6 +301,9 @@
     <ClCompile Include="Source\Editor\Visualizer\FTextVisualizer.cpp">
       <Filter>Source\Editor\Visualizer</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Actors\AMasterYi.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Runtime\Rendering\FRenderer.h">
@@ -579,6 +582,9 @@
     <ClInclude Include="Source\Runtime\Math\Random.h">
       <Filter>Source\Runtime\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Actors\AMasterYi.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FRenderQueue.h" />
+    <ClInclude Include="Resources\MasterYi\MasterYi_HeadData.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\GridPS.hlsl">
@@ -614,6 +620,8 @@
     <FxCompile Include="Shader\TexturedPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Shader\ScreenQuadVS.hlsl" />
+    <FxCompile Include="Shader\OutlinePostProcessPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\Constants.hlsli">
