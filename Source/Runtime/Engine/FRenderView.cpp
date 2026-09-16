@@ -83,8 +83,14 @@ void FRenderView::RenderView(const FSceneView& View, const UScene& Scene, const 
     }
 
     if (EditorCtx.SelectedPrimitive && EditorCtx.VisualizerRegistry) {
-        if (IVisualizer* Visualizer = EditorCtx.VisualizerRegistry->FindVisualizer(
-                EditorCtx.SelectedPrimitive->GetClass())) {
+
+        UClass* ClassType = EditorCtx.SelectedPrimitive->GetClass();
+        FVisualizerRegistry& Registry = *EditorCtx.VisualizerRegistry;
+
+        IVisualizer* Visualizer = Registry.FindVisualizer(ClassType);
+
+        if (Visualizer)
+        {
             Visualizer->Draw(
                 *EditorCtx.SelectedPrimitive,
                 *this,
@@ -262,7 +268,7 @@ void FRenderView::DrawStencilMask(const FCamera& Camera,
     auto Mesh = FRenderResourceLibrary::Get().GetMesh(RD.MeshId);
     if (!Mesh) return;
 
-    const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+    const FMatrix ModelMatrix = PrimComp->GetRenderMatrix(Camera);
     FObjectConstants Constants{};
     Constants.World = ModelMatrix;
     Constants.MVP   = Constants.World * Camera.CreateViewProjectionMatrix();

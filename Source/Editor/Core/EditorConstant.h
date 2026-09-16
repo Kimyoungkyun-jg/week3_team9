@@ -9,7 +9,7 @@
 #include "Runtime/Actors/ABillboardActor.h"
 #include "Runtime/Actors/AAnimatedBillboardActor.h"
 #include "Runtime/Actors/ASpotlightActor.h"
-#include "Runtime/Actors/TestTextActor.h"
+#include "Runtime/Actors/ATextRenderActor.h"
 #include "Runtime/Actors/AInstancingActor.h"
 
 namespace EditorConstant
@@ -26,7 +26,7 @@ namespace EditorConstant
 	   ABillboardActor::StaticClass(),
 	   AAnimatedBillboardActor::StaticClass(),
 	   ASpotlightActor::StaticClass(),
-	   TestTextActor::StaticClass(),
+	   ATextRenderActor::StaticClass(),
 	   AInstancingActor::StaticClass(),
 	};
 
