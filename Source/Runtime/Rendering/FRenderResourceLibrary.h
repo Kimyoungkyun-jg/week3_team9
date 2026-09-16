@@ -11,6 +11,7 @@
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Core/TMap.h"
 #include "Vertices.h"
+#include "FFont.h"
 
 class FRenderer;
 class FTexture;
@@ -34,6 +35,8 @@ public:
   TMap<FName, TSharedPtr<FMaterial>> AllMaterialMap;
   // 텍스쳐 보관 맵 (FName 기반)
   TMap<FName, TSharedPtr<FTexture>> AllTextureMap;
+
+  TMap<FString, TSharedPtr<FFont>> AllFontMap;
 
   // 에디터용 아이콘 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllEditorTextureMap;
@@ -177,6 +180,16 @@ public:
   // 정점 배열 메쉬 캐싱 생성
   TSharedPtr<FMesh> GetOrCreateMesh(const FName &ID,
                                     const TArray<FVertexData> &vertices);
+
+  bool CreateFonts(FRenderer& Renderer);
+
+  [[nodiscard]] TSharedPtr<FFont> GetFont(const FString& InName) const {
+      auto it = AllFontMap.find(InName);
+      if (it != AllFontMap.end())
+          return it->second;
+      return nullptr;
+  }
+
 
 private:
   bool InitializePipelines(FRenderer &Renderer);

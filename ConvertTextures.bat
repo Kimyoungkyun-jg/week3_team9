@@ -17,5 +17,3 @@ cd /d"%~dp0\Resources\Textures\Fonts"
 for %%f in  (*.png) do (
 	..\..\..\Tools\texconv.exe -m 0 -f R8G8B8A8_UNORM -y -o "..\..\Textures" "%%f"
 )
-
-pause
