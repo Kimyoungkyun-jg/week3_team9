@@ -55,7 +55,6 @@ void FImguiConsoleWindow::Process(FEditor& Editor)
 
 	const bool bCopyToClipboard = ShowMenuBar();
 
-	ShowDebugTextButton();
 	ShowLogRegion(bCopyToClipboard);
 
 	ImGui::Separator();
@@ -100,21 +99,6 @@ bool FImguiConsoleWindow::ShowMenuBar()
 	}
 
 	return bCopyToClipboard;
-}
-
-void FImguiConsoleWindow::ShowDebugTextButton() const
-{
-	if (!ImGui::SmallButton("Add Debug Text")) {
-		return;
-	}
-
-	std::time_t now = std::time(nullptr);
-	std::tm local_time;
-	localtime_s(&local_time, &now);
-
-	UE_LOG("%dY-%dm-%dd %dH:%dM:%dS", local_time.tm_year + 1900, local_time.tm_mon + 1, local_time.tm_mday, local_time.tm_hour, local_time.tm_min, local_time.tm_sec);
-	UE_LOG_WARN("진돗개 둘");
-	UE_LOG_ERROR("DEFCON 1!!");
 }
 
 void FImguiConsoleWindow::ShowLogRegion(bool bCopyToClipboard)

@@ -27,9 +27,6 @@ private:
 	// Copy 를 눌렀으면 true 를 돌려주어 로그 영역이 클립보드로 복사하게 한다.
 	bool ShowMenuBar();
 
-	// 각 레벨의 로그를 하나씩 찍어보는 테스트 버튼.
-	void ShowDebugTextButton() const;
-
 	// 로그가 출력되는 스크롤 영역.
 	void ShowLogRegion(bool bCopyToClipboard);
 
