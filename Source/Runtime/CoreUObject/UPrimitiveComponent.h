@@ -51,6 +51,7 @@ public:
 
   virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
 
+  FMatrix GetModelMatrix();
 protected:
   UPrimitiveComponent() = default;
 

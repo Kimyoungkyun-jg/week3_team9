@@ -100,7 +100,6 @@ void FImguiControlPanelWindow::ActorSpawnSetting(FEditor& Editor)
     ImGui::InputInt("##SpawnCount", &spawnCount);
     ImGui::SameLine();
     ImGui::Text("Number of spawn");
-}
 
     // Actor 1개에 N개 인스턴스 - UObject 오버헤드 없음
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.5f, 0.85f, 1.0f));
@@ -115,6 +114,9 @@ void FImguiControlPanelWindow::ActorSpawnSetting(FEditor& Editor)
     ImGui::PopStyleColor(3);
     ImGui::SameLine();
     ImGui::Text("Instances: %d", totalInstanceCount);
+
+}
+
 
     // 그리드 설정
 void FImguiControlPanelWindow::GridSetting(FEditor& Editor)

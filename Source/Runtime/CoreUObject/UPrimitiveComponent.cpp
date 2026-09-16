@@ -89,3 +89,8 @@ bool UPrimitiveComponent::SetTextureByName(const FString &InTextureName) {
   SetMaterial(NewMaterial);
   return true;
 }
+
+FMatrix UPrimitiveComponent::GetModelMatrix()
+{
+    return GetGlobalTransform().ToMatrix();
+}
