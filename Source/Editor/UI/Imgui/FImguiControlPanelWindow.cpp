@@ -263,6 +263,16 @@ void FImguiControlPanelWindow::CameraSetting(FEditor& Editor)
 
         ImGui::SameLine();
         ImGui::Text("Camera Rotation");
+
+        if (ImGui::Button("Reset Camera"))
+        {
+            Camera.Position = FVector{ -8.0f, 0.0f, 4.0f };
+            Camera.Pitch = -20.0f;
+            Camera.Yaw = 0.0f;
+            Editor.State.SetCameraLocation(Camera.Position);
+            Editor.State.SetCameraPitch(Camera.Pitch);
+            Editor.State.SetCameraYaw(Camera.Yaw);
+        }
     }
 }
 

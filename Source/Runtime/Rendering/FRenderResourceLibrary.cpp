@@ -101,7 +101,7 @@ const FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Opaque,
     },
     {
-        .Id = EPipelineID::SelectedActor_Text,
+        .Id = FName("SelectedActor_Text"),
         .VertexShader = L"InstanceVS.cso",
         .PixelShader = L"MsdfTextPS.cso",
         .bDepthWrite = false,
@@ -161,12 +161,12 @@ const FMaterialEntry materialTable[] = {
         .PipelineID = FName("Gizmo"),
     },
     {
-        .Id = EMaterialID::Outline,
-        .PipelineID = EPipelineID::Outline,
+        .Id = FName("Outline"),
+        .PipelineID = FName("Outline"),
     },
     {
-        .Id = EMaterialID::SelectedActor_Text,
-        .PipelineID = EPipelineID::SelectedActor_Text,
+        .Id = FName("SelectedActor_Text"),
+        .PipelineID = FName("SelectedActor_Text"),
         .TextureName = "maplestorybold",
     },
 };
@@ -310,7 +310,7 @@ bool FRenderResourceLibrary::CreateOutlinePipeline(FRenderer &Renderer) {
     return false;
   }
 
-  AllPipelineMap[EPipelineID::Outline] = Pipeline;
+  AllPipelineMap[FName("Outline")] = Pipeline;
   return true;
 }
 
@@ -406,7 +406,7 @@ bool FRenderResourceLibrary::CreatePostProcessPipeline(FRenderer &Renderer) {
     return false;
   }
 
-  AllPipelineMap[EPipelineID::PostProcess] = Pipeline;
+  AllPipelineMap[FName("PostProcess")] = Pipeline;
   return true;
 }
 
@@ -1266,9 +1266,10 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer)
       FString KeyWide = Entry.path().stem().string();
       std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
                      ::tolower);
+      FName TextureKey(KeyWide);
 
       // 이미 로드된 텍스처 건너뜀
-      if (AllTextureMap.find(KeyWide) != AllTextureMap.end()) {
+      if (AllTextureMap.find(TextureKey) != AllTextureMap.end()) {
         continue;
       }
   
@@ -1277,7 +1278,7 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer)
       if (!Texture)
         continue;
 
-      RegisterTexture(KeyWide, Texture);
+      RegisterTexture(TextureKey, Texture);
     }
   }
 

@@ -1,4 +1,4 @@
-﻿#include "UPrimitiveComponent.h"
+#include "UPrimitiveComponent.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/ShaderConstants.h"
 #include "UClass.h"
@@ -31,7 +31,7 @@ FAxisAlignedBoundingBox UPrimitiveComponent::CalcLocalBounds()
     return {};
 }
 
-bool UPrimitiveComponent::SetTextureByName(const FString& InTextureName)
+bool UPrimitiveComponent::SetTextureByName(const FName& InTextureName)
 {
     RenderData.TextureId = InTextureName;
     return true;

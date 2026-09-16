@@ -20,9 +20,9 @@ enum class ERenderType
 
 struct FRenderData
 {
-    EMeshID MeshId = EMeshID::None;
-    EMaterialID MaterialId = EMaterialID::None;
-    FString TextureId;
+    FName MeshId{"None"};
+    FName MaterialId{"None"};
+    FName TextureId{"None"};
     FObjectConstants Constants;
     ERenderType type = ERenderType::Primitive;
     bool bSelected = false;

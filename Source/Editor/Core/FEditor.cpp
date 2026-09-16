@@ -27,8 +27,8 @@ void FEditor::Initialize(USceneManager *SceneManager) {
   {
     FGarbageCollector::Get().AddRoot(SelectedActorTextComp.Get());
     SelectedActorTextComp->SetInheritRotation(false);
-    SelectedActorTextComp->SetMeshID(EMeshID::Rect);
-    SelectedActorTextComp->SetMaterialID(EMaterialID::SelectedActor_Text);
+    SelectedActorTextComp->SetMeshID(FName("Rect"));
+    SelectedActorTextComp->SetMaterialID(FName("SelectedActor_Text"));
     SelectedActorTextComp->SetFont();
   }
 
@@ -216,11 +216,11 @@ void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
 
 
         FTransform CurrentTransform = NewActor->GetTransform();
-        CurrentTransform.Location = FVector{ Offset, 0.0f, 0.0f };
+        CurrentTransform.Location = Location;
+        CurrentTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
         NewActor->SetTransform(CurrentTransform);
 
-        //USceneComponent* RootComponent = NewActor->GetRootComponent();
-        //RootComponent->SetRelativeTransform(Transform);
+        // 액터 시작 및 선택
         NewActor->BeginPlay();
         SelectActor(NewActor);
     }

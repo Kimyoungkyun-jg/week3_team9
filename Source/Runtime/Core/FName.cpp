@@ -2,6 +2,11 @@
 #include "Runtime/Core/FNamePool.h"
 #include "Runtime/Utility/EngineUtil.h"
 
+FName::FName()
+	: FName{ FString{ "None" } }
+{
+}
+
 FName::FName(const char* CharPtr)
 	: FName{ FString{ CharPtr } }
 {
@@ -10,6 +15,11 @@ FName::FName(const char* CharPtr)
 FName::FName(const FString& Str)
 	: Entry{ FNamePool::AddEntry(Str) }
 {
+}
+
+bool FName::IsNone() const
+{
+	return *this == FName{ "None" };
 }
 
 int32 FName::Compare(const FName& Other) const

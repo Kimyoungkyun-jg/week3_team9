@@ -22,15 +22,19 @@ public:
     const FRenderData& GetPureRenderData() const { return RenderData; }
 
 
-    void SetMeshID(EMeshID InMeshId)         { RenderData.MeshId = InMeshId; }
-    void SetMaterialID(EMaterialID InMaterialId) { RenderData.MaterialId = InMaterialId; }
-    void SetTextureID(FString textureid) { RenderData.TextureId = textureid; }
+    // ID 접근자
+    void SetMeshID(const FName& InMeshId)         { RenderData.MeshId = InMeshId; }
+    void SetMaterialID(const FName& InMaterialId) { RenderData.MaterialId = InMaterialId; }
+    void SetTextureID(const FName& InTextureId)   { RenderData.TextureId = InTextureId; }
+    const FName& GetMeshID() const               { return RenderData.MeshId; }
+    const FName& GetMaterialID() const           { return RenderData.MaterialId; }
+    const FName& GetTextureID() const            { return RenderData.TextureId; }
 
-    // Visualizer 및 충돌 판정용 LocalBounds
+    // 충돌 판정용 바운드 계산
     virtual FAxisAlignedBoundingBox CalcLocalBounds();
 
     // 텍스처 이름으로 머티리얼 텍스처 교체
-    bool SetTextureByName(const FString& InTextureName);
+    bool SetTextureByName(const FName& InTextureName);
 
     // 색상 설정 및 조회
     const FVector& GetColor() const { return Color; }
@@ -44,8 +48,6 @@ public:
     virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
 
     FMatrix GetModelMatrix();
-
-
 
 protected:
     UPrimitiveComponent() = default;

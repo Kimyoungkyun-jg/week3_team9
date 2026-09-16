@@ -104,6 +104,13 @@ void FRenderView::BeginView(FVector2 TopLeftUV, FVector2 LengthUV, EViewModeInde
 void FRenderView::DrawGrid(const FCamera& Camera, FGrid& Grid)
 {
     Grid.DrawLine(Renderer, Camera);
+
+    FGridLineConstants Constants{};
+    Constants.MVP = Camera.CreateViewProjectionMatrix();
+    Constants.CameraPosition = Camera.Position;
+    Constants.FadeStartDistance = 3.0f;
+    Constants.FadeEndDistance = 75.0f;
+    Renderer.FlushLineBatch(Constants, FName("Grid"));
 }
 
 void FRenderView::FlushBasePass(const FCamera& Camera)
@@ -246,7 +253,7 @@ void FRenderView::DrawStencilMask(const FCamera& Camera,
     Constants.World = ModelMatrix;
     Constants.MVP   = Constants.World * Camera.CreateViewProjectionMatrix();
 
-    auto OutlineMaterial = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Outline);
+    auto OutlineMaterial = FRenderResourceLibrary::Get().GetMaterial(FName("Outline"));
     if (OutlineMaterial) {
         OutlineMaterial->GetPipeline()->SetStencilRef(1);
         Renderer.Draw(*Mesh, *OutlineMaterial, Constants, 0, false);
@@ -322,7 +329,7 @@ void FRenderView::FlushQueue(const FCamera& Camera)
         auto Material = ResLib.GetMaterial(Data.MaterialId);
         if (!Mesh || !Material) continue;
 
-        if (!Data.TextureId.empty())
+        if (!Data.TextureId.IsNone())
         {
             auto Tex = ResLib.GetTexture(Data.TextureId);
             if (Tex)
@@ -350,8 +357,8 @@ void FRenderView::FlushQueue(const FCamera& Camera)
     if (!RenderQueue.IsTextRQEmpty())
     {
         const FRenderData& First = RenderQueue.GetTextRenderQ()[0];
-        EMeshID     TextMeshId     = First.MeshId;
-        EMaterialID TextMaterialId = First.MaterialId;
+        FName     TextMeshId     = First.MeshId;
+        FName     TextMaterialId = First.MaterialId;
         
         for (const FRenderData& Data : RenderQueue.GetTextRenderQ())
         {

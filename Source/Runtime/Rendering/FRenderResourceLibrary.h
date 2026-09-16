@@ -32,11 +32,10 @@ public:
   TMap<FName, TSharedPtr<FMesh>> AllMeshMap;
   // 머티리얼 보관 맵 (FName 기반)
   TMap<FName, TSharedPtr<FMaterial>> AllMaterialMap;
-  // 텍스쳐 보관 맵
-  TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
+  // 텍스쳐 보관 맵 (FName 기반)
+  TMap<FName, TSharedPtr<FTexture>> AllTextureMap;
 
-
-  //에디터용 아이콘 텍스쳐 보관 맵
+  // 에디터용 아이콘 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllEditorTextureMap;
 
   // 인스턴싱 배치 배열 맵
@@ -133,7 +132,7 @@ public:
   // 머티리얼 등록
   TSharedPtr<FMaterial> RegisterMaterial(const FName& Id, TSharedPtr<FMaterial> inMaterial);
 
-  void RegisterTexture(const FString &name, TSharedPtr<FTexture> texture) {
+  void RegisterTexture(const FName &name, TSharedPtr<FTexture> texture) {
     AllTextureMap[name] = texture;
   }
 
@@ -141,8 +140,8 @@ public:
     AllEditorTextureMap[name] = texture;
   }
 
-  // 텍스처 조회. 없으면 nullptr
-  [[nodiscard]] TSharedPtr<FTexture> GetTexture(const FString &name) const {
+  // 텍스처 조회
+  [[nodiscard]] TSharedPtr<FTexture> GetTexture(const FName &name) const {
     auto it = AllTextureMap.find(name);
     if (it != AllTextureMap.end())
       return it->second;

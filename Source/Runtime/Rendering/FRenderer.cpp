@@ -769,8 +769,8 @@ void FRenderer::DrawInstances(const FCamera &Camera) {
   }
 }
 
-void FRenderer::DrawTextInstances(const FCamera &Camera, const EMeshID &MeshId,
-                                  const EMaterialID &MaterialId) {
+void FRenderer::DrawTextInstances(const FCamera &Camera, const FName &MeshId,
+                                  const FName &MaterialId) {
   auto &ResLib = FRenderResourceLibrary::Get();
 
   // 상수 버퍼 업데이트
@@ -869,7 +869,7 @@ void FRenderer::RenderOutline()
     ID3D11ShaderResourceView* SRVs[] = { EditorViewPortSRV.Get(), DepthStencilSRV.Get() };
     Context->PSSetShaderResources(0, 2, SRVs);
         
-    FRenderResourceLibrary::Get().GetPipeline(EPipelineID::PostProcess)->Bind(*Context.Get());
+    FRenderResourceLibrary::Get().GetPipeline(FName("PostProcess"))->Bind(*Context.Get());
     Context->Draw(3, 0);
 
     // 슬롯 해제

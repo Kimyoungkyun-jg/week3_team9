@@ -57,7 +57,7 @@ public:
 	void UpdateLightConstants(const FLightConstants& Constants, const EViewModeIndex InMode);
 	void DrawInstances(const FCamera& Camera);
 	void ClearTextInstances();
-	void FlushLineBatch(const FMatrix& ViewProjection);
+	void FlushLineBatch(const FMatrix& ViewProjection, const FName& PipelineId = FName("Simple_Wireframe"));
 	void FlushQueue(const FCamera& Camera);
 
 	FRenderQueue& GetRenderQueue() { return RenderQueue; }

@@ -1,10 +1,11 @@
-﻿#include "FCameraInputController.h"
+#include "FCameraInputController.h"
 
 #include "Runtime/Engine/FCamera.h"
 #include "Runtime/Math/FMatrix.h"
 #include <Windows.h>
 
 #include "FInputManager.h"
+#include <algorithm>
 
 void FCameraInputController::UpdateKeyInput(FCamera& Camera, float DeltaTime) 
 {
@@ -94,5 +95,6 @@ void FCameraInputController::UpdateMouseInput(FCamera& Camera) const
 		FVector2 Delta = FInputManager::Get().GetMouseDelta() * CameraRotateSpeed;
 		Camera.Yaw += Delta.X;
 		Camera.Pitch -= Delta.Y;
+		Camera.Pitch = std::clamp(Camera.Pitch, -89.0f, 89.0f);
 	}
 }

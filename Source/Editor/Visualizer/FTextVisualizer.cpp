@@ -36,6 +36,12 @@ void FTextVisualizer::Draw(
     return;
   }
 
+  TArray<FVector> Array;
+  for (int i = 0; i < 4; ++i) {
+    FVector WorldVector = ModelMatrix.TransformPointRow(Mesh.GetPositions()[i]);
+    Array.push_back(WorldVector);
+  }
+
 	RenderView.RenderQuad(
 		Array[0],
 		Array[1],

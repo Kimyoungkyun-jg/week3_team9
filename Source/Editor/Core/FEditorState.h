@@ -24,9 +24,9 @@ private:
 	// Camera
 	float CameraSensitivity = 0.5f;
 	float CameraSpeed = 10.0f;
-	FVector CameraLocation = { -3.0f, 3.0f, 2.0f };
-	float CameraYaw = -45.0f;
-	float CameraPitch = -25.0f;
+	FVector CameraLocation = { -8.0f, 0.0f, 4.0f };
+	float CameraYaw = 0.0f;
+	float CameraPitch = -20.0f;
 	float CameraFOV = 60.0f;
 
 	// Grid

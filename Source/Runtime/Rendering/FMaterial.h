@@ -36,7 +36,7 @@ public:
   [[nodiscard]] TSharedPtr<FTexture> GetTexture() const { return Texture; }
 
   // 원본 머터리얼에서 텍스처 교체 함수
-  bool SetTextureByName(const FString& InTextureName);
+  bool SetTextureByName(const FName& InTextureName);
 
 
   FName MaterialId{"None"};

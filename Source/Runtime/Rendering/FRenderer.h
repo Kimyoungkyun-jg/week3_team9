@@ -77,7 +77,7 @@ public:
   // 텍스트 인스턴싱
   void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const FName& MeshId, const FName& MaterialId);
   void DrawInstances(const FCamera& Camera);
-  void DrawTextInstances(const FCamera& Camera, const EMeshID& MeshId, const EMaterialID& MaterialId);
+  void DrawTextInstances(const FCamera& Camera, const FName& MeshId, const FName& MaterialId);
   void ClearTextInstances();
 
   void RenderOutline();

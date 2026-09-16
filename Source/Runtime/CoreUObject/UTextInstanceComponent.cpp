@@ -37,9 +37,9 @@ FMatrix GetRenderMatrix(const FTransform &Transform, const FCamera &Camera) {
 void UTextInstanceComponent::Register(UScene &InScene) {
   SetFont();
 
-  RenderData.MeshId = EMeshID::Rect;
-  RenderData.MaterialId = EMaterialID::Instance_Text;
-  RenderData.TextureId = "maplestorybold";
+  RenderData.MeshId = FName("Rect");
+  RenderData.MaterialId = FName("Instance_Text");
+  RenderData.TextureId = FName("maplestorybold");
   RenderData.type = ERenderType::Text;
 
   RebuildTextMesh();

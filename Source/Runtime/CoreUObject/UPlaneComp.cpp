@@ -1,4 +1,4 @@
-﻿#include "UPlaneComp.h"
+#include "UPlaneComp.h"
 
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Engine/UScene.h"
@@ -10,8 +10,7 @@ UCLASS_META(UPlaneComp, DisplayName, "Plane")
 UCLASS_META(UPlaneComp, MeshName, "Plane")
 
 void UPlaneComp::Register(UScene &InScene) {
-  FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh(FName("Plane")) : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial(FName("Simple")) : nullptr);
+  SetMeshID(FName("Plane"));
+  SetMaterialID(FName("Simple"));
   Super::Register(InScene);
 }

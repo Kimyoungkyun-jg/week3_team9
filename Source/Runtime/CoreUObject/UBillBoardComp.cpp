@@ -15,12 +15,11 @@ UCLASS_META(UBillBoardComp, DisplayName, "BillBoard")
 UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 
 void UBillBoardComp::Register(UScene& InScene) {
-  FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
-  if (!GetMesh()) {
-    SetMesh(Resources ? Resources->GetMesh(FName("Rect")) : nullptr);
+  if (GetMeshID().IsNone()) {
+    SetMeshID(FName("Rect"));
   }
-  if (!GetMaterial()) {
-    SetMaterial(Resources ? Resources->GetMaterial(FName("Billboard")) : nullptr);
+  if (GetMaterialID().IsNone()) {
+    SetMaterialID(FName("Billboard"));
   }
   Super::Register(InScene);
 }
@@ -52,14 +51,15 @@ void UBillBoardComp::SetTexture(
   std::transform(LowerName.begin(), LowerName.end(), LowerName.begin(),
                  ::tolower);
 
-  auto NewTex = lib.GetTexture(LowerName);
+  FName TextureId(LowerName);
+  auto NewTex = lib.GetTexture(TextureId);
   if (!NewTex) {
     UE_LOG("There is no such texture");
     return;
   }
 
   // TextureId를 RenderData에 기록 → FlushQueue의 Texture 큐에서 머티리얼 인스턴스 생성
-  RenderData.TextureId = LowerName;
+  RenderData.TextureId = TextureId;
   RenderData.type      = ERenderType::Texture;
 }
 

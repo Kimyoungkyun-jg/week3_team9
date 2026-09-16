@@ -22,8 +22,11 @@ private:
 	FNameEntry Entry;
 
 public:
+	FName();
 	FName(const char* CharPtr);
 	FName(const FString& Str);
+
+	bool IsNone() const;
 
 	/// <summary>
 	/// 두 FName의 문자열을 사전식으로 비교합니다.
