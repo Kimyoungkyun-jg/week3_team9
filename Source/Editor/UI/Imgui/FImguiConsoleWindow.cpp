@@ -43,15 +43,8 @@ static void  Strtrim(char* s) { char* str_end = s + strlen(s); while (str_end > 
 
 void FImguiConsoleWindow::Process(FEditor& Editor)
 {
-	if (!bIsOpened)
-		return;
+	ImGui::Begin("Console Window", nullptr, ImGuiWindowFlags_MenuBar);
 
-	if (!ImGui::Begin("Console Window", &bIsOpened, ImGuiWindowFlags_MenuBar)) {
-		ImGui::End();
-		return;
-	}
-
-	ShowCloseContextMenu();
 
 	const bool bCopyToClipboard = ShowMenuBar();
 
@@ -62,17 +55,6 @@ void FImguiConsoleWindow::Process(FEditor& Editor)
 	ShowCommandLine();
 
 	ImGui::End();
-}
-
-void FImguiConsoleWindow::ShowCloseContextMenu()
-{
-	if (ImGui::BeginPopupContextItem())
-	{
-		if (ImGui::MenuItem("Close Console")) {
-			bIsOpened = false;
-		}
-		ImGui::EndPopup();
-	}
 }
 
 bool FImguiConsoleWindow::ShowMenuBar()

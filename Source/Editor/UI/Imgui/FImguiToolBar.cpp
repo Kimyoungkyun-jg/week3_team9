@@ -102,7 +102,6 @@ void FImguiToolbar::ShowViewBar(FEditor& Editor, FImguiConsoleWindow& ConsoleWin
 {
     if (ImGui::BeginMenu("View"))
     {
-        if (ImGui::MenuItem("Console")) { ConsoleWindow.bIsOpened = true; }
         ImGui::EndMenu();
     }
 
