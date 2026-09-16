@@ -9,6 +9,7 @@
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Core/TMap.h"
 #include "Vertices.h"
+#include "FFont.h"
 
 class FRenderer;
 class FTexture;
@@ -92,6 +93,8 @@ public:
   TMap<EMaterialID, TSharedPtr<FMaterial>> AllMaterialMap;
   // 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
+  // 폰트 보관 맵
+  TMap<FString, TSharedPtr<FFont>> AllFontMap;
 
 
   //에디터용 아이콘 텍스쳐 보관 맵
@@ -238,7 +241,14 @@ public:
   TSharedPtr<FMesh> GetOrCreateMesh(const EMeshID &ID,
                                     const TArray<FVertexData> &vertices);
 
+  bool CreateFonts(FRenderer& Renderer);
 
+  [[nodiscard]] TSharedPtr<FFont> GetFont(const FString& InName) const {
+      auto it = AllFontMap.find(InName);
+      if (it != AllFontMap.end())
+          return it->second;
+      return nullptr;
+  }
 
 
 private:

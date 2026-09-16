@@ -221,7 +221,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
       !CreateRectMesh(Renderer) || !CreateTextures(Renderer) ||
       !InitializeMaterials(Renderer) || !CreateInstancingArrayMap() ||
-      !CreateEditTextures(Renderer)) {
+      !CreateEditTextures(Renderer) || !CreateFonts(Renderer)) {
     return false;
   }
 
@@ -1057,4 +1057,56 @@ FRenderResourceLibrary::GetOrCreateMesh(const EMeshID &ID,
     AllMeshMap[ID] = newMesh;
   }
   return newMesh;
+}
+
+bool FRenderResourceLibrary::CreateFonts(FRenderer& Renderer)
+{
+    const std::filesystem::path ExeDir(GetExecutableDirectory());
+    const std::filesystem::path ProjectRoot =
+        ExeDir.parent_path().parent_path().parent_path();
+
+    TArray<std::filesystem::path> SearchRoots = {
+        ProjectRoot / L"Fonts",
+        std::filesystem::current_path() / L"Fonts",
+        ExeDir / L"Fonts",
+    };
+
+    for (const auto& Root : SearchRoots) {
+        std::error_code Ec;
+        if (!std::filesystem::exists(Root, Ec)) {
+            continue;
+        }
+
+        for (const auto& Entry :
+            std::filesystem::recursive_directory_iterator(Root, Ec)) {
+            if (!Entry.is_regular_file(Ec))
+                continue;
+
+            FWString Ext = Entry.path().extension().wstring();
+            std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+            if (Ext != L".json")
+                continue;
+
+            TSharedPtr<FFont>Font = MakeShared<FFont>();
+
+            FWString Path = Entry.path().wstring();
+            Font->Deserialize(Path);
+
+            // 확장자 제거
+            FString KeyWide = Entry.path().stem().string();
+            std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
+                ::tolower);
+
+            Font->SetTexture(AllTextureMap[KeyWide]);
+
+            // 이미 로드된 폰트 건너뜀
+            if (AllFontMap.find(KeyWide) != AllFontMap.end()) {
+                continue;
+            }
+
+            AllFontMap[KeyWide] = Font;
+        }
+    }
+
+    return true;
 }
