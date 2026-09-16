@@ -88,95 +88,37 @@ void FEditorApplication::Render() {
   const TArray<FEditorViewport> &EditorViewports = Editor.GetViewports();
 
   for (auto &EditorViewport : EditorViewports) {
-    // VP행렬을 매번 계산하는걸 방지하기 위해 FSceneView 사용
+    // 뷰포트 렌더링 명세 구성
     FSceneView sceneview{
-        EditorViewport.ViewportCamera,
-        EditorViewport.ViewportCamera.CreateViewProjectionMatrix()};
+        .Camera = EditorViewport.ViewportCamera,
+        .ViewProj = EditorViewport.ViewportCamera.CreateViewProjectionMatrix(),
+        .TopLeftUV = EditorViewport.TopLeftUV,
+        .LengthUV = EditorViewport.LengthUV,
+        .ViewMode = EditorViewport.ViewMode,
+        .ShowFlags = EditorViewport.ShowFlags,
+        .LightConstants = Editor.GlobalLight
+    };
 
-    if (RenderView) {
-      RenderView->SetRenderMode(EditorViewport.ViewMode);
-      RenderView->UpdateLightConstants(
-          Editor.GlobalLight, EditorViewport.ViewMode); // globallgiht udpate
-    }
+    // 에디터 렌더링 컨텍스트 구성
+    FEditorRenderContext EditorCtx;
+    EditorCtx.SelectedActor     = Editor.GetSelectedActor();
+    EditorCtx.SelectedTransform = Editor.SelectedTransform;
+    EditorCtx.Gizmo             = Editor.ObjectSelected() ? &Editor.GetGizmo() : nullptr;
+    EditorCtx.TextComp          = Editor.ObjectSelected() ? Editor.GetTextcomp() : nullptr;
+    EditorCtx.DrawLinesCallback = [&](FRenderView& RV) {
+        RV.DrawGrid(sceneview.Camera, Editor.GetGrid());
+        if (Editor.ObjectSelected()) {
+            USceneComponent *RootComp = Editor.GetSelectedActor()->GetRootComponent();
+            if (auto *PrimComp = RootComp->Cast<UPrimitiveComponent>()) {
+                if (auto *Vis = VisualizerRegistry.FindVisualizer(PrimComp->GetClass())) {
+                    Vis->Draw(*PrimComp, RV, EditorViewport.ViewportCamera);
+                }
+            }
+        }
+    };
 
-    RenderView->RenderGrid(EditorViewport.ViewportCamera,
-                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                           Editor.GetGrid()); // 그리드 그리기
-
-    RenderView->SetViewportUV(EditorViewport.TopLeftUV,
-                              EditorViewport.LengthUV);
-
-    for (auto &PrimitiveComponent :
-         SceneManager->CurrentScene->GetRenderComponents()) {
-      if (!PrimitiveComponent)
-        continue;
-
-      if (!EditorViewport.HasShowFlag(PrimitiveComponent->GetShowFlag())) {
-        continue;
-      }
-
-      bool bSelected = false;
-      if (PrimitiveComponent->GetActorOwner() &&
-          PrimitiveComponent->GetActorOwner() == Editor.GetSelectedActor()) {
-        bSelected = true;
-      }
-
-      // FRenderData 상수 계산 후 타입별 큐에 Push
-      FRenderData Data = PrimitiveComponent->GetRenderData();
-      const FMatrix World = PrimitiveComponent->GetRenderMatrix(EditorViewport.ViewportCamera);
-      Data.Constants.MVP   = World * sceneview.ViewProj;
-      Data.Constants.World = World;
-      Data.Constants.ColorOverride      = PrimitiveComponent->GetColor();
-      Data.Constants.ColorOverrideAmount = PrimitiveComponent->GetColorAmount();
-      
-      if (bSelected && Data.Constants.ColorOverrideAmount > 0.0f)
-          Data.Constants.ColorOverride = Data.Constants.ColorOverride * 0.7f + FVector{0.3f, 0.3f, 0.3f};
-      else if (bSelected)
-      {
-          Data.Constants.ColorOverride = FVector{1.0f, 1.0f, 1.0f};
-          Data.Constants.ColorOverrideAmount = 0.5f;
-      }
-      Data.bSelected = bSelected;
-      RenderView->GetRenderQueue().Push(Data);
-    }
-
-    // 큐 일괄 드로우 (Primitive / Texture / Text 각각 처리)
-    RenderView->FlushQueue(sceneview.Camera);
-
-    if (Editor.ObjectSelected()) // 선택된 객체 판단
-    {
-      // 선택된 물체에 대해서 Visualizer 수행
-      USceneComponent *RootComp = Editor.GetSelectedActor()->GetRootComponent();
-      UPrimitiveComponent *PrimComp = RootComp->Cast<UPrimitiveComponent>();
-
-      if (PrimComp && RenderView) {
-        UClass *ClassType = PrimComp->GetClass();
-        IVisualizer *Visualizer = VisualizerRegistry.FindVisualizer(ClassType);
-        Visualizer->Draw(*PrimComp, *RenderView, EditorViewport.ViewportCamera);
-      }
-    }
-
-    RenderView->GetRenderer().FlushLineBatch(
-        EditorViewport.ViewportCamera
-            .CreateViewProjectionMatrix()); // line batch 일괄 flush
-
-    RenderView->RenderPostProcess(
-        EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
-        EditorViewport.LengthUV, Editor.GetSelectedActor()); // 포스트 프로세싱
-
-    if (Editor.ObjectSelected()) {
-
-      // 기즈모 그리기
-      RenderView->RenderGizmo(
-          Editor.SelectedTransform, EditorViewport.ViewportCamera,
-          EditorViewport.TopLeftUV, EditorViewport.LengthUV, Editor.GetGizmo());
-
-      RenderView->RenderUUIDText(
-          EditorViewport.ViewportCamera, EditorViewport.TopLeftUV,
-          EditorViewport.LengthUV, Editor.GetTextcomp(), sceneview);
-    }
-
-    // 선택 객체 하이라이트 렌더
+    // 뷰포트 렌더링 일괄 수행
+    RenderView->RenderView(sceneview, *SceneManager->CurrentScene, EditorCtx);
   }
   ImguiManager.RenderUI();
 }

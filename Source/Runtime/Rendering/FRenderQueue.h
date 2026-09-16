@@ -6,7 +6,6 @@
 #include "ShaderConstants.h"
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Core/PointerTypes.h"
-#include "Runtime/Engine/ShowFlags.h"
 
 // 렌더링에 필요한 드로우 정보
 
@@ -15,9 +14,7 @@ enum class ERenderType
     Primitive,
     Texture,
     Text,
-    Instancing,
-    Grid,
-    Gizmo
+    Instancing
 };
 
 struct FRenderData
@@ -27,7 +24,6 @@ struct FRenderData
     FString TextureId;
     FObjectConstants Constants;
     ERenderType type = ERenderType::Primitive;
-    EEngineShowFlags flag = EEngineShowFlags::SF_Primitives;
     bool bSelected = false;
     TArray<FInstanceData> Instances; // 인스턴스 데이터 목록
 };

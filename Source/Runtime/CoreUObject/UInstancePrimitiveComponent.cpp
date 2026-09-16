@@ -29,7 +29,6 @@ FRenderData UInstancePrimitiveComponent::BuildRenderData() const
     Data.type       = ERenderType::Instancing;
     Data.MeshId     = RenderData.MeshId;
     Data.MaterialId = RenderData.MaterialId;
-    Data.flag       = GetShowFlag();
 
     TArray<FInstanceData> Built;
 

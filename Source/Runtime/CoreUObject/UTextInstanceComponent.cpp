@@ -197,7 +197,6 @@ FRenderData UTextInstanceComponent::BuildRenderData(const FCamera& Camera) const
     Data.type       = ERenderType::Text;
     Data.MeshId     = RenderData.MeshId;
     Data.MaterialId = RenderData.MaterialId;
-    Data.flag       = EEngineShowFlags::SF_BillboardText;
 
     if (Instances.empty()) return Data;
 

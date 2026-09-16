@@ -664,15 +664,14 @@ bool FRenderer::InitializeConstantBuffers() {
   return true;
 }
 
-void FRenderer::UpdateLightConstants(FLightConstants &Constants,
+void FRenderer::UpdateLightConstants(const FLightConstants &Constants,
                                      const EViewModeIndex InMode) {
+  FLightConstants LocalConstants = Constants;
   if (InMode == EViewModeIndex::VMI_Unlit) {
-    Constants.Intensity = 0;
-  } else {
-    Constants.Intensity = 1.0f;
+    LocalConstants.Intensity = 0.0f;
   }
 
-  Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants,
+  Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &LocalConstants,
                              0, 0);
   Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
 }

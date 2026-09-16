@@ -11,9 +11,129 @@
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/FRenderer.h"
 #include "Runtime/Rendering/ShaderConstants.h"
+#include "Runtime/Engine/UScene.h"
 #include <fstream>
 
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
+
+void FRenderView::CollectScenePrimitives(const UScene& Scene, const FSceneView& View, const AActor* SelectedActor)
+{
+    for (auto& PrimitiveComponent : Scene.GetRenderComponents())
+    {
+        if (!PrimitiveComponent) continue;
+
+        // 쇼 플래그 확인
+        if ((static_cast<uint64>(View.ShowFlags) & static_cast<uint64>(PrimitiveComponent->GetShowFlag())) == 0)
+        {
+            continue;
+        }
+
+        bool bSelected = false;
+        if (PrimitiveComponent->GetActorOwner() && PrimitiveComponent->GetActorOwner() == SelectedActor)
+        {
+            bSelected = true;
+        }
+
+        FRenderData Data = PrimitiveComponent->GetRenderData();
+        const FMatrix World = PrimitiveComponent->GetRenderMatrix(View.Camera);
+        Data.Constants.MVP   = World * View.ViewProj;
+        Data.Constants.World = World;
+        Data.Constants.ColorOverride       = PrimitiveComponent->GetColor();
+        Data.Constants.ColorOverrideAmount = PrimitiveComponent->GetColorAmount();
+
+        if (bSelected && Data.Constants.ColorOverrideAmount > 0.0f)
+        {
+            Data.Constants.ColorOverride = Data.Constants.ColorOverride * 0.7f + FVector{ 0.3f, 0.3f, 0.3f };
+        }
+        else if (bSelected)
+        {
+            Data.Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
+            Data.Constants.ColorOverrideAmount = 0.5f;
+        }
+        Data.bSelected = bSelected;
+        RenderQueue.Push(Data);
+    }
+}
+
+void FRenderView::RenderView(const FSceneView& View, const UScene& Scene, const FEditorRenderContext& EditorCtx)
+{
+    // 뷰포트 시작
+    BeginView(View.TopLeftUV, View.LengthUV, View.ViewMode, View.LightConstants);
+
+    // 씬 컴포넌트 수집
+    CollectScenePrimitives(Scene, View, EditorCtx.SelectedActor);
+
+    // 기본 씬 오브젝트 패스
+    FlushBasePass(View.Camera);
+
+    // 라인 패스
+    if (EditorCtx.DrawLinesCallback)
+    {
+        EditorCtx.DrawLinesCallback(*this);
+    }
+    
+    FlushLinePass(View.Camera);
+
+    // 후처리 외곽선 패스
+    RenderPostProcessPass(View.Camera, EditorCtx.SelectedActor);
+
+    // 오버레이 패스
+    if (EditorCtx.Gizmo && EditorCtx.SelectedActor)
+    {
+        RenderOverlayPass(View.Camera, View, EditorCtx.SelectedTransform, *EditorCtx.Gizmo, EditorCtx.TextComp);
+    }
+}
+
+void FRenderView::BeginView(FVector2 TopLeftUV, FVector2 LengthUV, EViewModeIndex ViewMode, const FLightConstants& LightConstants)
+{
+    // 에디터 뷰포트 렌더타겟 바인딩
+    Renderer.BindEditorViewportRenderTargets();
+    Renderer.SetViewportUV(TopLeftUV, LengthUV);
+    Renderer.SetRenderMode(ViewMode);
+    Renderer.UpdateLightConstants(LightConstants, ViewMode);
+}
+
+void FRenderView::DrawGrid(const FCamera& Camera, FGrid& Grid)
+{
+    Grid.DrawLine(Renderer, Camera);
+}
+
+void FRenderView::FlushBasePass(const FCamera& Camera)
+{
+    FlushQueue(Camera);
+}
+
+void FRenderView::FlushLinePass(const FCamera& Camera)
+{
+    Renderer.FlushLineBatch(Camera.CreateViewProjectionMatrix());
+}
+
+void FRenderView::RenderPostProcessPass(const FCamera& Camera, const AActor* SelectedActor)
+{
+    RenderOutline(Camera, SelectedActor);
+}
+
+void FRenderView::RenderOverlayPass(const FCamera& Camera, const FSceneView& SceneView, const FTransform& SelectedTransform, const FGizmo& Gizmo, UTextInstanceComponent* TextComp)
+{
+    // 뷰포트 영역 재설정
+    Renderer.SetViewportUV(SceneView.TopLeftUV, SceneView.LengthUV);
+
+    // 기즈모 렌더링
+    Renderer.ClearDepth();
+    Gizmo.Draw(Renderer, SelectedTransform, Camera);
+
+    // 텍스트 오버레이 렌더링
+    if (TextComp)
+    {
+        FRenderData Data = TextComp->BuildRenderData(Camera);
+        if (!Data.Instances.empty())
+        {
+            Renderer.AddTextInstanceArray(Data.Instances, Data.MeshId, Data.MaterialId);
+            Renderer.DrawTextInstances(Camera, Data.MeshId, Data.MaterialId);
+            Renderer.ClearTextInstances();
+        }
+    }
+}
 
 void FRenderView::RenderGizmo(const FTransform &Transform,
                               const FCamera &Camera, FVector2 TopLeftUV,
@@ -133,7 +253,7 @@ void FRenderView::SetRenderMode(EViewModeIndex InMode)
     Renderer.SetRenderMode(InMode);
 }
 
-void FRenderView::UpdateLightConstants(FLightConstants& Constants, const EViewModeIndex InMode)
+void FRenderView::UpdateLightConstants(const FLightConstants& Constants, const EViewModeIndex InMode)
 {
     Renderer.UpdateLightConstants(Constants, InMode);
 }
