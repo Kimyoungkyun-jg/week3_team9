@@ -39,14 +39,32 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::Begin("Jungle Control Panel");
 
     ImGui::Text("Hello Jungle World!");
+    //FPS 표시
     ImGui::Text("FPS %.0f (%.0f ms)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
+    //메모리 사용 표시
     ImGui::Text("Live UObjects : %llu, UObject Memory: %llu bytes (%.2f KiB)", static_cast<unsigned long long>(Count), static_cast<unsigned long long>(Bytes), static_cast<double>(Bytes) / 1024.0);
     ImGui::Separator();
 
-    // ---------------- 액터 스폰 ----------------
+    //액터 스폰
+    ActorSpawnSetting(Editor);
+    // 그리드 설정
+    GridSetting(Editor);
+    // 뷰포트 렌더 모드 및 쇼 플래그 설정
+    RenderModeAndShowFlagSetting(Editor);
+    ImGui::Separator();
+    //카메라 
+    CameraSetting(Editor);
+    ImGui::Separator();
+    //전역조명
+    DirectionLightSetting(Editor);
+    ImGui::End();
+}
+
+void FImguiControlPanelWindow::ActorSpawnSetting(FEditor& Editor)
+{
     static UClass* SelectedActorClass = EditorConstant::SpawnableActors[0];
     const char* PreviewValue = SelectedActorClass->GetUClassName().c_str();
-    
+
     ImGui::SetNextItemWidth(180.0f);
     if (ImGui::BeginCombo("##Actor", PreviewValue))
     {
@@ -68,7 +86,6 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     }
     ImGui::SameLine();
     ImGui::Text("Actor");
-
     static int spawnCount = 1;
     static int totalInstanceCount = 0;
 
@@ -79,10 +96,11 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     }
 
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SetNextItemWidth(120.0f);
     ImGui::InputInt("##SpawnCount", &spawnCount);
     ImGui::SameLine();
     ImGui::Text("Number of spawn");
+}
 
     // Actor 1개에 N개 인스턴스 - UObject 오버헤드 없음
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.5f, 0.85f, 1.0f));
@@ -99,6 +117,8 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::Text("Instances: %d", totalInstanceCount);
 
     // 그리드 설정
+void FImguiControlPanelWindow::GridSetting(FEditor& Editor)
+{
     float CellSize = Editor.GetGrid().GetCellSize();
     ImGui::SetNextItemWidth(180.0f);
     if (ImGui::DragFloat("##GridCellSize", &CellSize, 0.05f, 0.1f, 15.0f, "%.2f"))
@@ -107,8 +127,11 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     }
     ImGui::SameLine();
     ImGui::Text("Grid Cell Size");
+}
 
-    // 뷰포트 렌더 모드 및 쇼 플래그 설정
+void FImguiControlPanelWindow::RenderModeAndShowFlagSetting(FEditor& Editor)
+{
+    
     FEditorViewport* ActiveViewport = Editor.GetActiveViewport();
     if (ActiveViewport)
     {
@@ -144,11 +167,10 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         ImGui::SameLine();
         ImGui::Text("Show Flags");
     }
+}
 
-
-    ImGui::Separator();
-
-    
+void FImguiControlPanelWindow::CameraSetting(FEditor& Editor)
+{
     if (FEditorViewport* Viewport = Editor.GetActiveViewport())
     {
         FCamera& Camera = Viewport->ViewportCamera;
@@ -180,36 +202,48 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
         ImGui::SameLine();
         ImGui::Text("FOV");
 
-
-        FVector CameraLocation = Editor.State.GetCameraLocation();
         ImGui::SetNextItemWidth(180.0f);
-        ImGui::DragFloat3("##CameraLocation", &CameraLocation.X, 0.05f, 0.0f, 0.0f, "%.3f");
+        ImGui::DragFloat3("##CameraLocation", &Camera.Position.X, 0.05f, 0.0f, 0.0f, "%.3f");
         ImGui::SameLine();
         ImGui::Text("Camera Location");
-        Editor.State.SetCameraLocation(CameraLocation);
 
+        ImGui::SetNextItemWidth(40.0f);
+        ImGui::Text("Pitch");
+        ImGui::SameLine();
 
-    
-        FVector CameraRotation
-        {
+        ImGui::SetNextItemWidth(50.0f);
+        ImGui::DragFloat(
+            "##CameraPitch",
+            &Camera.Pitch,
+            0.5f,
             0.0f,
-            Editor.State.GetCameraPitch(),
-            Editor.State.GetCameraYaw(),
-        };
-        ImGui::SetNextItemWidth(180.0f);
-        if (ImGui::DragFloat3("##CameraRotation", &CameraRotation.X, 0.5f, 0.0f, 0.0f, "%.2f"))
-        {
-            Camera.Pitch = CameraRotation[1];
-            Camera.Yaw = CameraRotation[2];
-        }
+            0.0f,
+            "%.2f"
+        );
+        ImGui::SameLine();
+
+        ImGui::SetNextItemWidth(40.0f);
+        ImGui::Text("Yaw");
+        ImGui::SameLine();
+
+        ImGui::SetNextItemWidth(50.0f);
+        ImGui::DragFloat(
+            "##CameraYaw",
+            &Camera.Yaw,
+            0.5f,
+            0.0f,
+            0.0f,
+            "%.2f"
+        );
+
         ImGui::SameLine();
         ImGui::Text("Camera Rotation");
     }
+}
 
-    ImGui::Separator();
-
+void FImguiControlPanelWindow::DirectionLightSetting(FEditor& Editor)
+{
     ImGui::SeparatorText("Sun Light Control");
-
     // 엑스축 조명 방향 설정
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.85f, 0.22f, 0.22f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.95f, 0.32f, 0.32f, 1.0f));
@@ -269,8 +303,5 @@ void FImguiControlPanelWindow::Process(FEditor& Editor)
     ImGui::SliderFloat("##LightAmbient", &Editor.GlobalLight.AmbientIntensity, 0.0f, 1.0f, "%.2f");
     ImGui::SameLine();
     ImGui::Text("Ambient");
-
-
-
-    ImGui::End();
 }
+

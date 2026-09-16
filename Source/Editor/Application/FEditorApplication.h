@@ -49,6 +49,7 @@ public:
 
 	void Initialize_ImguiWin32DX11(HWND& Window, ID3D11Device* Device, ID3D11DeviceContext* Context);
 	void Initialize_Runtime(USceneManager* SceneManager, FRenderView* RenderView);
+	void Shutdown();
 	bool CheckSceneExistsAndInitializeIfNotExists(const FString& path = "");
 	void Update(float DeltaTime);
 	void Render();

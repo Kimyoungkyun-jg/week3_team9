@@ -47,12 +47,6 @@ constexpr FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Translucent,
     },
     {
-        .Id = EPipelineID::Grid,
-        .VertexShader = L"GridVS.cso",
-        .PixelShader = L"GridPS.cso",
-        .BlendMode = EBlendMode::Opaque,
-    },
-    {
         .Id = EPipelineID::RotationGizmo,
         .VertexShader = L"RotationGizmoVS.cso",
         .PixelShader = L"RotationGizmoPS.cso",
@@ -62,7 +56,6 @@ constexpr FPipelineEntry pipelineTable[] = {
         .Id = EPipelineID::Spotlight,
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"SpotlightPS.cso",
-        .bDepthWrite = false,
         .CullMode = D3D11_CULL_NONE,
         .BlendMode = EBlendMode::Additive,
     },
@@ -70,14 +63,12 @@ constexpr FPipelineEntry pipelineTable[] = {
         .Id = EPipelineID::Text,
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"MsdfTextPS.cso",
-        .bDepthWrite = false,
         .BlendMode = EBlendMode::Translucent,
     },
     {
         .Id = EPipelineID::Instance_Text,
         .VertexShader = L"InstanceVS.cso",
         .PixelShader = L"MsdfTextPS.cso",
-        .bDepthWrite = false,
         .BlendMode = EBlendMode::Translucent,
         .bIsInstancing = true,
     },
@@ -117,10 +108,6 @@ constexpr FMaterialEntry materialTable[] = {
     {
         .Id = EMaterialID::Simple,
         .PipelineID = EPipelineID::Simple_Solid,
-    },
-    {
-        .Id = EMaterialID::Grid,
-        .PipelineID = EPipelineID::Grid,
     },
     {
         .Id = EMaterialID::RotGizmo,

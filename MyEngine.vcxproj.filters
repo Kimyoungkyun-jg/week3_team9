@@ -575,13 +575,7 @@
     <FxCompile Include="Shader\InstanceVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="Shader\GridPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
     <FxCompile Include="Shader\SpotlightPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Shader\GridVS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\RotationGizmoVS.hlsl">
@@ -600,12 +594,6 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\UnlightPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Shader\ScreenQuadVS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Shader\OutlinePostProcessPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>

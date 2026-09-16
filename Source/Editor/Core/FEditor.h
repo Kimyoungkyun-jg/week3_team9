@@ -34,6 +34,7 @@ public:
 
 public:
   void Initialize(USceneManager *SceneManager);
+  void Shutdown();
 
   void Process();
 
@@ -44,7 +45,9 @@ public:
 
   void AddViewport(FEditorViewport Viewport);
   void DeleteViewport(int32 IndexOfViewport);
-  FEditorViewport *GetActiveViewport(); // 임시로 0번 반환
+  FEditorViewport* GetActiveViewport(); // 임시로 0번 반환
+
+  void UpdateCamera();
 
   bool SelectActor(AActor *Actor);
   void UnSelectActor();
@@ -68,6 +71,8 @@ public:
 
   void ClearSelectionForGC();
 
+  void SaveState();
+  void LoadState();
   UTextInstanceComponent* GetTextcomp() { return SelectedActorTextComp; }
 
 private:

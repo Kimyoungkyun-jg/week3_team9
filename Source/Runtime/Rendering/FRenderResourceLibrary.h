@@ -101,7 +101,8 @@ public:
   // 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllTextureMap;
 
-  // 에디터용 아이콘 텍스쳐 보관 맵
+
+  //에디터용 아이콘 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllEditorTextureMap;
 
   // 인스턴싱 배치 배열 맵
@@ -126,6 +127,14 @@ public:
     if (it != AllMaterialMap.end())
       return it->second;
     return nullptr;
+  }
+
+  // 머티리얼 조회 (ID 기반 전용)
+  [[nodiscard]] TSharedPtr<FMaterial> GetEditMaterial(EMaterialID Id) const {
+      auto it = AllMaterialMap.find(Id);
+      if (it != AllMaterialMap.end())
+          return it->second;
+      return nullptr;
   }
 
   // 메쉬 조회
