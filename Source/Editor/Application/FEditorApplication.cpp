@@ -159,7 +159,12 @@ void FEditorApplication::Render() {
         {
             UClass* ClassType = PrimComp->GetClass();
             IVisualizer* Visualizer = VisualizerRegistry.FindVisualizer(ClassType);
-            Visualizer->Draw(*PrimComp, *RenderView, EditorViewport.ViewportCamera);
+            Visualizer->Draw(
+                *PrimComp,
+                *RenderView,
+                EditorViewport.ViewportCamera,
+                FVector4{ 0.0f, 1.0f, 0.0f, 1.0f }
+            );
         }
     }
 
