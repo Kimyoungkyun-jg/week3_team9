@@ -1,5 +1,4 @@
 #include "UInstancePrimitiveComponent.h"
-#include "Runtime/Rendering/FRenderer.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/ShaderConstants.h"
 #include "Runtime/Engine/UScene.h"
@@ -9,44 +8,64 @@ IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
 void UInstancePrimitiveComponent::Register(UScene& Scene)
 {
-	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
-	if (!PrimitiveMesh)
+	if (GetMeshID().IsNone())
 	{
-		SetMesh(Resources ? Resources->GetMesh(FName("Cube")) : nullptr);
+		SetMeshID(FName("Cube"));
 	}
 	
-	if (!PrimitiveMaterial)
+	if (GetMaterialID().IsNone())
 	{
-		SetMaterial(Resources ? Resources->GetMaterial(FName("Instance_Simple")) : nullptr);
+		SetMaterialID(FName("Instance_Simple"));
 	}
 
-	Super::Register(Scene);
+    RenderData.type = ERenderType::Instancing;
+
+    Super::Register(Scene);
 }
 
-void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
+void UInstancePrimitiveComponent::AddInstance(const FVector& WorldPosition, const FVector4& Color)
 {
-	// 매 프레임 이전 인스턴스 누적 방지
-	Instances.clear();
+    InstanceTransforms.push_back({ WorldPosition, Color });
+}
 
-	FMatrix WorldMatrix = GetGlobalTransform().ToMatrix();
-	const auto& Positions = GetMesh()->GetPositions();
-	TArray<FVector> WorldPositions;
-	
-	WorldPositions.reserve(Positions.size());
-	for (const FVector& LocalPos : Positions)
-	{
-		// 정점 좌표 변환 (W = 1.0f 기준)
-		FVector WorldPos = WorldMatrix.TransformPointRow(LocalPos);
-		FMatrix PosMatrix = FMatrix::MakeTranslation(WorldPos);
-		FInstanceData Data
-		{
-			.World = PosMatrix,
-			.Color = FVector4(GetColor(), 1.0f),
-		};
+void UInstancePrimitiveComponent::ClearInstances()
+{
+    InstanceTransforms.clear();
+}
 
-		Instances.push_back(Data);
-	}
+void UInstancePrimitiveComponent::BuildRenderData()
+{
+    TArray<FInstanceData> Built;
 
+    if (InstanceTransforms.empty())
+    {
+        // 등록된 인스턴스 없으면 자기 자신 트랜스폼 1개
+        Built.push_back(FInstanceData{
+            .World    = GetGlobalTransform().ToMatrix(),
+            .Color    = FVector4(GetColor(), 1.0f),
+            .UVScale  = {1.0f, 1.0f},
+            .UVOffset = {0.0f, 0.0f},
+        });
+    }
+    else
+    {
+        Built.reserve(InstanceTransforms.size());
+        for (const auto& Entry : InstanceTransforms)
+        {
+            Built.push_back(FInstanceData{
+                .World    = FMatrix::MakeTranslation(Entry.Position),
+                .Color    = Entry.Color,
+                .UVScale  = {1.0f, 1.0f},
+                .UVOffset = {0.0f, 0.0f},
+            });
+        }
+    }
 
-	renderer.AddTextInstanceArray(Instances, GetMesh()->MeshId, GetMaterial()->MaterialId);
+    RenderData.Instances = std::move(Built);
+}
+
+const FRenderData& UInstancePrimitiveComponent::GetRenderData(const FCamera& Camera)
+{
+    BuildRenderData();
+    return RenderData;
 }

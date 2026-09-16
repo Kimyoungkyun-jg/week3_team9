@@ -107,6 +107,10 @@ void FEditorState::ReadFromFile(FStringView FilePath)
 	if (!Archive.IsEmpty("Gizmo", "Mode"))
 	{
 		GizmoMode = static_cast<uint8>(Archive.GetUInt32("Gizmo", "Mode"));
+		if (GizmoMode == 0)
+		{
+			GizmoMode = 1;
+		}
 	}
 
 	if (!Archive.IsEmpty("Gizmo", "Space"))

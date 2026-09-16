@@ -1,11 +1,12 @@
 #include "FTextVisualizer.h"
 
-#include "Runtime/CoreUObject/UTextInstanceComponent.h"
-#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
-#include "Runtime/Engine/FRenderView.h"
-#include "Runtime/Rendering/FMesh.h"
-#include "Runtime/Math/FMatrix.h"
 #include "Runtime/Core/TArray.h"
+#include "Runtime/CoreUObject/UTextInstanceComponent.h"
+#include "Runtime/Engine/FRenderView.h"
+#include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
+#include "Runtime/Math/FMatrix.h"
+#include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 
 void FTextVisualizer::Draw(
 	const UPrimitiveComponent& Component,
@@ -16,22 +17,30 @@ void FTextVisualizer::Draw(
 {
 	if (Component.IsA<UTextInstanceComponent>() == false) { return; }
 
-	const UTextInstanceComponent& TextComponent = *Component.Cast<UTextInstanceComponent>();
 
-	float Width = TextComponent.GetWidth();
-	float Height = TextComponent.GetHeight();
 
-	const FMesh& Mesh = *TextComponent.GetMesh();
-	const FMatrix ModelMatrix = TextComponent.GetRenderMatrix(Camera);
+  const UTextInstanceComponent &TextComponent =
+      *Component.Cast<UTextInstanceComponent>();
 
-	if (Mesh.GetPositions().size() != 4) { return; }
+  float Width = TextComponent.GetWidth();
+  float Height = TextComponent.GetHeight();
 
-	TArray<FVector> Array;
-	for (int i = 0; i < 4; ++i)
-	{
-		FVector WorldVector = ModelMatrix.TransformPointRow(Mesh.GetPositions()[i]);
-		Array.push_back(WorldVector);
-	}
+  auto MeshPtr = FRenderResourceLibrary::Get().GetMesh(
+      TextComponent.GetPureRenderData().MeshId);
+  if (!MeshPtr)
+    return;
+  const FMesh &Mesh = *MeshPtr;
+  const FMatrix ModelMatrix = TextComponent.GetRenderMatrix(Camera);
+
+  if (Mesh.GetPositions().size() != 4) {
+    return;
+  }
+
+  TArray<FVector> Array;
+  for (int i = 0; i < 4; ++i) {
+    FVector WorldVector = ModelMatrix.TransformPointRow(Mesh.GetPositions()[i]);
+    Array.push_back(WorldVector);
+  }
 
 	RenderView.RenderQuad(
 		Array[0],

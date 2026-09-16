@@ -4,6 +4,7 @@
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 #include "Runtime/Engine/FRenderView.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Math/FMatrix.h"
 
 void FPrimitiveVisualizer::Draw(
@@ -13,10 +14,11 @@ void FPrimitiveVisualizer::Draw(
 	const FVector4& Color
 ) const
 {
-	if (Component.IsA<UPrimitiveComponent>() == false) { return; }
+    if (Component.IsA<UPrimitiveComponent>() == false) { return; }
 
-	const FMesh& Mesh = *Component.GetMesh();
-	const FMatrix ModelMatrix = Component.GetRenderMatrix(Camera);
-	FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-	RenderView.RenderBoxMinMax(AABB.Min, AABB.Max, Color);
+    auto Mesh = FRenderResourceLibrary::Get().GetMesh(Component.GetPureRenderData().MeshId);
+    if (!Mesh) return;
+    const FMatrix ModelMatrix = Component.GetRenderMatrix(Camera);
+    FAxisAlignedBoundingBox AABB{ *Mesh, ModelMatrix };
+    RenderView.RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
 }

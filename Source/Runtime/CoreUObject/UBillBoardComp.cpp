@@ -4,7 +4,7 @@
 #include "Runtime/Engine/FArchive.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Core/Log.h"
-#include "Runtime/Rendering/FRenderer.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Engine/FSceneView.h"
 #include "UClass.h"
 #include <algorithm>
@@ -15,12 +15,11 @@ UCLASS_META(UBillBoardComp, DisplayName, "BillBoard")
 UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 
 void UBillBoardComp::Register(UScene& InScene) {
-  FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
-  if (!GetMesh()) {
-    SetMesh(Resources ? Resources->GetMesh(FName("Rect")) : nullptr);
+  if (GetMeshID().IsNone()) {
+    SetMeshID(FName("Rect"));
   }
-  if (!GetMaterial()) {
-    SetMaterial(Resources ? Resources->GetMaterial(FName("Billboard")) : nullptr);
+  if (GetMaterialID().IsNone()) {
+    SetMaterialID(FName("Billboard"));
   }
   Super::Register(InScene);
 }
@@ -41,40 +40,6 @@ void UBillBoardComp::Deserialize(const FArchive& Archive)
     UVOffset = Archive.GetVector2("UVOffset");
 }
 
-void UBillBoardComp::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) {
-  if (!GetMesh() || !GetMaterial()) {
-    return;
-  }
-
-  FMatrix ModelMatrix = GetRenderMatrix(Camera);
-  FMatrix VP = Camera.CreateViewProjectionMatrix();
-
-  FObjectConstants Constants;
-  Constants.MVP = ModelMatrix * VP;
-  Constants.World = ModelMatrix;
-
-  // UV 반영
-  Constants.UVScale = UVScale;
-  Constants.UVOffset = UVOffset;
-
-  // 컴포넌트 색상 반영
-  Constants.ColorOverride = GetColor();
-  Constants.ColorOverrideAmount = GetColorAmount();
-
-  if (bHighlighted) {
-      // 하이라이트 색상 보정
-      if (Constants.ColorOverrideAmount > 0.0f) {
-          Constants.ColorOverride =
-              Constants.ColorOverride * 0.7f + FVector{ 0.3f, 0.3f, 0.3f };
-      }
-      else {
-          Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
-          Constants.ColorOverrideAmount = 0.5f;
-      }
-  }
-
-  renderer.Draw(*GetMesh(), *GetMaterial(), Constants);
-}
 
 void UBillBoardComp::SetTexture(
     FString texture) // 원본 머터리얼을 건드리지 않고 instance로 생성해서 사용
@@ -86,23 +51,16 @@ void UBillBoardComp::SetTexture(
   std::transform(LowerName.begin(), LowerName.end(), LowerName.begin(),
                  ::tolower);
 
-  auto NewTex = lib.GetTexture(LowerName);
+  FName TextureId(LowerName);
+  auto NewTex = lib.GetTexture(TextureId);
   if (!NewTex) {
     UE_LOG("There is no such texture");
     return;
   }
 
-  // 머티리얼 인스턴스 생성
-  auto materialinstance = TSharedPtr<FMaterial>(new FMaterial());
-
-  if (GetMaterial()) {
-    materialinstance->SetPipeLine(GetMaterial()->GetPipeline());
-  } else {
-    materialinstance->SetPipeLine(lib.GetPipeline(FName("Textured")));
-  }
-
-  materialinstance->SetTexture(NewTex);
-  SetMaterial(materialinstance);
+  // TextureId를 RenderData에 기록 → FlushQueue의 Texture 큐에서 머티리얼 인스턴스 생성
+  RenderData.TextureId = TextureId;
+  RenderData.type      = ERenderType::Texture;
 }
 
 FMatrix UBillBoardComp::GetRenderMatrix(const FCamera& Camera) const

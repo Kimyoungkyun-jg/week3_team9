@@ -7,8 +7,7 @@ UCLASS_META(USphereComp, DisplayName, "Sphere")
 UCLASS_META(USphereComp, MeshName, "Sphere")
 
 void USphereComp::Register(UScene &InScene) {
-  FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh(FName("Sphere")) : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial(FName("Simple")) : nullptr);
+  SetMeshID(FName("Sphere"));
+  SetMaterialID(FName("Simple"));
   Super::Register(InScene);
 }

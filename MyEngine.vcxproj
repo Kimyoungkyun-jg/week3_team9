@@ -387,7 +387,6 @@
     <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp" />
     <ClCompile Include="Source\Runtime\Actors\TestTextActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.cpp" />
-    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -476,6 +475,7 @@
     <ClInclude Include="Source\Runtime\Rendering\EBlendMode.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderPipeline.h" />
     <ClInclude Include="Source\Runtime\Rendering\FRenderResourceLibrary.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FRenderQueue.h" />
     <ClInclude Include="Source\Runtime\Rendering\FTexture.h" />
     <ClInclude Include="Source\Runtime\Rendering\ShaderConstants.h" />
     <ClInclude Include="Source\Runtime\Rendering\Vertices.h" />
@@ -497,7 +497,6 @@
     <ClInclude Include="Source\Runtime\Actors\AAnimatedBillboardActor.h" />
     <ClInclude Include="Source\Runtime\Actors\TestTextActor.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.h" />
-    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h" />
   </ItemGroup>
   <ItemGroup>
@@ -611,6 +610,14 @@
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\ScreenQuadVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\OutlinePostProcessPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
   </ItemGroup>

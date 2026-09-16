@@ -4,6 +4,7 @@
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 #include "Runtime/Engine/FRenderView.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Math/FMatrix.h"
 #include "Runtime/Core/TArray.h"
 
@@ -18,7 +19,9 @@ void FBillboardVisualizer::Draw(
 
 	const UBillBoardComp& BillBoardComponent = *Component.Cast<UBillBoardComp>();
 
-	const FMesh& Mesh = *BillBoardComponent.GetMesh();
+	auto MeshPtr = FRenderResourceLibrary::Get().GetMesh(BillBoardComponent.GetPureRenderData().MeshId);
+	if (!MeshPtr) return;
+	const FMesh& Mesh = *MeshPtr;
 	const FMatrix ModelMatrix = BillBoardComponent.GetRenderMatrix(Camera);
 
 	if (Mesh.GetPositions().size() != 4) { return; }

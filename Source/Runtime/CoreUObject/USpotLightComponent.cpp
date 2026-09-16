@@ -10,10 +10,10 @@ UCLASS_META(USpotLightComponent, MeshName, "SpotlightCone")
 
 void USpotLightComponent::Register(UScene& Scene)
 {
-	// 원뿔 메시 및 스포트라이트 머티리얼 장착
-	auto& ResLib = FRenderResourceLibrary::Get();
-	SetMesh(ResLib.GetMesh(FName("SpotlightCone")));
-	SetMaterial(ResLib.GetMaterial(FName("Spotlight")));
+	// 스포트라이트 메쉬 및 머티리얼 장착
+	SetMeshID(FName("SpotlightCone"));
+	SetMaterialID(FName("Spotlight"));
+	RenderData.type = ERenderType::Spotlight;
 	Super::Register(Scene);
 }
 

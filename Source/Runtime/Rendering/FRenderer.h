@@ -21,6 +21,7 @@
 class FTexture;
 struct FTextureDesc;
 struct FCamera;
+class UTextInstanceComponent;
 
 inline FWString GetExecutableDirectory() {
   wchar_t Buffer[256];
@@ -36,6 +37,7 @@ public:
   bool Initialize(HWND Window);
   void Shutdown();
   void BeginFrame();
+  void BindEditorViewportRenderTargets();
   void SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV);
   void ClearDepth();
   void SwapBuffer();
@@ -70,12 +72,16 @@ public:
 
   FLineBatcher &GetLineBatcher() { return LineBatcher; }
 
-  void UpdateLightConstants(FLightConstants &Constants, const EViewModeIndex InMode);
+  void UpdateLightConstants(const FLightConstants &Constants, const EViewModeIndex InMode);
 
   // 텍스트 인스턴싱
   void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const FName& MeshId, const FName& MaterialId);
   void DrawInstances(const FCamera& Camera);
+  void DrawTextInstances(const FCamera& Camera, const FName& MeshId, const FName& MaterialId);
   void ClearTextInstances();
+
+  void RenderOutline();
+  ID3D11RenderTargetView* GetBackBuffer() { return BackBufferRTV.Get(); }
 
 
 private:
@@ -109,6 +115,9 @@ private:
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> EditorViewPortRTV;
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> EditorViewPortSRV;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> renderTexture;
+  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> DepthStencilSRV;
+
+  bool InitializeEditorViewportRenderTarget();
 
   // 텍스트 인스턴싱 버퍼
 

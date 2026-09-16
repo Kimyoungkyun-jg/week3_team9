@@ -5,6 +5,7 @@
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 #include "Runtime/Engine/FRenderView.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Math/FMatrix.h"
 
 void FSpotlightVisualizer::Draw(
@@ -16,7 +17,9 @@ void FSpotlightVisualizer::Draw(
 {
     if (Component.IsA<USpotLightComponent>() == false) { return; }
 
-    const FMesh& Mesh = *Component.GetMesh();
+    auto MeshPtr = FRenderResourceLibrary::Get().GetMesh(Component.GetPureRenderData().MeshId);
+    if (!MeshPtr) return;
+    const FMesh& Mesh = *MeshPtr;
     const FMatrix ModelMatrix = Component.GetRenderMatrix(Camera);
 
     const auto& Positions = Mesh.GetPositions();

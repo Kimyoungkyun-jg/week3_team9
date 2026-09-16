@@ -11,18 +11,34 @@
 #include "Runtime/CoreUObject/USphereComp.h"
 #include "Runtime/Engine/FTimeManager.h"
 #include "Runtime/Input/FInputManager.h"
+#include "Runtime/Actors/AInstancingActor.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Math/Random.h"
+#include "Runtime/CoreUObject/FGarbageCollector.h"
 #include <numbers>
 
 
 void FEditor::Initialize(USceneManager *SceneManager) {
   State.ReadFromFile();
   Gizmo.Initialize();
+
+  SelectedActorTextComp = NewObject<UTextInstanceComponent>();
+  if (SelectedActorTextComp)
+  {
+    FGarbageCollector::Get().AddRoot(SelectedActorTextComp.Get());
+    SelectedActorTextComp->SetInheritRotation(false);
+    SelectedActorTextComp->SetMeshID(FName("Rect"));
+    SelectedActorTextComp->SetMaterialID(FName("SelectedActor_Text"));
+    SelectedActorTextComp->SetFont();
+  }
+
   this->SceneManager = SceneManager;
 }
 
 void FEditor::Shutdown() {
+  if (SelectedActorTextComp) {
+    FGarbageCollector::Get().RemoveRoot(SelectedActorTextComp.Get());
+  }
   SaveState();
   State.FlushToFile();
 }
@@ -131,6 +147,17 @@ bool FEditor::SelectActor(AActor *Actor) {
   if (SelectedActor) {
     SelectedTransform = SelectedActor->GetTransform();
     SelectedEulerDegDisplay = SelectedTransform.Rotation.GetEulerXYZ();
+    if (Gizmo.Mode == EGizmoMode::None) {
+      Gizmo.Mode = EGizmoMode::Translate;
+    }
+
+    if (SelectedActorTextComp) {
+      SelectedActorTextComp->SetActorOwner(SelectedActor.Get());
+      FTransform RelativeTrans;
+      RelativeTrans.Location = FVector{ 0.0f, 0.0f, 1.5f }; 
+      SelectedActorTextComp->SetRelativeTransform(RelativeTrans);
+      SelectedActorTextComp->SetText(L"UUID : " + std::to_wstring(SelectedActor->GetUUID()));
+    }
   }
 
   return true;
@@ -141,6 +168,9 @@ void FEditor::UnSelectActor() {
     SelectedActor->SetTransform(SelectedTransform);
   }
   SelectedActor = nullptr;
+  if (SelectedActorTextComp) {
+    SelectedActorTextComp->SetActorOwner(nullptr);
+  }
 }
 
 TArray<UPrimitiveComponent *> FEditor::GetPrimitiveComponents() const {
@@ -184,9 +214,68 @@ void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
         AActor* NewActor = SceneManager->CurrentScene->SpawnActor(Type);
         if (!NewActor) { return; }
 
-        USceneComponent* RootComponent = NewActor->GetRootComponent();
-        RootComponent->SetRelativeTransform(Transform);
+
+        FTransform CurrentTransform = NewActor->GetTransform();
+        CurrentTransform.Location = Location;
+        CurrentTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
+        NewActor->SetTransform(CurrentTransform);
+
+        // 액터 시작 및 선택
         NewActor->BeginPlay();
         SelectActor(NewActor);
     }
 }
+
+void FEditor::SpawnInstancingToCurrentScene(int Count)
+{
+    if (!SceneManager || !SceneManager->CurrentScene || Count <= 0) return;
+
+    // 무작위 색상 계산
+    const float Hue = static_cast<float>(std::rand()) / RAND_MAX;
+    const float S = 0.85f;
+    const float V = 1.0f;
+    const float H6 = Hue * 6.0f;
+    const int   HI = static_cast<int>(H6);
+    const float F  = H6 - static_cast<float>(HI);
+    const float P  = V * (1.0f - S);
+    const float Q  = V * (1.0f - S * F);
+    const float T  = V * (1.0f - S * (1.0f - F));
+    FVector4 Color;
+    switch (HI % 6)
+    {
+    case 0: Color = {V, T, P, 1.0f}; break;
+    case 1: Color = {Q, V, P, 1.0f}; break;
+    case 2: Color = {P, V, T, 1.0f}; break;
+    case 3: Color = {P, Q, V, 1.0f}; break;
+    case 4: Color = {T, P, V, 1.0f}; break;
+    default:Color = {V, P, Q, 1.0f}; break;
+    }
+
+    AActor* TargetActor = SceneManager->CurrentScene->SpawnActor(AInstancingActor::StaticClass());
+    
+    if (!TargetActor) return;
+    TargetActor->BeginPlay();
+
+    auto* Comp = TargetActor->GetRootComponent()->Cast<UInstancePrimitiveComponent>();
+    if (!Comp) return;
+
+    // 일정 반경 이내 좌표 추가
+    const float MaxDistance = 25.0f;
+    const float TwoPi = 6.2831853f;
+    const FVector Center = TargetActor->GetTransform().Location;
+
+    for (int i = 0; i < Count; ++i)
+    {
+        float Angle = (static_cast<float>(std::rand()) / RAND_MAX) * TwoPi;
+        float Dist = std::sqrt(static_cast<float>(std::rand()) / RAND_MAX) * MaxDistance;
+        FVector Pos;
+        Pos.X = Center.X + std::cos(Angle) * Dist;
+        Pos.Y = Center.Y + std::sin(Angle) * Dist;
+        Pos.Z = Center.Z;
+        Comp->AddInstance(Pos, Color);
+    }
+
+    // 액터 선택
+    SelectActor(TargetActor);
+}
+

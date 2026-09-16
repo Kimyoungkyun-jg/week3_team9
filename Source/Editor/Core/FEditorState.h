@@ -24,9 +24,9 @@ private:
 	// Camera
 	float CameraSensitivity = 0.5f;
 	float CameraSpeed = 10.0f;
-	FVector CameraLocation = { -3.0f, 3.0f, 2.0f };
-	float CameraYaw = -45.0f;
-	float CameraPitch = -25.0f;
+	FVector CameraLocation = { -8.0f, 0.0f, 4.0f };
+	float CameraYaw = 0.0f;
+	float CameraPitch = -20.0f;
 	float CameraFOV = 60.0f;
 
 	// Grid
@@ -37,9 +37,9 @@ private:
 	float SpawnActorMaxLocation = 3.0f;
 
 	// Gizmo
-	uint8 GizmoMode = 0;
+	uint8 GizmoMode = 1;
 	uint8 GizmoSpace = 0;
-	uint32 SelectedActor = -1; // Note: uint32이므로 -1은 언더플로우됨
+	uint32 SelectedActor = -1;
 
 public:
 	void WriteToFile(FStringView FilePath = DefaultFileName) const;
