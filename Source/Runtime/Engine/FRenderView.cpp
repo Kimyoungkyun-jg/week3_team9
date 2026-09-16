@@ -41,6 +41,8 @@ void FRenderView::RenderGridAndFlush(const FCamera &Camera, FVector2 TopLeftUV,
   FGridLineConstants Constants{};
   Constants.MVP = Camera.CreateViewProjectionMatrix();
   Constants.CameraPosition = Camera.Position;
+  Constants.FadeStartDistance = 3.0f;
+  Constants.FadeEndDistance = 75.0f;
   Renderer.FlushLineBatch(Constants, FName("Grid"));
 }
 

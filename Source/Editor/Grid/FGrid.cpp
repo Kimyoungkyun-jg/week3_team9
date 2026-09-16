@@ -30,7 +30,7 @@ void FGrid::DrawLine(FRenderer &Renderer, const FCamera &Camera) {
   const FVector4 AxisColorY{0.0f, 1.0f, 0.0f, 1.0f};
   const FVector4 BackgroundColor{0.05f, 0.05f, 0.08f, 1.0f};
 
-  const bool bEnableMajorGrid = (CellSize <= 0.2f);
+  //const bool bEnableMajorGrid = (CellSize <= 0.2f);
   const float LineOffset = CellSize * 0.02f;
 
   // 가로선 렌더링
@@ -42,7 +42,7 @@ void FGrid::DrawLine(FRenderer &Renderer, const FCamera &Camera) {
                            FVector{SnapX + Extent, Y, 0.0f}, AxisColorX);
     } else {
       const int64 GridIndex = static_cast<int64>(std::round(Y / CellSize));
-      const bool bIsMajor = bEnableMajorGrid && (std::abs(GridIndex) % 10 == 0);
+      const bool bIsMajor = (std::abs(GridIndex) % 10 == 0);
       const FVector4 Color = bIsMajor ? MajorGridColor : MinorGridColor;
 
       LineBatcher.DrawLine(FVector{SnapX - Extent, Y, 0.0f},
@@ -58,7 +58,7 @@ void FGrid::DrawLine(FRenderer &Renderer, const FCamera &Camera) {
                            FVector{X, SnapY + Extent, 0.0f}, AxisColorY);
     } else {
       const int64 GridIndex = static_cast<int64>(std::round(X / CellSize));
-      const bool bIsMajor = bEnableMajorGrid && (std::abs(GridIndex) % 10 == 0);
+      const bool bIsMajor = (std::abs(GridIndex) % 10 == 0);
       const FVector4 Color = bIsMajor ? MajorGridColor : MinorGridColor;
 
       LineBatcher.DrawLine(FVector{X, SnapY - Extent, 0.0f},

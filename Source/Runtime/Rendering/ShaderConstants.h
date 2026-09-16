@@ -30,8 +30,8 @@ static_assert(sizeof(FGridConstants) % 16 == 0);
 struct FGridLineConstants {
   FMatrix MVP;
   FVector CameraPosition;
-  float FadeStartDistance = 3.0f;
-  float FadeEndDistance = 50.0f;
+  float FadeStartDistance;
+  float FadeEndDistance;
   FVector Padding;
 };
 
