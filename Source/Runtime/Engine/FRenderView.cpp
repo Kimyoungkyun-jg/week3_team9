@@ -51,6 +51,7 @@ void FRenderView::CollectScenePrimitives(const UScene& Scene, const FSceneView& 
         Data.Constants.World = World;
         Data.Constants.ColorOverride       = PrimitiveComponent->GetColor();
         Data.Constants.ColorOverrideAmount = PrimitiveComponent->GetColorAmount();
+        Data.Constants.DisableShading      = View.ViewMode == EViewModeIndex::VMI_Unlit ? 1.0f : 0.0f;
 
         if (bSelected && Data.Constants.ColorOverrideAmount > 0.0f)
         {
@@ -265,6 +266,7 @@ void FRenderView::DrawStencilMask(const FCamera& Camera,
     FObjectConstants Constants{};
     Constants.World = ModelMatrix;
     Constants.MVP   = Constants.World * Camera.CreateViewProjectionMatrix();
+    Constants.DisableShading = 1.0f;
 
     auto OutlineMaterial = FRenderResourceLibrary::Get().GetMaterial(FName("Outline"));
     if (OutlineMaterial) {

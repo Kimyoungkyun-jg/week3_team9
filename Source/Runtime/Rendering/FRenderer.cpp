@@ -661,13 +661,8 @@ bool FRenderer::InitializeConstantBuffers() {
 }
 
 void FRenderer::UpdateLightConstants(const FLightConstants &Constants,
-                                     const EViewModeIndex InMode) {
-  FLightConstants LocalConstants = Constants;
-  if (InMode == EViewModeIndex::VMI_Unlit) {
-    LocalConstants.Intensity = 0.0f;
-  }
-
-  Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &LocalConstants,
+                                     const EViewModeIndex) {
+  Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &Constants,
                              0, 0);
   Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
 }
@@ -701,15 +696,18 @@ void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances, con
 void FRenderer::DrawInstances(const FCamera &Camera) {
   auto &ResLib = FRenderResourceLibrary::Get();
 
-    // 상수 버퍼 업데이트
-    FObjectConstants SC{};
-    SC.MVP = Camera.CreateViewProjectionMatrix();
-    UpdateBuffer(SC);
+  FObjectConstants SC{};
+  SC.MVP = Camera.CreateViewProjectionMatrix();
 
   // 배치 키(MaterialID, MeshID) 순회
   for (const auto &[BatchKey, InstanceData] : ResLib.AllInstancingArrayMap) {
     if (InstanceData.empty())
       continue;
+
+    SC.DisableShading =
+        CurrentRenderMode == EViewModeIndex::VMI_Unlit ||
+        BatchKey.MaterialID == FName("Instance_Simple") ? 1.0f : 0.0f;
+    UpdateBuffer(SC);
 
     const UINT InstanceCount = static_cast<UINT>(InstanceData.size());
     const UINT RequiredSize = InstanceCount * sizeof(FInstanceData);

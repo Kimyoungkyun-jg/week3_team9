@@ -43,7 +43,7 @@ const FPipelineEntry pipelineTable[] = {
     {
         .Id = FName("Simple_Line"),
         .VertexShader = L"ExampleVS.cso",
-        .PixelShader = L"UnlightPS.cso",
+        .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
     {
@@ -98,14 +98,14 @@ const FPipelineEntry pipelineTable[] = {
     {
         .Id = FName("Instance_Simple"),
         .VertexShader = L"InstanceVS.cso",
-        .PixelShader = L"UnlightPS.cso",
+        .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
         .bIsInstancing = true,
     },
     {
         .Id = FName("Gizmo"),
         .VertexShader = L"ExampleVS.cso",
-        .PixelShader = L"UnlightPS.cso",
+        .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
     {
@@ -219,7 +219,7 @@ bool FRenderResourceLibrary::CreateOutlinePipeline(FRenderer &Renderer) {
 
   const FWString Path = GetExecutableDirectory();
   const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
-  const FWString PsPath = Path + L"/Shader/UnlightPS.cso";
+  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
 
   if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
     return false;

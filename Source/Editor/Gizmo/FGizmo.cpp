@@ -240,18 +240,22 @@ void FGizmo::DrawAxis(FRenderer& Renderer, EGizmoHandle Handle, const FMatrix& M
 		return;
 	}
 
+	FVector DrawColor = Color[static_cast<uint8>(Handle) - 1];
 	if (ActiveHandle == Handle)
 	{
-		Renderer.Draw<FObjectConstants>(*GizmoMesh, *GizmoMaterial, { MVP, ActiveColor, 1.0f });
+		DrawColor = ActiveColor;
 	}
 	else if (HoveredHandle == Handle && ActiveHandle == EGizmoHandle::None)
 	{
-		Renderer.Draw<FObjectConstants>(*GizmoMesh, *GizmoMaterial, { MVP, HoverColor, 1.0f });
+		DrawColor = HoverColor;
 	}
-	else
-	{
-		Renderer.Draw<FObjectConstants>(*GizmoMesh, *GizmoMaterial, { MVP, Color[static_cast<uint8>(Handle) - 1], 1.0f });
-	}
+
+	FObjectConstants Constants{};
+	Constants.MVP = MVP;
+	Constants.ColorOverride = DrawColor;
+	Constants.ColorOverrideAmount = 1.0f;
+	Constants.DisableShading = 1.0f;
+	Renderer.Draw(*GizmoMesh, *GizmoMaterial, Constants);
 }
 
 float FGizmo::CalculateGizmoScale(const FVector& GizmoLocation, const FCamera& Camera) const
