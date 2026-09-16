@@ -18,9 +18,16 @@ void UBillBoardComp::Register(UScene& InScene) {
   if (GetMeshID().IsNone()) {
     SetMeshID(FName("Rect"));
   }
+  
   if (GetMaterialID().IsNone()) {
     SetMaterialID(FName("Billboard"));
   }
+
+  if (RenderData.type == ERenderType::None)
+  {
+      RenderData.type = ERenderType::Texture;
+  }
+
   Super::Register(InScene);
 }
 
