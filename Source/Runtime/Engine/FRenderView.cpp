@@ -120,7 +120,7 @@ void FRenderView::FlushBasePass(const FCamera& Camera)
 
 void FRenderView::FlushLinePass(const FCamera& Camera)
 {
-    Renderer.FlushLineBatch(Camera.CreateViewProjectionMatrix());
+    FlushLineBatch(Camera.CreateViewProjectionMatrix());
 }
 
 void FRenderView::RenderPostProcessPass(const FCamera& Camera, const AActor* SelectedActor)

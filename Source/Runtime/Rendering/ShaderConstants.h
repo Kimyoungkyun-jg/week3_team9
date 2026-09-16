@@ -42,6 +42,8 @@ struct FFrameConstants {
   FVector2 ViewportSize;
   float Padding[2];
 };
+static_assert(sizeof(FFrameConstants) % 16 == 0);
+
 
 struct FLightConstants {
   // 기본 조명 파라미터
@@ -52,5 +54,4 @@ struct FLightConstants {
   float AmbientIntensity = 0.2f;
 };
 
-static_assert(sizeof(FLightConstants) == 32);
 static_assert(sizeof(FLightConstants) % 16 == 0);

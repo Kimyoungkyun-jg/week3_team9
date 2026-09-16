@@ -88,7 +88,7 @@ void FEditorApplication::Render() {
             USceneComponent *RootComp = Editor.GetSelectedActor()->GetRootComponent();
             if (auto *PrimComp = RootComp->Cast<UPrimitiveComponent>()) {
                 if (auto *Vis = VisualizerRegistry.FindVisualizer(PrimComp->GetClass())) {
-                    Vis->Draw(*PrimComp, RV, EditorViewport.ViewportCamera, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+                    Vis->Draw(*PrimComp, RV, EditorViewport.ViewportCamera, FVector4{ 0.0f, 1.0f, 0.0f, 1.0f });
                 }
             }
         }
