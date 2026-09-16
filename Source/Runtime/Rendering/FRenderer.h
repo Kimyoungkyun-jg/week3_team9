@@ -41,8 +41,6 @@ public:
   void SwapBuffer();
   void OnWindowSize(UINT Width, UINT Height);
 
-  void FlushLineBatch(const FMatrix &ViewProjection, const FVector &CameraPosition);
-
   EViewModeIndex GetRenderMode() const { return CurrentRenderMode; }
   void SetRenderMode(EViewModeIndex InMode) { CurrentRenderMode = InMode; }
 
@@ -120,6 +118,13 @@ private:
   EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
   
 public:
+  template <typename TConstants>
+  void FlushLineBatch(const TConstants &Constants,
+                      EPipelineID PipelineId = EPipelineID::Simple_Line) {
+    UpdateBuffer(Constants);
+    LineBatcher.Flush(*Context.Get(), GetPipeline(PipelineId));
+  }
+
   // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
   template <typename TConstants>
   void Draw(const FMesh &Mesh, const FMaterial &Material,

@@ -12,6 +12,7 @@
 #include <wrl/client.h>
 
 class FRenderer;
+class FRenderPipeline;
 
 // 라인 정점 구조체
 struct FLineVertex {
@@ -48,8 +49,8 @@ public:
 	void DrawSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments = 16);
 
 	// 수집된 선들을 일괄 렌더링하고 비움
-	void Flush(ID3D11DeviceContext& Context, FRenderer& Renderer,
-		const FMatrix& ViewProjection, const FVector& CameraPosition);
+	void Flush(ID3D11DeviceContext& Context,
+		const TSharedPtr<FRenderPipeline>& Pipeline);
 
 	// 대기 중인 정점 수
 	[[nodiscard]] uint32 GetVertexCount() const { return static_cast<uint32>(LineVertices.size()); }
@@ -57,9 +58,6 @@ public:
 private:
 	// 동적 라인 정점 버퍼
 	Microsoft::WRL::ComPtr<ID3D11Buffer> DynamicLineVertexBuffer;
-	// 상수 버퍼
-	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
-
 	// 정점 리스트
 	TArray<FVertexData> LineVertices;
 };

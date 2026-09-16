@@ -109,9 +109,9 @@ void FEditorApplication::Render() {
       RenderView->UpdateLightConstants(Editor.GlobalLight, EditorViewport.ViewMode); // globallgiht udpate
     }
 
-    RenderView->RenderGrid(EditorViewport.ViewportCamera,
-                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                           Editor.GetGrid()); // 그리드 그리기
+    RenderView->RenderGridAndFlush(EditorViewport.ViewportCamera,
+                                   EditorViewport.TopLeftUV, EditorViewport.LengthUV,
+                                   Editor.GetGrid()); // 그리드 그리기 및 즉시 flush
 
     RenderView->SetViewportUV(EditorViewport.TopLeftUV, EditorViewport.LengthUV);
 
@@ -164,7 +164,7 @@ void FEditorApplication::Render() {
     }
 
 
-    RenderView->FlushLineBatch(sceneview.ViewProj, sceneview.Camera.Position); // line batch 일괄 flush
+    RenderView->FlushLineBatch(sceneview.ViewProj); // Unlit line batch 일괄 flush
 
 
     if (Editor.ObjectSelected())
