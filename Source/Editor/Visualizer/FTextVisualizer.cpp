@@ -10,7 +10,8 @@
 void FTextVisualizer::Draw(
 	const UPrimitiveComponent& Component,
 	FRenderView& RenderView,
-	const FCamera& Camera
+	const FCamera& Camera,
+	const FVector4& Color
 ) const
 {
 	if (Component.IsA<UTextInstanceComponent>() == false) { return; }
@@ -37,6 +38,6 @@ void FTextVisualizer::Draw(
 		Array[1],
 		Array[2],
 		Array[3],
-		FVector4{1.0f, 1.0f, 1.0f, 1.0f}
+		Color
 	);
 }

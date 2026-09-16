@@ -45,10 +45,10 @@ void UTextInstanceComponent::Register(UScene& InScene)
 	}
 
 	if (!GetMesh()) {
-		SetMesh(Resources ? Resources->GetMesh(EMeshID::Rect) : nullptr);
+		SetMesh(Resources ? Resources->GetMesh(FName("Rect")) : nullptr);
 	}
 	if (!GetMaterial()) {
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
+		SetMaterial(Resources ? Resources->GetMaterial(FName("Instance_Text")) : nullptr);
 	}
 
     RebuildTextMesh();

@@ -33,10 +33,17 @@ void FRenderView::RenderGizmo(const FTransform &Transform,
   Gizmo.Draw(Renderer, Transform, Camera);
 }
 
-void FRenderView::RenderGrid(const FCamera &Camera, FVector2 TopLeftUV,
-                             FVector2 LengthUV, FGrid &Grid) {
+void FRenderView::RenderGridAndFlush(const FCamera &Camera, FVector2 TopLeftUV,
+                                     FVector2 LengthUV, FGrid &Grid) {
   Renderer.SetViewportUV(TopLeftUV, LengthUV);
   Grid.DrawLine(Renderer, Camera);
+
+  FGridLineConstants Constants{};
+  Constants.MVP = Camera.CreateViewProjectionMatrix();
+  Constants.CameraPosition = Camera.Position;
+  Constants.FadeStartDistance = 3.0f;
+  Constants.FadeEndDistance = 75.0f;
+  Renderer.FlushLineBatch(Constants, FName("Grid"));
 }
 
 void FRenderView::RenderLine(const FVector &Start, const FVector &End,
@@ -101,8 +108,10 @@ void FRenderView::ClearTextInstances()
     Renderer.ClearTextInstances();
 }
 
-void FRenderView::FlushLineBatch(const FMatrix& ViewProjection)
+void FRenderView::FlushLineBatch(const FMatrix& ViewProjection, const FName& PipelineId)
 {
-    Renderer.FlushLineBatch(ViewProjection);
+    FObjectConstants Constants{};
+    Constants.MVP = ViewProjection;
+    Renderer.FlushLineBatch(Constants, PipelineId);
 }
 

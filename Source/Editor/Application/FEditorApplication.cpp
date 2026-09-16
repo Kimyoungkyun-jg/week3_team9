@@ -41,36 +41,12 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   this->CurrentScene = SceneManager->CurrentScene;
 
   Editor.Initialize(SceneManager);
-
   Editor.AddViewport(FEditorViewport{});
-
   Editor.LoadState();
-
-
-  // Editor.LoadScene("");
 }
 
 void FEditorApplication::Shutdown() {
   Editor.Shutdown();
-}
-
-/// <summary>
-/// return value: if scene is pre-existing, returns true
-/// if scene was not existing, returns false
-/// </summary>
-/// <param name="path"></param>
-/// <returns></returns>
-bool FEditorApplication::CheckSceneExistsAndInitializeIfNotExists(
-    const FString &path) {
-  if (Editor.CheckSceneExists())
-    return true;
-  else {
-    if (path == "")
-      Editor.NewScene();
-    else
-      Editor.LoadScene(path);
-    return false;
-  }
 }
 
 void FEditorApplication::Update(float DeltaTime) {
@@ -109,9 +85,13 @@ void FEditorApplication::Render() {
       RenderView->UpdateLightConstants(Editor.GlobalLight, EditorViewport.ViewMode); // globallgiht udpate
     }
 
-    RenderView->RenderGrid(EditorViewport.ViewportCamera,
-                           EditorViewport.TopLeftUV, EditorViewport.LengthUV,
-                           Editor.GetGrid()); // 그리드 그리기
+    // 그리드 그리기 및 즉시 flush
+    RenderView->RenderGridAndFlush(
+        EditorViewport.ViewportCamera,
+        EditorViewport.TopLeftUV,
+        EditorViewport.LengthUV,
+        Editor.GetGrid()
+    ); 
 
     RenderView->SetViewportUV(EditorViewport.TopLeftUV, EditorViewport.LengthUV);
 
@@ -123,7 +103,6 @@ void FEditorApplication::Render() {
         {
             continue;
         }
-
 
         bool bSelected = true;
 
@@ -159,12 +138,17 @@ void FEditorApplication::Render() {
         {
             UClass* ClassType = PrimComp->GetClass();
             IVisualizer* Visualizer = VisualizerRegistry.FindVisualizer(ClassType);
-            Visualizer->Draw(*PrimComp, *RenderView, EditorViewport.ViewportCamera);
+            Visualizer->Draw(
+                *PrimComp,
+                *RenderView,
+                EditorViewport.ViewportCamera,
+                FVector4{ 0.0f, 1.0f, 0.0f, 1.0f }
+            );
         }
     }
 
 
-    RenderView->FlushLineBatch(sceneview.ViewProj); // line batch 일괄 flush
+    RenderView->FlushLineBatch(sceneview.ViewProj); // Unlit line batch 일괄 flush
 
 
     if (Editor.ObjectSelected())

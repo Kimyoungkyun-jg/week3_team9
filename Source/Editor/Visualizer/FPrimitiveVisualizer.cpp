@@ -9,7 +9,8 @@
 void FPrimitiveVisualizer::Draw(
 	const UPrimitiveComponent& Component,
 	FRenderView& RenderView,
-	const FCamera& Camera
+	const FCamera& Camera,
+	const FVector4& Color
 ) const
 {
 	if (Component.IsA<UPrimitiveComponent>() == false) { return; }
@@ -17,5 +18,5 @@ void FPrimitiveVisualizer::Draw(
 	const FMesh& Mesh = *Component.GetMesh();
 	const FMatrix ModelMatrix = Component.GetRenderMatrix(Camera);
 	FAxisAlignedBoundingBox AABB{ Mesh, ModelMatrix };
-	RenderView.RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+	RenderView.RenderBoxMinMax(AABB.Min, AABB.Max, Color);
 }

@@ -3,6 +3,7 @@
 #include "FRenderPipeline.h"
 #include "FTexture.h"
 #include "Runtime/Core/FString.h"
+#include "Runtime/Core/FName.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Core/TMap.h"
 #include "Vertices.h"
@@ -11,7 +12,6 @@
 
 class FRenderer;
 class FRenderResourceLibrary;
-enum class EMaterialID : uint8;
 
 
 
@@ -39,7 +39,7 @@ public:
   bool SetTextureByName(const FString& InTextureName);
 
 
-  EMaterialID MaterialId;
+  FName MaterialId{"None"};
 private:
   void BindResources(ID3D11DeviceContext &Context) const;
 

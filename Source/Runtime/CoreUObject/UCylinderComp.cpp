@@ -8,7 +8,7 @@ UCLASS_META(UCylinderComp, MeshName, "Cylinder")
 
 void UCylinderComp::Register(UScene &InScene) {
   FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh(EMeshID::Cylinder) : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Simple) : nullptr);
+  SetMesh(Resources ? Resources->GetMesh(FName("Cylinder")) : nullptr);
+  SetMaterial(Resources ? Resources->GetMaterial(FName("Simple")) : nullptr);
   Super::Register(InScene);
 }
