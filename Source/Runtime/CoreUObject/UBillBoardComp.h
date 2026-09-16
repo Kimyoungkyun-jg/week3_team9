@@ -22,7 +22,7 @@ protected:
   FVector2 UVOffset{0.0f, 0.0f};
 
 public:
-  virtual void Register(UScene& InScene) override;
+  void Initialize() override;
 
 
   virtual void SetTexture(FString texture); // 원본 머터리얼을 건드리지 않고

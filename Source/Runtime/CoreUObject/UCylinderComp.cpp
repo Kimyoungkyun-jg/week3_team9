@@ -6,8 +6,8 @@ IMPLEMENT_UCLASS(UCylinderComp, UPrimitiveComponent)
 UCLASS_META(UCylinderComp, DisplayName, "Cylinder")
 UCLASS_META(UCylinderComp, MeshName, "Cylinder")
 
-void UCylinderComp::Register(UScene &InScene) {
+void UCylinderComp::Initialize() {
+  Super::Initialize();
   SetMeshID(FName("Cylinder"));
   SetMaterialID(FName("Simple"));
-  Super::Register(InScene);
 }

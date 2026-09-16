@@ -14,21 +14,12 @@ IMPLEMENT_UCLASS(UBillBoardComp, UPrimitiveComponent)
 UCLASS_META(UBillBoardComp, DisplayName, "BillBoard")
 UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 
-void UBillBoardComp::Register(UScene& InScene) {
-  if (GetMeshID().IsNone()) {
-    SetMeshID(FName("Rect"));
-  }
-  
-  if (GetMaterialID().IsNone()) {
-    SetMaterialID(FName("Billboard"));
-  }
+void UBillBoardComp::Initialize() {
+  Super::Initialize();
+  SetMeshID(FName("Rect"));
+  SetMaterialID(FName("Billboard"));
 
-  if (RenderData.type == ERenderType::None)
-  {
-      RenderData.type = ERenderType::Texture;
-  }
-
-  Super::Register(InScene);
+  RenderData.type = ERenderType::Texture;
 }
 
 void UBillBoardComp::Serialize(FArchive& Archive) const

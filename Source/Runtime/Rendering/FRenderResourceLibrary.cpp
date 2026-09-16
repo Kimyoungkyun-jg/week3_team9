@@ -44,7 +44,7 @@ const FPipelineEntry pipelineTable[] = {
     {
         .Id = FName("Simple_Line"),
         .VertexShader = L"ExampleVS.cso",
-        .PixelShader = L"UnlightPS.cso",
+        .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
     {
@@ -99,7 +99,7 @@ const FPipelineEntry pipelineTable[] = {
     {
         .Id = FName("Instance_Simple"),
         .VertexShader = L"InstanceVS.cso",
-        .PixelShader = L"UnlightPS.cso",
+        .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
         .bIsInstancing = true,
     },
@@ -114,7 +114,7 @@ const FPipelineEntry pipelineTable[] = {
     {
         .Id = FName("Gizmo"),
         .VertexShader = L"ExampleVS.cso",
-        .PixelShader = L"UnlightPS.cso",
+        .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
     {
@@ -165,7 +165,17 @@ const FMaterialEntry materialTable[] = {
         .TextureName = "uv-test",
     },
     {
-        .Id = FName("Instance_Text"),
+        .Id = FName("Instance_Text_Bazzi"),
+        .PipelineID = FName("Instance_Text"),
+        .TextureName = "bazziotf",
+    },
+    {
+        .Id = FName("Instance_Text_DNF"),
+        .PipelineID = FName("Instance_Text"),
+        .TextureName = "dnfbitbitv2",
+    },
+    {
+        .Id = FName("Instance_Text_Maple"),
         .PipelineID = FName("Instance_Text"),
         .TextureName = "maplestorybold",
     },
@@ -233,7 +243,7 @@ bool FRenderResourceLibrary::CreateOutlinePipeline(FRenderer &Renderer) {
 
   const FWString Path = GetExecutableDirectory();
   const FWString VsPath = Path + L"/Shader/ExampleVS.cso";
-  const FWString PsPath = Path + L"/Shader/UnlightPS.cso";
+  const FWString PsPath = Path + L"/Shader/ExamplePS.cso";
 
   if (!std::filesystem::exists(VsPath) || !std::filesystem::exists(PsPath)) {
     return false;
@@ -1385,11 +1395,11 @@ bool FRenderResourceLibrary::CreateFonts(FRenderer& Renderer)
             Font->SetTexture(AllTextureMap[TextureKey]);
 
             // 이미 로드된 폰트 건너뜀
-            if (AllFontMap.find(KeyWide) != AllFontMap.end()) {
+            if (AllFontMap.find(TextureKey) != AllFontMap.end()) {
                 continue;
             }
 
-            AllFontMap[KeyWide] = Font;
+            AllFontMap[TextureKey] = Font;
         }
     }
 

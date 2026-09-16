@@ -6,8 +6,8 @@ IMPLEMENT_UCLASS(UCubeComp, UPrimitiveComponent)
 UCLASS_META(UCubeComp, DisplayName, "Cube")
 UCLASS_META(UCubeComp, MeshName, "Cube")
 
-void UCubeComp::Register(UScene &InScene) {
+void UCubeComp::Initialize() {
+  Super::Initialize();
   SetMeshID(FName("Cube"));
   SetMaterialID(FName("Textured"));
-  Super::Register(InScene);
 }
