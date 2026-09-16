@@ -20,5 +20,5 @@ void FPrimitiveVisualizer::Draw(
     if (!Mesh) return;
     const FMatrix ModelMatrix = Component.GetRenderMatrix(Camera);
     FAxisAlignedBoundingBox AABB{ *Mesh, ModelMatrix };
-    RenderView.RenderBoxMinMax(AABB.Min, AABB.Max, FVector4{ 1.0f, 1.0f, 1.0f, 1.0f });
+    RenderView.RenderBoxMinMax(AABB.Min, AABB.Max, Color);
 }

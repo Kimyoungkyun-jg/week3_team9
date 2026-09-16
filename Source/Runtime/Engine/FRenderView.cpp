@@ -2,6 +2,8 @@
 
 #include "Editor/Gizmo/FGizmo.h"
 #include "Editor/Grid/FGrid.h"
+#include "Editor/Visualizer/FVisualizerRegistry.h"
+#include "Editor/Visualizer/IVisualizer.h"
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UClass.h"
@@ -49,6 +51,7 @@ void FRenderView::CollectScenePrimitives(const UScene& Scene, const FSceneView& 
         Data.Constants.World = World;
         Data.Constants.ColorOverride       = PrimitiveComponent->GetColor();
         Data.Constants.ColorOverrideAmount = PrimitiveComponent->GetColorAmount();
+        Data.Constants.DisableShading      = View.ViewMode == EViewModeIndex::VMI_Unlit ? 1.0f : 0.0f;
 
         if (bSelected && Data.Constants.ColorOverrideAmount > 0.0f)
         {
@@ -74,10 +77,27 @@ void FRenderView::RenderView(const FSceneView& View, const UScene& Scene, const 
     // 기본 씬 오브젝트 패스
     FlushBasePass(View.Camera);
 
-    // 라인 패스
-    if (EditorCtx.DrawLinesCallback)
-    {
-        EditorCtx.DrawLinesCallback(*this);
+    // 에디터 라인 패스
+    if (EditorCtx.Grid) {
+        DrawGrid(View.Camera, *EditorCtx.Grid);
+    }
+
+    if (EditorCtx.SelectedPrimitive && EditorCtx.VisualizerRegistry) {
+
+        UClass* ClassType = EditorCtx.SelectedPrimitive->GetClass();
+        FVisualizerRegistry& Registry = *EditorCtx.VisualizerRegistry;
+
+        IVisualizer* Visualizer = Registry.FindVisualizer(ClassType);
+
+        if (Visualizer)
+        {
+            Visualizer->Draw(
+                *EditorCtx.SelectedPrimitive,
+                *this,
+                View.Camera,
+                FVector4{0.0f, 1.0f, 0.0f, 1.0f}
+            );
+        }
     }
     
     FlushLinePass(View.Camera);
@@ -120,7 +140,7 @@ void FRenderView::FlushBasePass(const FCamera& Camera)
 
 void FRenderView::FlushLinePass(const FCamera& Camera)
 {
-    Renderer.FlushLineBatch(Camera.CreateViewProjectionMatrix());
+    FlushLineBatch(Camera.CreateViewProjectionMatrix());
 }
 
 void FRenderView::RenderPostProcessPass(const FCamera& Camera, const AActor* SelectedActor)
@@ -248,10 +268,11 @@ void FRenderView::DrawStencilMask(const FCamera& Camera,
     auto Mesh = FRenderResourceLibrary::Get().GetMesh(RD.MeshId);
     if (!Mesh) return;
 
-    const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+    const FMatrix ModelMatrix = PrimComp->GetRenderMatrix(Camera);
     FObjectConstants Constants{};
     Constants.World = ModelMatrix;
     Constants.MVP   = Constants.World * Camera.CreateViewProjectionMatrix();
+    Constants.DisableShading = 1.0f;
 
     auto OutlineMaterial = FRenderResourceLibrary::Get().GetMaterial(FName("Outline"));
     if (OutlineMaterial) {
@@ -295,6 +316,7 @@ void FRenderView::FlushLineBatch(const FMatrix& ViewProjection, const FName& Pip
 {
     FObjectConstants Constants{};
     Constants.MVP = ViewProjection;
+    Constants.DisableShading = 1.0f;
     Renderer.FlushLineBatch(Constants, PipelineId);
 }
 

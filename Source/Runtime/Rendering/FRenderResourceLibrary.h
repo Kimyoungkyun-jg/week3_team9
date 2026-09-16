@@ -36,7 +36,7 @@ public:
   // 텍스쳐 보관 맵 (FName 기반)
   TMap<FName, TSharedPtr<FTexture>> AllTextureMap;
   // 폰트 보관 맵
-  TMap<FString, TSharedPtr<FFont>> AllFontMap;
+  TMap<FName, TSharedPtr<FFont>> AllFontMap;
 
   // 에디터용 아이콘 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllEditorTextureMap;
@@ -187,9 +187,9 @@ public:
   TSharedPtr<FMesh> GetOrCreateMesh(const FName &ID,
                                     const TArray<FVertexData> &vertices);
 
-  bool CreateFonts(FRenderer& Renderer);
+  
 
-  [[nodiscard]] TSharedPtr<FFont> GetFont(const FString& InName) const {
+  [[nodiscard]] TSharedPtr<FFont> GetFont(const FName& InName) const {
       auto it = AllFontMap.find(InName);
       if (it != AllFontMap.end())
           return it->second;

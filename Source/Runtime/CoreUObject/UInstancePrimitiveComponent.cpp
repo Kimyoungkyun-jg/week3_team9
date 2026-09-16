@@ -6,13 +6,12 @@
 
 IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
-void UInstancePrimitiveComponent::Register(UScene& Scene)
+void UInstancePrimitiveComponent::Initialize()
 {
-	if (GetMeshID().IsNone())
-	{
-		SetMeshID(FName("Cube"));
-	}
-	
+    Super::Initialize();
+
+    SetMeshID(FName("Cube"));
+    
 	if (GetMaterialID().IsNone())
 	{
 		SetMaterialID(FName("Instance_Simple"));
@@ -21,7 +20,7 @@ void UInstancePrimitiveComponent::Register(UScene& Scene)
 	{
 		SetMaterialID(FName("Instance_Textured"));
 	}
-
+    
     RenderData.type = ERenderType::Instancing;
 
     // 텍스처 ID가 지정되어 있고 머티리얼이 있는 경우 텍스처 설정
@@ -38,7 +37,6 @@ void UInstancePrimitiveComponent::Register(UScene& Scene)
         }
     }
 
-    Super::Register(Scene);
 }
 
 void UInstancePrimitiveComponent::AddInstance(const FVector& WorldPosition, const FVector4& Color)

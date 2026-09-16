@@ -5,12 +5,12 @@
 #include "Runtime/Engine/ShowFlags.h"
 #include "Runtime/Rendering/ShaderConstants.h"
 #include "Runtime/Geometry/FTransform.h"
-#include <functional>
-
 class AActor;
 class FGizmo;
+class FGrid;
+class FVisualizerRegistry;
+class UPrimitiveComponent;
 class UTextInstanceComponent;
-class FRenderView;
 
 // 뷰포트 렌더링 명세
 struct FSceneView
@@ -28,8 +28,10 @@ struct FSceneView
 struct FEditorRenderContext
 {
 	const AActor* SelectedActor = nullptr;
+	UPrimitiveComponent* SelectedPrimitive = nullptr;
+	FGrid* Grid = nullptr;
+	FVisualizerRegistry* VisualizerRegistry = nullptr;
 	FTransform SelectedTransform;
 	const FGizmo* Gizmo = nullptr;
 	UTextInstanceComponent* TextComp = nullptr;
-	std::function<void(FRenderView&)> DrawLinesCallback;
 };

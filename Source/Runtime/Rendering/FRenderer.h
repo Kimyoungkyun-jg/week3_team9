@@ -128,16 +128,24 @@ private:
   
 public:
   template <typename TConstants>
-  void FlushLineBatch(const TConstants &Constants,
-                      const FName& PipelineId = FName("Simple_Line")) {
+  void FlushLineBatch(
+      const TConstants &Constants,
+      const FName& PipelineId = FName("Simple_Line")
+  ) {
     UpdateBuffer(Constants);
     LineBatcher.Flush(*Context.Get(), GetPipeline(PipelineId));
   }
 
   // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
   template <typename TConstants>
-  void Draw(const FMesh &Mesh, const FMaterial &Material,
-            const TConstants &Constants, uint32 Slot = 0, bool bApplyViewMode = true) {
+  void Draw(
+      const FMesh &Mesh,
+      const FMaterial &Material,
+      const TConstants &Constants,
+      uint32 Slot = 0,
+      bool bApplyViewMode = true
+  )
+  {
     UpdateBuffer(Constants, Slot);
 
     TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;

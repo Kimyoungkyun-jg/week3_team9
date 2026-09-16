@@ -6,8 +6,8 @@ IMPLEMENT_UCLASS(UConeComp, UPrimitiveComponent)
 UCLASS_META(UConeComp, DisplayName, "Cone")
 UCLASS_META(UConeComp, MeshName, "Cone")
 
-void UConeComp::Register(UScene &InScene) {
+void UConeComp::Initialize() {
+  Super::Initialize();
   SetMeshID(FName("Cone"));
   SetMaterialID(FName("Simple"));
-  Super::Register(InScene);
 }

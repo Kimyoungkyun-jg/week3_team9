@@ -9,8 +9,8 @@ IMPLEMENT_UCLASS(UPlaneComp, UPrimitiveComponent)
 UCLASS_META(UPlaneComp, DisplayName, "Plane")
 UCLASS_META(UPlaneComp, MeshName, "Plane")
 
-void UPlaneComp::Register(UScene &InScene) {
+void UPlaneComp::Initialize() {
+  Super::Initialize();
   SetMeshID(FName("Plane"));
   SetMaterialID(FName("Simple"));
-  Super::Register(InScene);
 }

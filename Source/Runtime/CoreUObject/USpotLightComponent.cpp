@@ -8,13 +8,13 @@ IMPLEMENT_UCLASS(USpotLightComponent, UPrimitiveComponent)
 UCLASS_META(USpotLightComponent, DisplayName, "SpotLight")
 UCLASS_META(USpotLightComponent, MeshName, "SpotlightCone")
 
-void USpotLightComponent::Register(UScene& Scene)
+void USpotLightComponent::Initialize()
 {
+	Super::Initialize();
 	// 스포트라이트 메쉬 및 머티리얼 장착
 	SetMeshID(FName("SpotlightCone"));
 	SetMaterialID(FName("Spotlight"));
 	RenderData.type = ERenderType::Spotlight;
-	Super::Register(Scene);
 }
 
 void USpotLightComponent::Serialize(FArchive& Archive) const

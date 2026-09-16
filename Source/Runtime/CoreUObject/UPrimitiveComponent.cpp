@@ -6,6 +6,12 @@
 
 IMPLEMENT_UCLASS(UPrimitiveComponent, USceneComponent)
 
+void UPrimitiveComponent::Initialize()
+{
+    Super::Initialize();
+    RenderData.type = ERenderType::Primitive;
+}
+
 void UPrimitiveComponent::Register(UScene& InScene)
 {
     if (RenderData.type == ERenderType::None)
