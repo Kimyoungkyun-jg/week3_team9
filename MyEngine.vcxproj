@@ -137,7 +137,7 @@
       <PreprocessorDefinitions>NOMINMAX;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Source;$(SolutionDir)Source\ThirdParty\DirectXTK;$(SolutionDir)Source\ThirdParty\DirectXTK\Inc;$(SolutionDir)Source\ThirdParty\DirectXTK\Src</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -162,7 +162,7 @@
       <PreprocessorDefinitions>NOMINMAX;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Source;$(SolutionDir)Source\ThirdParty\DirectXTK;$(SolutionDir)Source\ThirdParty\DirectXTK\Inc;$(SolutionDir)Source\ThirdParty\DirectXTK\Src</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -185,7 +185,7 @@
       <PreprocessorDefinitions>NOMINMAX;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Source;$(SolutionDir)Source\ThirdParty\DirectXTK;$(SolutionDir)Source\ThirdParty\DirectXTK\Inc;$(SolutionDir)Source\ThirdParty\DirectXTK\Src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Source;$(SolutionDir)Source\ThirdParty\DirectXTK;$(SolutionDir)Source\ThirdParty\DirectXTK\Inc;$(SolutionDir)Source\ThirdParty\DirectXTK\Src</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -211,7 +211,7 @@
       <PreprocessorDefinitions>NOMINMAX;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Source;$(SolutionDir)Source\ThirdParty\DirectXTK;$(SolutionDir)Source\ThirdParty\DirectXTK\Inc;$(SolutionDir)Source\ThirdParty\DirectXTK\Src</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -231,7 +231,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">
     <ClCompile>
       <EnablePREfast>true</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Source;$(SolutionDir)Source\ThirdParty\DirectXTK;$(SolutionDir)Source\ThirdParty\DirectXTK\Inc;$(SolutionDir)Source\ThirdParty\DirectXTK\Src</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -247,7 +247,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">
     <ClCompile>
       <EnablePREfast>true</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)Source;$(SolutionDir)Source\ThirdParty\DirectXTK;$(SolutionDir)Source\ThirdParty\DirectXTK\Inc;$(SolutionDir)Source\ThirdParty\DirectXTK\Src</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -391,6 +391,7 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Resources\MasterYi\MasterYi_HeadData.h" />
     <ClInclude Include="Source\Editor\Application\FEditorApplication.h" />
     <ClInclude Include="Source\Editor\Core\EditorConstant.h" />
     <ClInclude Include="Source\Editor\Core\FConfigArchive.h" />
@@ -539,10 +540,30 @@
     <FxCompile Include="Shader\MsdfTextPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\TextPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\TexturedPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
@@ -591,6 +612,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">MainPS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\RotationGizmoPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -646,5 +675,14 @@
     <PreBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">call "$(ProjectDir)ConvertTextures.bat"</Command>
     </PreBuildEvent>
+    <ClCompile>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</MultiProcessorCompilation>
+    </ClCompile>
+    <ClCompile>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">true</MultiProcessorCompilation>
+    </ClCompile>
+    <ClCompile>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</MultiProcessorCompilation>
+    </ClCompile>
   </ItemDefinitionGroup>
 </Project>
