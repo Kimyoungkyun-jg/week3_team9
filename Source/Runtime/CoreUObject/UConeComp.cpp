@@ -1,4 +1,4 @@
-#include "UConeComp.h"
+﻿#include "UConeComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "UClass.h"
 
@@ -8,7 +8,7 @@ UCLASS_META(UConeComp, MeshName, "Cone")
 
 void UConeComp::Register(UScene &InScene) {
   FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh(EMeshID::Cone) : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Simple) : nullptr);
+  SetMeshID(EMeshID::Cone);
+  SetMaterialID(EMaterialID::Simple);
   Super::Register(InScene);
 }

@@ -7,6 +7,7 @@
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Engine/FCamera.h"
 #include "Runtime/Rendering/FTexture.h"
+#include "Runtime/Rendering/FRenderQueue.h"
 #include "ShaderConstants.h"
 #include "Vertices.h"
 #include <Windows.h>
@@ -878,3 +879,4 @@ void FRenderer::RenderOutline()
     ID3D11ShaderResourceView* NullSRVs[] = { nullptr, nullptr };
     Context->PSSetShaderResources(0, 2, NullSRVs);
 }
+

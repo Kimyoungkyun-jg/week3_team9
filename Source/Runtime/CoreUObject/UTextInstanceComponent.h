@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Runtime/Rendering/FFont.h"
+#include "Runtime/Rendering/FRenderQueue.h"
 #include "Runtime/CoreUObject/UInstancePrimitiveComponent.h"
 
 class FArchive;
@@ -27,7 +28,8 @@ public:
 	// Object -> World 변환 행렬 생성
 	virtual FMatrix GetRenderMatrix(const FCamera& Camera) const override;
 
-	void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) override;
+	// 큐 방식: FRenderData에 Instances까지 채워서 반환
+	FRenderData BuildRenderData(const FCamera& Camera) const;
 
 	virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_BillboardText; }
 
@@ -43,4 +45,6 @@ private:
 
 	float Width = 0.0f;
 	float Height = 0.0f;
+
+	TArray<FInstanceData> Instances;
 };

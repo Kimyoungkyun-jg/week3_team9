@@ -3,6 +3,7 @@
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Math/FVector.h"
 #include "Runtime/Rendering/Vertices.h"
+#include "Runtime/Rendering/FRenderQueue.h"
 #include "UPrimitiveComponent.h"
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -13,7 +14,9 @@ class UInstancePrimitiveComponent : public UPrimitiveComponent {
 
 public:
     void Register(UScene& Scene) override;
-    void Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView) override;
+
+    // 큐 방식: FRenderData에 Instances까지 채워서 반환
+    FRenderData BuildRenderData() const;
 
     // 인스턴스 위치/색상 추가 (Actor 1개가 N개 위치를 직접 관리)
     void AddInstance(const FVector& WorldPosition, const FVector4& Color = {1,1,1,1});
@@ -22,8 +25,5 @@ public:
 
 private:
     struct FInstanceEntry { FVector Position; FVector4 Color; };
-    TArray<FInstanceEntry> InstanceTransforms; // 순수 데이터 배열, UObject 아님
-
-protected:
-    TArray<FInstanceData> Instances;           // GPU 업로드용 임시 버퍼 (자식 클래스 접근 가능)
+    TArray<FInstanceEntry> InstanceTransforms;
 };

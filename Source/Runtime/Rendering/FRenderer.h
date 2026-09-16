@@ -85,6 +85,7 @@ public:
   void RenderOutline();
   ID3D11RenderTargetView* GetBackBuffer() { return BackBufferRTV.Get(); }
 
+
 private:
   bool InitializeDeviceAndSwapChain(HWND Window);
   bool InitializeBackBufferAndDepthStencil();

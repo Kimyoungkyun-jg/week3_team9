@@ -5,14 +5,17 @@
 #include "Runtime/Math/FVector2.h"
 #include "Runtime/CoreUObject/UTextInstanceComponent.h"
 #include "Runtime/Rendering/FRenderer.h"
+#include "Runtime/Rendering/FRenderQueue.h"
 
 struct FCamera;
+struct FSceneView;
 class FGizmo;
 class FGrid;
 class AActor;
 
 class FRenderView final {
 	FRenderer& Renderer;
+	FRenderQueue RenderQueue;
 
 public:
 	FRenderView(FRenderer& Renderer);
@@ -21,7 +24,6 @@ public:
 	FRenderView(const FRenderView&) = delete;
 	FRenderView& operator=(const FRenderView&) = delete;
 
-	void Render(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent* Rendered, FSceneView& sceneView, bool bHighlighted = false);
 	void RenderGizmo(const FTransform& Transform, const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, const FGizmo& Gizmo);
 	void RenderGrid(const FCamera& Camera, FVector2 TopLeftUV, FVector2 LengthUV, FGrid& Grid);
 	void RenderLine(const FVector& Start, const FVector& End, const FVector4& Color);
@@ -42,4 +44,8 @@ public:
 	void DrawInstances(const FCamera& Camera);
 	void ClearTextInstances();
 	void FlushLineBatch(const FMatrix& ViewProjection);
+	void FlushQueue(const FCamera& Camera);
+
+	FRenderQueue& GetRenderQueue() { return RenderQueue; }
+	const FRenderQueue& GetRenderQueue() const { return RenderQueue; }
 };

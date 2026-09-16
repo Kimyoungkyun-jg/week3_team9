@@ -1,4 +1,4 @@
-#include "UCubeComp.h"
+﻿#include "UCubeComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "UClass.h"
 
@@ -8,7 +8,7 @@ UCLASS_META(UCubeComp, MeshName, "Cube")
 
 void UCubeComp::Register(UScene &InScene) {
   FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh(EMeshID::Cube) : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Textured) : nullptr);
+  SetMeshID(EMeshID::Cube);
+  SetMaterialID(EMaterialID::Textured);
   Super::Register(InScene);
 }

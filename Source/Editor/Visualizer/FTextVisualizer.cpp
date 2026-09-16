@@ -4,6 +4,7 @@
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
 #include "Runtime/Engine/FRenderView.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Math/FMatrix.h"
 #include "Runtime/Core/TArray.h"
 
@@ -20,7 +21,9 @@ void FTextVisualizer::Draw(
 	float Width = TextComponent.GetWidth();
 	float Height = TextComponent.GetHeight();
 
-	const FMesh& Mesh = *TextComponent.GetMesh();
+	auto MeshPtr = FRenderResourceLibrary::Get().GetMesh(TextComponent.GetRenderData().MeshId);
+	if (!MeshPtr) return;
+	const FMesh& Mesh = *MeshPtr;
 	const FMatrix ModelMatrix = TextComponent.GetRenderMatrix(Camera);
 
 	if (Mesh.GetPositions().size() != 4) { return; }

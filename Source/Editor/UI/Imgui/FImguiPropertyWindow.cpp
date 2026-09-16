@@ -2,7 +2,6 @@
 #include "Runtime/CoreUObject/USceneComponent.h"
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/CoreUObject/USpotLightComponent.h"
-#include "Runtime/CoreUObject/UTextComponent.h"
 #include "Runtime/CoreUObject/UTextInstanceComponent.h"
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/Actors/AActor.h"
@@ -13,7 +12,6 @@
 #include <string>
 #include "FImguiDragDrop.h"
 #include "Runtime/Rendering/FMaterial.h"
-#include "Runtime/Rendering/FTexture.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 
 void FImguiPropertyWindow::Process(FEditor& Editor)
@@ -222,7 +220,7 @@ void FImguiPropertyWindow::ShowPrimitiveSettings(AActor& Actor, UPrimitiveCompon
 void FImguiPropertyWindow::ShowTextureSlot(UPrimitiveComponent& PrimComp) const
 {
 	constexpr float SlotSize = 64.0f;
-	TSharedPtr<FMaterial> Material = PrimComp.GetMaterial();
+	TSharedPtr<FMaterial> Material = FRenderResourceLibrary::Get().GetMaterial(PrimComp.GetRenderData().MaterialId);
 	TSharedPtr<FTexture> CurrentTexture = Material ? Material->GetTexture() : nullptr;
 
 	ImGui::Spacing();

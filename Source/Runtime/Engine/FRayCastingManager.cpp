@@ -2,6 +2,7 @@
 #include "Runtime/Input/FInputManager.h"
 #include "Runtime/Math/FMatrix.h"
 #include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include <limits>
 #include "Runtime/CoreUObject/UPrimitiveComponent.h"
 #include "Runtime/Core/Log.h"
@@ -55,7 +56,7 @@ bool FRayCastingManager::RayIntersectsMeshes(
 			continue;
 		}
 
-		auto Mesh = Component->GetMesh();
+		auto Mesh = FRenderResourceLibrary::Get().GetMesh(Component->GetRenderData().MeshId);
 		if (!Mesh)
 		{
 			continue;

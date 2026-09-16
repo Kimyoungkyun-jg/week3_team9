@@ -1,4 +1,4 @@
-#include "UCylinderComp.h"
+﻿#include "UCylinderComp.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "UClass.h"
 
@@ -8,7 +8,7 @@ UCLASS_META(UCylinderComp, MeshName, "Cylinder")
 
 void UCylinderComp::Register(UScene &InScene) {
   FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh(EMeshID::Cylinder) : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Simple) : nullptr);
+  SetMeshID(EMeshID::Cylinder);
+  SetMaterialID(EMaterialID::Simple);
   Super::Register(InScene);
 }

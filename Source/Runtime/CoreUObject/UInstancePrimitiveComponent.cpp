@@ -1,5 +1,4 @@
 #include "UInstancePrimitiveComponent.h"
-#include "Runtime/Rendering/FRenderer.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/ShaderConstants.h"
 #include "Runtime/Engine/UScene.h"
@@ -9,17 +8,8 @@ IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
 void UInstancePrimitiveComponent::Register(UScene& Scene)
 {
-    FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
-    if (!PrimitiveMesh)
-    {
-        SetMesh(Resources ? Resources->GetMesh(EMeshID::Cube) : nullptr);
-    }
-
-    if (!PrimitiveMaterial)
-    {
-        SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Simple) : nullptr);
-    }
-
+    SetMeshID(EMeshID::Cube);
+    SetMaterialID(EMaterialID::Instance_Simple);
     Super::Register(Scene);
 }
 
@@ -33,40 +23,40 @@ void UInstancePrimitiveComponent::ClearInstances()
     InstanceTransforms.clear();
 }
 
-void UInstancePrimitiveComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
+FRenderData UInstancePrimitiveComponent::BuildRenderData() const
 {
-    if (!GetMesh() || !GetMaterial()) return;
+    FRenderData Data;
+    Data.type       = ERenderType::Instancing;
+    Data.MeshId     = RenderData.MeshId;
+    Data.MaterialId = RenderData.MaterialId;
+    Data.flag       = GetShowFlag();
 
-    Instances.clear();
+    TArray<FInstanceData> Built;
 
     if (InstanceTransforms.empty())
     {
-        // 등록된 인스턴스 없으면 자기 자신 트랜스폼 1개만 사용
-        FInstanceData Data
-        {
+        // 등록된 인스턴스 없으면 자기 자신 트랜스폼 1개
+        Built.push_back(FInstanceData{
             .World    = GetGlobalTransform().ToMatrix(),
             .Color    = FVector4(GetColor(), 1.0f),
             .UVScale  = {1.0f, 1.0f},
             .UVOffset = {0.0f, 0.0f},
-        };
-        Instances.push_back(Data);
+        });
     }
     else
     {
-        //Actor 1개가 N개 위치 관리 (UObject 오버헤드 없음)
-        Instances.reserve(InstanceTransforms.size());
+        Built.reserve(InstanceTransforms.size());
         for (const auto& Entry : InstanceTransforms)
         {
-            FInstanceData Data
-            {
+            Built.push_back(FInstanceData{
                 .World    = FMatrix::MakeTranslation(Entry.Position),
                 .Color    = Entry.Color,
                 .UVScale  = {1.0f, 1.0f},
                 .UVOffset = {0.0f, 0.0f},
-            };
-            Instances.push_back(Data);
+            });
         }
     }
 
-    renderer.AddTextInstanceArray(Instances, GetMesh()->MeshId, GetMaterial()->MaterialId);
+    Data.Instances = std::move(Built);
+    return Data;
 }

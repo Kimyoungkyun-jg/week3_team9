@@ -6,6 +6,7 @@
 #include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UClass.h"
 #include "Runtime/Engine/FCamera.h"
+#include "Runtime/Engine/FSceneView.h"
 #include "Runtime/Math/FVector2.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/FRenderer.h"
@@ -13,18 +14,6 @@
 #include <fstream>
 
 FRenderView::FRenderView(FRenderer &Renderer) : Renderer(Renderer) {}
-
-void FRenderView::Render(const FCamera &Camera, FVector2 TopLeftUV, FVector2 LengthUV, UPrimitiveComponent *Rendered, FSceneView& sceneView,bool bHighlighted) {
-  if (!Rendered) {
-    return;
-  }
-
-  Renderer.SetViewportUV(TopLeftUV, LengthUV);
-  Rendered->Render(Renderer, Camera, bHighlighted, sceneView);
-
-  Renderer.DrawInstances(Camera);
-  Renderer.ClearTextInstances();
-}
 
 void FRenderView::RenderGizmo(const FTransform &Transform,
                               const FCamera &Camera, FVector2 TopLeftUV,
@@ -77,18 +66,22 @@ void FRenderView::RenderSphere(const FVector &Center, float Radius,
   LineBatcher.DrawSphere(Center, Radius, Color, Segments);
 }
 
-void FRenderView::RenderUUIDText(const FCamera &Camera, FVector2 TopLeftUV,
-                                 FVector2 LengthUV, UTextInstanceComponent *textcomp, const FSceneView& SceneView)
+void FRenderView::RenderUUIDText(const FCamera& Camera, FVector2 TopLeftUV,
+                                 FVector2 LengthUV, UTextInstanceComponent* textcomp, const FSceneView& SceneView)
 {
-  if (!textcomp || !textcomp->GetMesh() || !textcomp->GetMaterial()) {
-    return;
-  }
-  Renderer.SetViewportUV(TopLeftUV, LengthUV);
-  Renderer.ClearDepth();
-  textcomp->Render(Renderer, Camera, false, SceneView);
-  Renderer.DrawTextInstances(Camera, textcomp->GetMesh()->MeshId,
-                             textcomp->GetMaterial()->MaterialId);
-  Renderer.ClearTextInstances();
+    if (!textcomp) return;
+
+    Renderer.SetViewportUV(TopLeftUV, LengthUV);
+    Renderer.ClearDepth();
+
+    // BuildRenderData()로 Font 기반 인스턴스 데이터 획득 후 드로우
+    FRenderData Data = textcomp->BuildRenderData(Camera);
+    if (!Data.Instances.empty())
+    {
+        Renderer.AddTextInstanceArray(Data.Instances, Data.MeshId, Data.MaterialId);
+        Renderer.DrawTextInstances(Camera, Data.MeshId, Data.MaterialId);
+        Renderer.ClearTextInstances();
+    }
 }
 
 void FRenderView::RenderOutline(const FCamera &Camera,
@@ -97,32 +90,31 @@ void FRenderView::RenderOutline(const FCamera &Camera,
   Renderer.RenderOutline();
 }
 
-void FRenderView::DrawStencilMask(const FCamera &Camera,
-                                  const AActor *SelectedActor) {
-  if (!SelectedActor)
-    return;
+void FRenderView::DrawStencilMask(const FCamera& Camera,
+                                  const AActor* SelectedActor) {
+    if (!SelectedActor) return;
 
-  USceneComponent *RootComp = SelectedActor->GetRootComponent();
-  if (!RootComp)
-    return;
+    USceneComponent* RootComp = SelectedActor->GetRootComponent();
+    if (!RootComp) return;
 
-  UPrimitiveComponent *PrimComp = RootComp->Cast<UPrimitiveComponent>();
-  if (!PrimComp || !PrimComp->GetMesh())
-    return;
+    UPrimitiveComponent* PrimComp = RootComp->Cast<UPrimitiveComponent>();
+    if (!PrimComp) return;
 
-  // 메쉬 모델 행렬과 상수 버퍼 준비
-  const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
-  FObjectConstants Constants{};
-  Constants.World = ModelMatrix;
-  Constants.MVP = Constants.World * Camera.CreateViewProjectionMatrix();
+    // FRenderData에서 MeshId 읽어 ResLib로 실제 Mesh 획득
+    const FRenderData& RD = PrimComp->GetRenderData();
+    auto Mesh = FRenderResourceLibrary::Get().GetMesh(RD.MeshId);
+    if (!Mesh) return;
 
-  // 마스크용 머티리얼로 스텐실 기록
-  auto OutlineMaterial =
-      FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Outline);
-  if (OutlineMaterial) {
-    OutlineMaterial->GetPipeline()->SetStencilRef(1);
-    Renderer.Draw(*PrimComp->GetMesh(), *OutlineMaterial, Constants, 0, false);
-  }
+    const FMatrix ModelMatrix = PrimComp->GetModelMatrix();
+    FObjectConstants Constants{};
+    Constants.World = ModelMatrix;
+    Constants.MVP   = Constants.World * Camera.CreateViewProjectionMatrix();
+
+    auto OutlineMaterial = FRenderResourceLibrary::Get().GetMaterial(EMaterialID::Outline);
+    if (OutlineMaterial) {
+        OutlineMaterial->GetPipeline()->SetStencilRef(1);
+        Renderer.Draw(*Mesh, *OutlineMaterial, Constants, 0, false);
+    }
 }
 
 void FRenderView::RenderPostProcess(const FCamera &Camera, FVector2 TopLeftUV,
@@ -159,5 +151,70 @@ void FRenderView::ClearTextInstances()
 void FRenderView::FlushLineBatch(const FMatrix& ViewProjection)
 {
     Renderer.FlushLineBatch(ViewProjection);
+}
+
+void FRenderView::FlushQueue(const FCamera& Camera)
+{
+    auto& ResLib = FRenderResourceLibrary::Get();
+
+    // Primitive 큐 처리
+    for (const FRenderData& Data : RenderQueue.GetPrimRenderQ())
+    {
+        auto Mesh     = ResLib.GetMesh(Data.MeshId);
+        auto Material = ResLib.GetMaterial(Data.MaterialId);
+        if (!Mesh || !Material) continue;
+        Renderer.Draw(*Mesh, *Material, Data.Constants);
+    }
+
+    // Instancing 큐
+    if (!RenderQueue.IsInstancingRQEmpty())
+    {
+        for (const FRenderData& Data : RenderQueue.GetInstancingRenderQ())
+        {
+            Renderer.AddTextInstanceArray(Data.Instances, Data.MeshId, Data.MaterialId);
+        }
+        Renderer.DrawInstances(Camera);
+        Renderer.ClearTextInstances();
+    }
+
+    // Texture 큐: Primitive와 동일하지만 TextureId로 머티리얼 텍스처 교체 후 드로우
+    for (const FRenderData& Data : RenderQueue.GetTextureRenderQ())
+    {
+        auto Mesh     = ResLib.GetMesh(Data.MeshId);
+        auto Material = ResLib.GetMaterial(Data.MaterialId);
+        if (!Mesh || !Material) continue;
+
+        if (!Data.TextureId.empty())
+        {
+            auto Tex = ResLib.GetTexture(Data.TextureId);
+            if (Tex)
+            {
+                // 원본 머티리얼을 건드리지 않도록 인스턴스 복사
+                auto MatInst = TSharedPtr<FMaterial>(new FMaterial(*Material));
+                MatInst->SetTexture(Tex);
+                Renderer.Draw(*Mesh, *MatInst, Data.Constants);
+                continue;
+            }
+        }
+        Renderer.Draw(*Mesh, *Material, Data.Constants);
+    }
+
+    // Text 큐: BuildRenderData()에서 이미 계산된 Instances 배열 사용
+    if (!RenderQueue.IsTextRQEmpty())
+    {
+        const FRenderData& First = RenderQueue.GetTextRenderQ()[0];
+        EMeshID     TextMeshId     = First.MeshId;
+        EMaterialID TextMaterialId = First.MaterialId;
+
+        for (const FRenderData& Data : RenderQueue.GetTextRenderQ())
+        {
+            // Font에서 미리 계산된 글자별 쿼드 데이터를 그대로 넘김
+            Renderer.AddTextInstanceArray(Data.Instances, Data.MeshId, Data.MaterialId);
+        }
+        Renderer.DrawTextInstances(Camera, TextMeshId, TextMaterialId);
+        Renderer.ClearTextInstances();
+    }
+
+    RenderQueue.Clear();
 }
 

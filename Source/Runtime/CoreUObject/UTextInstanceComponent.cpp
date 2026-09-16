@@ -1,6 +1,6 @@
 #include "UTextInstanceComponent.h"
-#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Rendering/FRenderer.h"
+#include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Engine/UScene.h"
 #include "Runtime/Rendering/ShaderConstants.h"
 #include "UClass.h"
@@ -36,19 +36,10 @@ namespace
 
 void UTextInstanceComponent::Register(UScene& InScene)
 {
-	FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
-
     SetFont();
-
-	if (!GetMesh()) {
-		SetMesh(Resources ? Resources->GetMesh(EMeshID::Rect) : nullptr);
-	}
-	if (!GetMaterial()) {
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Text) : nullptr);
-	}
-
+    SetMeshID(EMeshID::Rect);
+    SetMaterialID(EMaterialID::Instance_Text);
     RebuildTextMesh();
-
     Super::Register(InScene);
 }
 
@@ -200,27 +191,28 @@ FMatrix UTextInstanceComponent::GetRenderMatrix(const FCamera& Camera) const
     return ScaleTransform * ModelMatrix;
 }
 
-void UTextInstanceComponent::Render(FRenderer& renderer, const FCamera& Camera, const bool& bHighlighted, const FSceneView& SceneView)
+FRenderData UTextInstanceComponent::BuildRenderData(const FCamera& Camera) const
 {
-	if (!GetMesh() || !GetMaterial() || Instances.empty()) {
-		return;
-	}
+    FRenderData Data;
+    Data.type       = ERenderType::Text;
+    Data.MeshId     = RenderData.MeshId;
+    Data.MaterialId = RenderData.MaterialId;
+    Data.flag       = EEngineShowFlags::SF_BillboardText;
 
-    FTransform Transform = GetGlobalTransform();
-    FMatrix ModelMatrix = ::GetRenderMatrix(Transform, Camera);
+    if (Instances.empty()) return Data;
 
-    TArray<FInstanceData> RenderInstances;
-    for (auto& Instance : Instances)
+    FTransform Transform    = GetGlobalTransform();
+    FMatrix    ModelMatrix  = GetRenderMatrix(Camera);
+
+    // 글자별 FInstanceData에 빌보드 월드 행렬 적용
+    for (const FInstanceData& Inst : Instances)
     {
-        FInstanceData Data = Instance;
-        Data.World *= ModelMatrix;
-        RenderInstances.push_back(Data);
+        FInstanceData WorldInst = Inst;
+        WorldInst.World *= ModelMatrix;
+        Data.Instances.push_back(WorldInst);
     }
 
-    renderer.AddTextInstanceArray(RenderInstances, GetMesh()->MeshId, GetMaterial()->MaterialId);
-    
-    // 현재 빌보드는 특수한 ModelMatrix가 필요한 관계로 InstancePrimitiveComponent::Render() 사용 불가..
-    //Super::Render(renderer, Camera, bHighlighted);
+    return Data;
 }
 
 void UTextInstanceComponent::Serialize(FArchive& Archive) const

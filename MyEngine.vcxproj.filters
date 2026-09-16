@@ -603,9 +603,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Runtime\CoreUObject\UTextComponent.h">
-      <Filter>Source\Runtime\CoreUObject</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Editor\UI\Imgui\FImguiWorldOutliner.h">
       <Filter>Source\Editor\UI\Imgui</Filter>
     </ClInclude>
@@ -631,9 +628,6 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Rendering\FLineBatcher.cpp">
       <Filter>Source\Runtime\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\CoreUObject\UTextComponent.cpp">
-      <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

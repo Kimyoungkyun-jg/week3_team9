@@ -1,63 +1,53 @@
-#pragma once
+﻿#pragma once
 
-#include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Engine/FCamera.h"
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
-#include "Runtime/Rendering/FMaterial.h"
-#include "Runtime/Rendering/FMesh.h"
+#include "Runtime/Rendering/FRenderQueue.h"
 #include "Runtime/Engine/ShowFlags.h"
-#include "Runtime/Engine/FSceneView.h"
 #include "USceneComponent.h"
-
-
-class FRenderer;
 
 class UPrimitiveComponent : public USceneComponent {
   GENERATED_BODY()
   DECLARE_UCLASS(UPrimitiveComponent, USceneComponent)
 
 public:
-	void Register(UScene& InScene) override;
-	void Unregister() override;
+    void Register(UScene& InScene) override;
+    void Unregister() override;
 
-	[[nodiscard]] TSharedPtr<FMesh> GetMesh() const { return PrimitiveMesh; }
-	[[nodiscard]] TSharedPtr<FMaterial> GetMaterial() const { return PrimitiveMaterial; }
-	virtual FMatrix GetRenderMatrix(const FCamera& Camera) const { return GetGlobalTransform().ToMatrix(); }
-	virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
+    virtual FMatrix GetRenderMatrix(const FCamera& Camera) const { return GetGlobalTransform().ToMatrix(); }
+    virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
 
-  // 컴포넌트 렌더링
-  virtual void Render(FRenderer &renderer, const FCamera &Camera,const bool &bHighlighted,const FSceneView& SceneView);
+    // FRenderData 조회 및 설정
+    const FRenderData& GetRenderData() const { return RenderData; }
+    void SetMeshID(EMeshID InMeshId)         { RenderData.MeshId = InMeshId; }
+    void SetMaterialID(EMaterialID InMaterialId) { RenderData.MaterialId = InMaterialId; }
 
-  // 메쉬 및 재질 설정
-  void SetMesh(TSharedPtr<FMesh> Mesh) { PrimitiveMesh = std::move(Mesh); }
-  void SetMaterial(TSharedPtr<FMaterial> Material) {
-    PrimitiveMaterial = std::move(Material);
-  }
+    // Visualizer 및 충돌 판정용 LocalBounds
+    virtual FAxisAlignedBoundingBox CalcLocalBounds();
 
-  // Visualizer 및 충돌 판정용 LocalBounds
-  virtual FAxisAlignedBoundingBox CalcLocalBounds();
+    // 텍스처 이름으로 머티리얼 텍스처 교체
+    bool SetTextureByName(const FString& InTextureName);
 
-  // 텍스처 이름으로 머티리얼 텍스처 교체
-  bool SetTextureByName(const FString &InTextureName);
+    // 색상 설정 및 조회
+    const FVector& GetColor() const { return Color; }
+    void SetColor(const FVector& InColor) {
+        Color = InColor;
+        ColorAmount = 1.0f;
+    }
+    float GetColorAmount() const { return ColorAmount; }
+    void SetColorAmount(float InAmount) { ColorAmount = InAmount; }
 
-  // 색상 설정 및 조회
-  const FVector &GetColor() const { return Color; }
-  void SetColor(const FVector &InColor) {
-    Color = InColor;
-    ColorAmount = 1.0f;
-  }
-  float GetColorAmount() const { return ColorAmount; }
-  void SetColorAmount(float InAmount) { ColorAmount = InAmount; }
+    virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
 
-  virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_Primitives; }
+    FMatrix GetModelMatrix();
 
-  FMatrix GetModelMatrix();
+
+
 protected:
-  UPrimitiveComponent() = default;
+    UPrimitiveComponent() = default;
 
-  TSharedPtr<FMesh> PrimitiveMesh;
-  TSharedPtr<FMaterial> PrimitiveMaterial;
+    FRenderData RenderData;
 
-  FVector Color{1.0f, 1.0f, 1.0f};
-  float ColorAmount = 0.0f;
+    FVector Color{1.0f, 1.0f, 1.0f};
+    float ColorAmount = 0.0f;
 };
