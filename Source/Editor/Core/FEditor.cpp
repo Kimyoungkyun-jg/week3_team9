@@ -30,7 +30,7 @@ void FEditor::Initialize(USceneManager *SceneManager) {
     SelectedActorTextComp->SetInheritRotation(false);
     SelectedActorTextComp->SetMeshID(FName("Rect"));
     SelectedActorTextComp->SetMaterialID(FName("SelectedActor_Text"));
-    SelectedActorTextComp->SetFont();
+    SelectedActorTextComp->SetFont(FName("bazziotf"));
   }
 
   this->SceneManager = SceneManager;

@@ -36,9 +36,10 @@ FMatrix GetRenderMatrix(const FTransform &Transform, const FCamera &Camera) {
 
 void UTextInstanceComponent::Initialize() {
   Super::Initialize();
+  SetFont("bazziotf");
 
   RenderData.MeshId = FName("Rect");
-  RenderData.MaterialId = FName("Instance_Text");
+  RenderData.MaterialId = FName("Instance_Text_Bazzi");
   RenderData.TextureId = FName("bazziotf");
   RenderData.type = ERenderType::Text;
 
@@ -55,13 +56,14 @@ void UTextInstanceComponent::SetText(const FWString &InText) {
 
 void UTextInstanceComponent::SetFont(TSharedPtr<FFont> InFont) {
   Font = InFont;
+  RenderData.TextureId = FName("bazziotf");
   RebuildTextMesh();
 }
 
-void UTextInstanceComponent::SetFont() {
-  if (!Font) {
-    Font = FRenderResourceLibrary::Get().GetFont("bazziotf");
-  }
+void UTextInstanceComponent::SetFont(const FName& InName) {
+  Font = FRenderResourceLibrary::Get().GetFont(InName);
+  //RenderData.TextureId(InName);
+  RebuildTextMesh();
 }
 
 void UTextInstanceComponent::RebuildTextMesh() {

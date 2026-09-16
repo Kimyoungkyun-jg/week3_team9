@@ -20,7 +20,7 @@ public:
   [[nodiscard]] const FWString &GetText() const { return Text; }
   void SetFont(TSharedPtr<FFont> InFont);
 
-  void SetFont();
+  void SetFont(const FName& InName);
 
   void RebuildTextMesh();
 
