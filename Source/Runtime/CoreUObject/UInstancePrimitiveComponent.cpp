@@ -12,12 +12,12 @@ void UInstancePrimitiveComponent::Register(UScene& Scene)
 	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
 	if (!PrimitiveMesh)
 	{
-		SetMesh(Resources ? Resources->GetMesh(EMeshID::Cube) : nullptr);
+		SetMesh(Resources ? Resources->GetMesh(FName("Cube")) : nullptr);
 	}
 	
 	if (!PrimitiveMaterial)
 	{
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Instance_Simple) : nullptr);
+		SetMaterial(Resources ? Resources->GetMaterial(FName("Instance_Simple")) : nullptr);
 	}
 
 	Super::Register(Scene);

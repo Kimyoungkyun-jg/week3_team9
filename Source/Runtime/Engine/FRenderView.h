@@ -35,5 +35,5 @@ public:
 	void DrawInstances(const FCamera& Camera);
 	void ClearTextInstances();
 	void FlushLineBatch(const FMatrix& ViewProjection,
-		EPipelineID PipelineId = EPipelineID::Simple_Line);
+		const FName& PipelineId = FName("Simple_Line"));
 };

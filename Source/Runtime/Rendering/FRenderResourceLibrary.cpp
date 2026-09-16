@@ -22,7 +22,7 @@ FRenderResourceLibrary &FRenderResourceLibrary::Get() {
 
 // 파이프라인 정보 엔트리
 struct FPipelineEntry {
-  EPipelineID Id;
+  FName Id;
   const wchar_t *VertexShader;
   const wchar_t *PixelShader;
   bool bDepthWrite = true;
@@ -32,21 +32,21 @@ struct FPipelineEntry {
 };
 
 // 기본 파이프라인 테이블
-constexpr FPipelineEntry pipelineTable[] = {
+const FPipelineEntry pipelineTable[] = {
     {
-        .Id = EPipelineID::Simple_Solid,
+        .Id = FName("Simple_Solid"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
     {
-        .Id = EPipelineID::Simple_Line,
+        .Id = FName("Simple_Line"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"UnlightPS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
     {
-        .Id = EPipelineID::Grid,
+        .Id = FName("Grid"),
         .VertexShader = L"GridVS.cso",
         .PixelShader = L"GridPS.cso",
         .bDepthWrite = false,
@@ -54,46 +54,46 @@ constexpr FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Translucent,
     },
     {
-        .Id = EPipelineID::Textured,
+        .Id = FName("Textured"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"TexturedPS.cso",
         .BlendMode = EBlendMode::Translucent,
     },
     {
-        .Id = EPipelineID::RotationGizmo,
+        .Id = FName("RotationGizmo"),
         .VertexShader = L"RotationGizmoVS.cso",
         .PixelShader = L"RotationGizmoPS.cso",
         .BlendMode = EBlendMode::Opaque,
     },
     {
-        .Id = EPipelineID::Spotlight,
+        .Id = FName("Spotlight"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"SpotlightPS.cso",
         .CullMode = D3D11_CULL_NONE,
         .BlendMode = EBlendMode::Additive,
     },
     {
-        .Id = EPipelineID::Text,
+        .Id = FName("Text"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"MsdfTextPS.cso",
         .BlendMode = EBlendMode::Translucent,
     },
     {
-        .Id = EPipelineID::Instance_Text,
+        .Id = FName("Instance_Text"),
         .VertexShader = L"InstanceVS.cso",
         .PixelShader = L"MsdfTextPS.cso",
         .BlendMode = EBlendMode::Translucent,
         .bIsInstancing = true,
     },
     {
-        .Id = EPipelineID::Instance_Simple,
+        .Id = FName("Instance_Simple"),
         .VertexShader = L"InstanceVS.cso",
         .PixelShader = L"ExamplePS.cso",
         .BlendMode = EBlendMode::Opaque,
         .bIsInstancing = true,
     },
     {
-        .Id = EPipelineID::Gizmo,
+        .Id = FName("Gizmo"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"UnlightPS.cso",
         .BlendMode = EBlendMode::Opaque,
@@ -102,52 +102,52 @@ constexpr FPipelineEntry pipelineTable[] = {
 
 // 머티리얼 정보 엔트리
 struct FMaterialEntry {
-  EMaterialID Id;
-  EPipelineID PipelineID;
+  FName Id;
+  FName PipelineID;
   const char *TextureName = nullptr;
 };
 
 // 기본 머티리얼 테이블
-constexpr FMaterialEntry materialTable[] = {
+const FMaterialEntry materialTable[] = {
     {
-        .Id = EMaterialID::Simple,
-        .PipelineID = EPipelineID::Simple_Solid,
+        .Id = FName("Simple"),
+        .PipelineID = FName("Simple_Solid"),
     },
     {
-        .Id = EMaterialID::RotGizmo,
-        .PipelineID = EPipelineID::RotationGizmo,
+        .Id = FName("RotGizmo"),
+        .PipelineID = FName("RotationGizmo"),
     },
     {
-        .Id = EMaterialID::Spotlight,
-        .PipelineID = EPipelineID::Spotlight,
+        .Id = FName("Spotlight"),
+        .PipelineID = FName("Spotlight"),
     },
     {
-        .Id = EMaterialID::Text,
-        .PipelineID = EPipelineID::Text,
+        .Id = FName("Text"),
+        .PipelineID = FName("Text"),
         .TextureName = "maplestorybold",
     },
     {
-        .Id = EMaterialID::Textured,
-        .PipelineID = EPipelineID::Textured,
+        .Id = FName("Textured"),
+        .PipelineID = FName("Textured"),
         .TextureName = "uv-test",
     },
     {
-        .Id = EMaterialID::Billboard,
-        .PipelineID = EPipelineID::Textured,
+        .Id = FName("Billboard"),
+        .PipelineID = FName("Textured"),
         .TextureName = "uv-test",
     },
     {
-        .Id = EMaterialID::Instance_Text,
-        .PipelineID = EPipelineID::Instance_Text,
+        .Id = FName("Instance_Text"),
+        .PipelineID = FName("Instance_Text"),
         .TextureName = "maplestorybold",
     },
     {
-        .Id = EMaterialID::Instance_Simple,
-        .PipelineID = EPipelineID::Instance_Simple,
+        .Id = FName("Instance_Simple"),
+        .PipelineID = FName("Instance_Simple"),
     },
     {
-        .Id = EMaterialID::Gizmo,
-        .PipelineID = EPipelineID::Gizmo,
+        .Id = FName("Gizmo"),
+        .PipelineID = FName("Gizmo"),
     },
 };
 
@@ -170,14 +170,14 @@ bool FRenderResourceLibrary::CreateSolidWireframePipeline(FRenderer &Renderer) {
   TSharedPtr<FRenderPipeline> SolidPipeline =
       Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Lit);
   if (SolidPipeline) {
-    AllPipelineMap[EPipelineID::Simple_Solid] = SolidPipeline;
+    AllPipelineMap[FName("Simple_Solid")] = SolidPipeline;
   }
 
   // 와이어프레임 파이프라인 생성 및 등록
   TSharedPtr<FRenderPipeline> WireframePipeline =
       Renderer.CreateRenderPipeline(Desc, EViewModeIndex::VMI_Wireframe);
   if (WireframePipeline) {
-    AllPipelineMap[EPipelineID::Simple_Wireframe] = WireframePipeline;
+    AllPipelineMap[FName("Simple_Wireframe")] = WireframePipeline;
   }
 
   return SolidPipeline != nullptr && WireframePipeline != nullptr;
@@ -253,8 +253,8 @@ bool FRenderResourceLibrary::CreateCubeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(std::size(CubeIndices)),
   };
 
-  RegisterMesh(EMeshID::Cube, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::Cube] != nullptr;
+  RegisterMesh(FName("Cube"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("Cube")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
@@ -360,8 +360,8 @@ bool FRenderResourceLibrary::CreateCylinderMesh(FRenderer &Renderer,
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::Cylinder, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::Cylinder] != nullptr;
+  RegisterMesh(FName("Cylinder"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("Cylinder")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
@@ -448,8 +448,8 @@ bool FRenderResourceLibrary::CreateConeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::Cone, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::Cone] != nullptr;
+  RegisterMesh(FName("Cone"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("Cone")] != nullptr;
 }
 
 // 스포트라이트 전용 열린 원뿔 메쉬 생성
@@ -516,8 +516,8 @@ bool FRenderResourceLibrary::CreateSpotlightConeMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::SpotlightCone, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::SpotlightCone] != nullptr;
+  RegisterMesh(FName("SpotlightCone"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("SpotlightCone")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
@@ -635,8 +635,8 @@ bool FRenderResourceLibrary::CreateArrowMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::Arrow, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::Arrow] != nullptr;
+  RegisterMesh(FName("Arrow"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("Arrow")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateCircleMesh(FRenderer &Renderer) {
@@ -696,8 +696,8 @@ bool FRenderResourceLibrary::CreateCircleMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::Circle, Renderer.CreateMesh(Desc));
-  return AllMeshMap[EMeshID::Circle] != nullptr;
+  RegisterMesh(FName("Circle"), Renderer.CreateMesh(Desc));
+  return AllMeshMap[FName("Circle")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer &Renderer) {
@@ -766,8 +766,8 @@ bool FRenderResourceLibrary::CreateRotationGizmoMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::RotGizmo, Renderer.CreateMesh(Desc));
-  return AllMeshMap[EMeshID::RotGizmo] != nullptr;
+  RegisterMesh(FName("RotGizmo"), Renderer.CreateMesh(Desc));
+  return AllMeshMap[FName("RotGizmo")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
@@ -818,8 +818,8 @@ bool FRenderResourceLibrary::CreateSquareArrowMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::SquareArrow, Renderer.CreateMesh(Desc));
-  return AllMeshMap[EMeshID::SquareArrow] != nullptr;
+  RegisterMesh(FName("SquareArrow"), Renderer.CreateMesh(Desc));
+  return AllMeshMap[FName("SquareArrow")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
@@ -849,8 +849,8 @@ bool FRenderResourceLibrary::CreateGridMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::Grid, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::Grid] != nullptr;
+  RegisterMesh(FName("Grid"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("Grid")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateSphereMesh(FRenderer &Renderer) {
@@ -864,8 +864,8 @@ bool FRenderResourceLibrary::CreateSphereMesh(FRenderer &Renderer) {
       .VertexCount = static_cast<uint32>(Vertices.size()),
   };
 
-  RegisterMesh(EMeshID::Sphere, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::Sphere] != nullptr;
+  RegisterMesh(FName("Sphere"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("Sphere")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
@@ -875,8 +875,8 @@ bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
                  .VertexCount = static_cast<uint32>(std::size(LineVertices)),
                  .bIsLine = true};
 
-  RegisterMesh(EMeshID::Line, Renderer.CreateMesh(Desc));
-  return AllMeshMap[EMeshID::Line] != nullptr;
+  RegisterMesh(FName("Line"), Renderer.CreateMesh(Desc));
+  return AllMeshMap[FName("Line")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
@@ -887,8 +887,8 @@ bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
       .VertexCount = static_cast<uint32>(std::size(PlaneVertices)),
   };
 
-  RegisterMesh(EMeshID::Plane, Renderer.CreateMesh(Desc));
-  return AllMeshMap[EMeshID::Plane] != nullptr;
+  RegisterMesh(FName("Plane"), Renderer.CreateMesh(Desc));
+  return AllMeshMap[FName("Plane")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
@@ -915,15 +915,15 @@ bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
       .IndexCount = static_cast<uint32>(Indices.size()),
   };
 
-  RegisterMesh(EMeshID::Rect, Renderer.CreateMesh(MeshDesc));
-  return AllMeshMap[EMeshID::Rect] != nullptr;
+  RegisterMesh(FName("Rect"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("Rect")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateInstancingArrayMap() {
   AllInstancingArrayMap.clear();
   // 기본 배치 키 등록
-  AllInstancingArrayMap[{EMaterialID::Instance_Text, EMeshID::Rect}] = {};
-  AllInstancingArrayMap[{EMaterialID::Instance_Simple, EMeshID::Cube}] = {};
+  AllInstancingArrayMap[{FName("Instance_Text"), FName("Rect")}] = {};
+  AllInstancingArrayMap[{FName("Instance_Simple"), FName("Cube")}] = {};
   return true;
 }
 
@@ -995,7 +995,7 @@ bool FRenderResourceLibrary::CreateEditTextures(FRenderer& Renderer)
     return true;
 }
 
-TSharedPtr<FMaterial> FRenderResourceLibrary::RegisterMaterial(EMaterialID Id, TSharedPtr<FMaterial> inMaterial) {
+TSharedPtr<FMaterial> FRenderResourceLibrary::RegisterMaterial(const FName& Id, TSharedPtr<FMaterial> inMaterial) {
   if (inMaterial) {
     inMaterial->MaterialId = Id;
   }
@@ -1054,7 +1054,7 @@ bool FRenderResourceLibrary::CreateTextures(FRenderer &Renderer)
 }
 
 TSharedPtr<FMesh>
-FRenderResourceLibrary::GetOrCreateMesh(const EMeshID &ID,
+FRenderResourceLibrary::GetOrCreateMesh(const FName &ID,
                                         const TArray<FVertexData> &vertices) {
   auto it = AllMeshMap.find(ID);
   if (it != AllMeshMap.end())

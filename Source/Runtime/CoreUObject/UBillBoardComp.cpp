@@ -17,10 +17,10 @@ UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 void UBillBoardComp::Register(UScene& InScene) {
   FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
   if (!GetMesh()) {
-    SetMesh(Resources ? Resources->GetMesh(EMeshID::Rect) : nullptr);
+    SetMesh(Resources ? Resources->GetMesh(FName("Rect")) : nullptr);
   }
   if (!GetMaterial()) {
-    SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Billboard) : nullptr);
+    SetMaterial(Resources ? Resources->GetMaterial(FName("Billboard")) : nullptr);
   }
   Super::Register(InScene);
 }
@@ -98,7 +98,7 @@ void UBillBoardComp::SetTexture(
   if (GetMaterial()) {
     materialinstance->SetPipeLine(GetMaterial()->GetPipeline());
   } else {
-    materialinstance->SetPipeLine(lib.GetPipeline(EPipelineID::Textured));
+    materialinstance->SetPipeLine(lib.GetPipeline(FName("Textured")));
   }
 
   materialinstance->SetTexture(NewTex);

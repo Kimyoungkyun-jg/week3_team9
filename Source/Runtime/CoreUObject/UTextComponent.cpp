@@ -24,7 +24,7 @@ void UTextComponent::Register(UScene& Scene)
 
 	if (!GetMaterial())
 	{
-		SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Text) : nullptr);
+		SetMaterial(Resources ? Resources->GetMaterial(FName("Text")) : nullptr);
 	}
 	RebuildTextMesh();
 }

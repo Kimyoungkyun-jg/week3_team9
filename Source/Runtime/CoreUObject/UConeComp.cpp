@@ -8,7 +8,7 @@ UCLASS_META(UConeComp, MeshName, "Cone")
 
 void UConeComp::Register(UScene &InScene) {
   FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMesh(Resources ? Resources->GetMesh(EMeshID::Cone) : nullptr);
-  SetMaterial(Resources ? Resources->GetMaterial(EMaterialID::Simple) : nullptr);
+  SetMesh(Resources ? Resources->GetMesh(FName("Cone")) : nullptr);
+  SetMaterial(Resources ? Resources->GetMaterial(FName("Simple")) : nullptr);
   Super::Register(InScene);
 }

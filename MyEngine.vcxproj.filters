@@ -35,6 +35,9 @@
     <Filter Include="Source\Runtime\Input">
       <UniqueIdentifier>{3ab891cc-31a1-4e46-850b-cd4dd3a5dcef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Utility">
+      <UniqueIdentifier>{d72794b8-9adb-41a8-b930-c62264131f55}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Editor">
       <UniqueIdentifier>{5ab85c01-52da-412e-953a-a9b74a09ed8a}</UniqueIdentifier>
     </Filter>
@@ -278,7 +281,10 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Utility\WindowsUtil.cpp">
-      <Filter>Source</Filter>
+      <Filter>Source\Runtime\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Utility\EngineUtil.cpp">
+      <Filter>Source\Runtime\Utility</Filter>
     </ClCompile>
     <ClCompile Include="Source\Editor\Visualizer\FBillboardVisualizer.cpp">
       <Filter>Source\Editor\Visualizer</Filter>
@@ -388,6 +394,9 @@
       <Filter>Source\Runtime\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Rendering\FRenderResourceLibrary.h">
+      <Filter>Source\Runtime\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Rendering\FInstanceBatchKey.h">
       <Filter>Source\Runtime\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UObjectGlobals.h">
@@ -544,6 +553,9 @@
     <ClInclude Include="Source\Runtime\Actors\AInstancingActor.h" />
     <ClInclude Include="Source\Runtime\Actors\ATextRenderActor.h" />
     <ClInclude Include="Source\Runtime\Utility\WindowsUtil.h" />
+    <ClInclude Include="Source\Runtime\Utility\EngineUtil.h">
+      <Filter>Source\Runtime\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="Source\ThirdParty\mINI\ini.h" />
     <ClInclude Include="Source\Editor\Visualizer\FBillboardVisualizer.h">
       <Filter>Source\Editor\Visualizer</Filter>

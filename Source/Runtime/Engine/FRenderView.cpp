@@ -41,7 +41,7 @@ void FRenderView::RenderGridAndFlush(const FCamera &Camera, FVector2 TopLeftUV,
   FGridLineConstants Constants{};
   Constants.MVP = Camera.CreateViewProjectionMatrix();
   Constants.CameraPosition = Camera.Position;
-  Renderer.FlushLineBatch(Constants, EPipelineID::Grid);
+  Renderer.FlushLineBatch(Constants, FName("Grid"));
 }
 
 void FRenderView::RenderLine(const FVector &Start, const FVector &End,
@@ -106,7 +106,7 @@ void FRenderView::ClearTextInstances()
     Renderer.ClearTextInstances();
 }
 
-void FRenderView::FlushLineBatch(const FMatrix& ViewProjection, EPipelineID PipelineId)
+void FRenderView::FlushLineBatch(const FMatrix& ViewProjection, const FName& PipelineId)
 {
     FObjectConstants Constants{};
     Constants.MVP = ViewProjection;

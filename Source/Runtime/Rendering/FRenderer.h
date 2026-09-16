@@ -66,14 +66,14 @@ public:
   TSharedPtr<FTexture> CreateTexture(const wchar_t* path);
   // 파이프라인 조회
   [[nodiscard]]
-  TSharedPtr<FRenderPipeline> GetPipeline(EPipelineID Id) const;
+  TSharedPtr<FRenderPipeline> GetPipeline(const FName& Id) const;
 
   FLineBatcher &GetLineBatcher() { return LineBatcher; }
 
   void UpdateLightConstants(FLightConstants &Constants, const EViewModeIndex InMode);
 
   // 텍스트 인스턴싱
-  void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const EMeshID& MeshId, const EMaterialID& MaterialId);
+  void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const FName& MeshId, const FName& MaterialId);
   void DrawInstances(const FCamera& Camera);
   void ClearTextInstances();
 
@@ -120,7 +120,7 @@ private:
 public:
   template <typename TConstants>
   void FlushLineBatch(const TConstants &Constants,
-                      EPipelineID PipelineId = EPipelineID::Simple_Line) {
+                      const FName& PipelineId = FName("Simple_Line")) {
     UpdateBuffer(Constants);
     LineBatcher.Flush(*Context.Get(), GetPipeline(PipelineId));
   }
@@ -133,7 +133,7 @@ public:
 
     TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
     if (bApplyViewMode && CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
-      Pipeline = GetPipeline(EPipelineID::Simple_Wireframe);
+      Pipeline = GetPipeline(FName("Simple_Wireframe"));
     }
     if (Pipeline) {
       Pipeline->Bind(*Context.Get());
