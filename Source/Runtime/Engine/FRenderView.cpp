@@ -101,8 +101,8 @@ void FRenderView::ClearTextInstances()
     Renderer.ClearTextInstances();
 }
 
-void FRenderView::FlushLineBatch(const FMatrix& ViewProjection)
+void FRenderView::FlushLineBatch(const FMatrix& ViewProjection, const FVector& CameraPosition)
 {
-    Renderer.FlushLineBatch(ViewProjection);
+    Renderer.FlushLineBatch(ViewProjection, CameraPosition);
 }
 

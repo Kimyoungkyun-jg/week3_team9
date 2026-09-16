@@ -164,7 +164,7 @@ void FEditorApplication::Render() {
     }
 
 
-    RenderView->FlushLineBatch(sceneview.ViewProj); // line batch 일괄 flush
+    RenderView->FlushLineBatch(sceneview.ViewProj, sceneview.Camera.Position); // line batch 일괄 flush
 
 
     if (Editor.ObjectSelected())

@@ -25,9 +25,9 @@ void FGrid::DrawLine(FRenderer &Renderer, const FCamera &Camera) {
   const float SnapY = std::floor(Camera.Position.Y / CellSize) * CellSize;
 
   const FVector4 MinorGridColor{0.1f, 0.1f, 0.1f, 1.0f};
-  const FVector4 MajorGridColor{0.4f, 0.4f, 0.4f, 1.0f};
-  const FVector4 AxisColorX{0.8f, 0.2f, 0.2f, 1.0f};
-  const FVector4 AxisColorY{0.2f, 0.8f, 0.2f, 1.0f};
+  const FVector4 MajorGridColor{0.3f, 0.3f, 0.3f, 1.0f};
+  const FVector4 AxisColorX{1.0f, 0.0f, 0.0f, 1.0f};
+  const FVector4 AxisColorY{0.0f, 1.0f, 0.0f, 1.0f};
   const FVector4 BackgroundColor{0.05f, 0.05f, 0.08f, 1.0f};
 
   const bool bEnableMajorGrid = (CellSize <= 0.2f);
@@ -69,5 +69,5 @@ void FGrid::DrawLine(FRenderer &Renderer, const FCamera &Camera) {
   // 수직 축선 렌더링
   LineBatcher.DrawLine(FVector{0.0f, 0.0f, -Extent},
                        FVector{0.0f, 0.0f, Extent},
-                       FVector4{0.2f, 0.4f, 0.9f, 1.0f});
+                       FVector4{0.0f, 0.0f, 1.0f, 1.0f});
 }

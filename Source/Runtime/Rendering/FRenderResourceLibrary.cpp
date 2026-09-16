@@ -46,6 +46,14 @@ constexpr FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Opaque,
     },
     {
+        .Id = EPipelineID::Grid,
+        .VertexShader = L"GridVS.cso",
+        .PixelShader = L"GridPS.cso",
+        .bDepthWrite = false,
+        .CullMode = D3D11_CULL_NONE,
+        .BlendMode = EBlendMode::Translucent,
+    },
+    {
         .Id = EPipelineID::Textured,
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"TexturedPS.cso",

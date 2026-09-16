@@ -41,7 +41,7 @@ public:
   void SwapBuffer();
   void OnWindowSize(UINT Width, UINT Height);
 
-  void FlushLineBatch(const FMatrix &ViewProjection);
+  void FlushLineBatch(const FMatrix &ViewProjection, const FVector &CameraPosition);
 
   EViewModeIndex GetRenderMode() const { return CurrentRenderMode; }
   void SetRenderMode(EViewModeIndex InMode) { CurrentRenderMode = InMode; }

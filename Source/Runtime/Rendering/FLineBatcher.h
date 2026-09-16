@@ -48,7 +48,8 @@ public:
 	void DrawSphere(const FVector& Center, float Radius, const FVector4& Color, uint32 Segments = 16);
 
 	// 수집된 선들을 일괄 렌더링하고 비움
-	void Flush(ID3D11DeviceContext& Context, FRenderer& Renderer, const FMatrix& ViewProjection);
+	void Flush(ID3D11DeviceContext& Context, FRenderer& Renderer,
+		const FMatrix& ViewProjection, const FVector& CameraPosition);
 
 	// 대기 중인 정점 수
 	[[nodiscard]] uint32 GetVertexCount() const { return static_cast<uint32>(LineVertices.size()); }

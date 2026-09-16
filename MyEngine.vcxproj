@@ -497,6 +497,14 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Shader\GridPS.hlsl">
+      <EntryPointName>MainPS</EntryPointName>
+      <ShaderType>Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\GridVS.hlsl">
+      <EntryPointName>MainVS</EntryPointName>
+      <ShaderType>Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="Shader\ExamplePS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>

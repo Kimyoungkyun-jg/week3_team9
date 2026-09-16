@@ -25,7 +25,7 @@ bool FLineBatcher::Initialize(ID3D11Device* Device) {
 
 	// 상수 버퍼 생성
 	D3D11_BUFFER_DESC CbDesc{
-		.ByteWidth = sizeof(FObjectConstants),
+		.ByteWidth = sizeof(FGridLineConstants),
 		.Usage = D3D11_USAGE_DYNAMIC,
 		.BindFlags = D3D11_BIND_CONSTANT_BUFFER,
 		.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
@@ -124,7 +124,8 @@ void FLineBatcher::DrawSphere(const FVector& Center, float Radius, const FVector
 	}
 }
 
-void FLineBatcher::Flush(ID3D11DeviceContext& Context, FRenderer& Renderer, const FMatrix& ViewProjection) {
+void FLineBatcher::Flush(ID3D11DeviceContext& Context, FRenderer& Renderer,
+	const FMatrix& ViewProjection, const FVector& CameraPosition) {
 	if (LineVertices.empty() || !DynamicLineVertexBuffer || !ConstantBuffer) {
 		return;
 	}
@@ -147,9 +148,9 @@ void FLineBatcher::Flush(ID3D11DeviceContext& Context, FRenderer& Renderer, cons
 		FVector{ 0.0f, 1.0f, 0.0f }, FVector{ 0.0f, 0.0f, 0.0f }
 	};
 
-	FObjectConstants Constants{};
+	FGridLineConstants Constants{};
 	Constants.MVP = ViewProjection * UnrealClipToD3DClip;
-	Constants.ColorOverrideAmount = 0.0f;
+	Constants.CameraPosition = CameraPosition;
 
 	D3D11_MAPPED_SUBRESOURCE MappedCb{};
 	Result = Context.Map(ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedCb);
@@ -159,7 +160,7 @@ void FLineBatcher::Flush(ID3D11DeviceContext& Context, FRenderer& Renderer, cons
 	}
 
 	// 파이프라인 바인딩
-	auto Pipeline = Renderer.GetPipeline(EPipelineID::Simple_Line);
+	auto Pipeline = Renderer.GetPipeline(EPipelineID::Grid);
 	if (Pipeline) {
 		Pipeline->Bind(Context);
 	}

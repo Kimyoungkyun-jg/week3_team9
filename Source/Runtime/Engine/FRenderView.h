@@ -34,5 +34,5 @@ public:
 	void UpdateLightConstants(FLightConstants& Constants, const EViewModeIndex InMode);
 	void DrawInstances(const FCamera& Camera);
 	void ClearTextInstances();
-	void FlushLineBatch(const FMatrix& ViewProjection);
+	void FlushLineBatch(const FMatrix& ViewProjection, const FVector& CameraPosition);
 };

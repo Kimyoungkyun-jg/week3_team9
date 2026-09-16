@@ -140,8 +140,9 @@ void FRenderer::OnWindowSize(UINT Width, UINT Height) {
   InitializeBackBufferAndDepthStencil();
 }
 
-void FRenderer::FlushLineBatch(const FMatrix &ViewProjection) {
-  LineBatcher.Flush(*Context.Get(), *this, ViewProjection);
+void FRenderer::FlushLineBatch(const FMatrix &ViewProjection,
+                               const FVector &CameraPosition) {
+  LineBatcher.Flush(*Context.Get(), *this, ViewProjection, CameraPosition);
 }
 
 TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
