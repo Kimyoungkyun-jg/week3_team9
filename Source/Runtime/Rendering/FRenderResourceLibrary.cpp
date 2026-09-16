@@ -1,5 +1,6 @@
 #include "FRenderResourceLibrary.h"
 #include "Vertices.h"
+#include "Resources/MasterYi/MasterYi_HeadData.h"
 
 #include "FRenderer.h"
 #include "FTexture.h"
@@ -103,6 +104,14 @@ const FPipelineEntry pipelineTable[] = {
         .bIsInstancing = true,
     },
     {
+        .Id = FName("Instance_Textured"),
+        .VertexShader = L"InstanceVS.cso",
+        .PixelShader = L"TexturedPS.cso",
+        .CullMode = D3D11_CULL_NONE,
+        .BlendMode = EBlendMode::Translucent,
+        .bIsInstancing = true,
+    },
+    {
         .Id = FName("Gizmo"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"UnlightPS.cso",
@@ -158,11 +167,16 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("Instance_Text"),
         .PipelineID = FName("Instance_Text"),
-        .TextureName = "bazziotf",
+        .TextureName = "maplestorybold",
     },
     {
         .Id = FName("Instance_Simple"),
         .PipelineID = FName("Instance_Simple"),
+    },
+    {
+        .Id = FName("Instance_Textured"),
+        .PipelineID = FName("Instance_Textured"),
+        .TextureName = "masteryi_head",
     },
     {
         .Id = FName("Gizmo"),
@@ -470,7 +484,8 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
-      !CreateRectMesh(Renderer) || !CreateTextures(Renderer) ||
+      !CreateRectMesh(Renderer) || !CreateMasterYiMesh(Renderer) ||
+      !CreateTextures(Renderer) ||
       !InitializeMaterials(Renderer) || !CreateInstancingArrayMap() ||
       !CreateEditTextures(Renderer) || !CreateFonts(Renderer)) {
     return false;
@@ -1156,11 +1171,27 @@ bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
   return AllMeshMap[FName("Rect")] != nullptr;
 }
 
+bool FRenderResourceLibrary::CreateMasterYiMesh(FRenderer &Renderer) {
+  FMeshDesc MeshDesc{
+      .VertexData = MasterYiHeadVertices,
+      .VertexDataSize = static_cast<uint32>(sizeof(MasterYiHeadVertices)),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = MasterYiHeadVertexCount,
+      .IndexData = MasterYiHeadIndices,
+      .IndexDataSize = static_cast<uint32>(sizeof(MasterYiHeadIndices)),
+      .IndexCount = MasterYiHeadIndexCount,
+  };
+
+  RegisterMesh(FName("MasterYi"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("MasterYi")] != nullptr;
+}
+
 bool FRenderResourceLibrary::CreateInstancingArrayMap() {
   AllInstancingArrayMap.clear();
   // 기본 배치 키 등록
   AllInstancingArrayMap[{FName("Instance_Text"), FName("Rect")}] = {};
   AllInstancingArrayMap[{FName("Instance_Simple"), FName("Cube")}] = {};
+  AllInstancingArrayMap[{FName("Instance_Textured"), FName("MasterYi")}] = {};
   AllInstancingArrayMap[{FName("SelectedActor_Text"), FName("Rect")}] = {};
   
   return true;

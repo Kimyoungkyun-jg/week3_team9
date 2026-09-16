@@ -61,7 +61,8 @@ void FEditorApplication::Tick(float DeltaTime) {
   Editor.Process();
 }
 
-void FEditorApplication::Render() {
+void FEditorApplication::Render() 
+{
   const TArray<FEditorViewport> &EditorViewports = Editor.GetViewports();
 
   for (auto &EditorViewport : EditorViewports) {
