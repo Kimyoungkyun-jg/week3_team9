@@ -8,8 +8,13 @@ IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
 void UInstancePrimitiveComponent::Register(UScene& Scene)
 {
-    SetMeshID(EMeshID::Cube);
-    SetMaterialID(EMaterialID::Instance_Simple);
+    if(RenderData.MeshId == EMeshID::None)
+        SetMeshID(EMeshID::Cube);
+    if(RenderData.MaterialId == EMaterialID::None)
+        SetMaterialID(EMaterialID::Instance_Simple);
+    
+    RenderData.type = ERenderType::Instancing;
+
     Super::Register(Scene);
 }
 
@@ -23,13 +28,8 @@ void UInstancePrimitiveComponent::ClearInstances()
     InstanceTransforms.clear();
 }
 
-FRenderData UInstancePrimitiveComponent::BuildRenderData() const
+void UInstancePrimitiveComponent::BuildRenderData()
 {
-    FRenderData Data;
-    Data.type       = ERenderType::Instancing;
-    Data.MeshId     = RenderData.MeshId;
-    Data.MaterialId = RenderData.MaterialId;
-
     TArray<FInstanceData> Built;
 
     if (InstanceTransforms.empty())
@@ -56,6 +56,11 @@ FRenderData UInstancePrimitiveComponent::BuildRenderData() const
         }
     }
 
-    Data.Instances = std::move(Built);
-    return Data;
+    RenderData.Instances = std::move(Built);
+}
+
+const FRenderData& UInstancePrimitiveComponent::GetRenderData(const FCamera& Camera)
+{
+    BuildRenderData();
+    return RenderData;
 }

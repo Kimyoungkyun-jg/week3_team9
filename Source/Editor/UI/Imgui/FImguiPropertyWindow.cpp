@@ -220,7 +220,7 @@ void FImguiPropertyWindow::ShowPrimitiveSettings(AActor& Actor, UPrimitiveCompon
 void FImguiPropertyWindow::ShowTextureSlot(UPrimitiveComponent& PrimComp) const
 {
 	constexpr float SlotSize = 64.0f;
-	TSharedPtr<FMaterial> Material = FRenderResourceLibrary::Get().GetMaterial(PrimComp.GetRenderData().MaterialId);
+	TSharedPtr<FMaterial> Material = FRenderResourceLibrary::Get().GetMaterial(PrimComp.GetPureRenderData().MaterialId);
 	TSharedPtr<FTexture> CurrentTexture = Material ? Material->GetTexture() : nullptr;
 
 	ImGui::Spacing();

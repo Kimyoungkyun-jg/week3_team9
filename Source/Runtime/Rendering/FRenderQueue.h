@@ -14,18 +14,19 @@ enum class ERenderType
     Primitive,
     Texture,
     Text,
-    Instancing
+    Instancing,
+    Spotlight
 };
 
 struct FRenderData
 {
-    EMeshID MeshId;
-    EMaterialID MaterialId;
+    EMeshID MeshId = EMeshID::None;
+    EMaterialID MaterialId = EMaterialID::None;
     FString TextureId;
     FObjectConstants Constants;
     ERenderType type = ERenderType::Primitive;
     bool bSelected = false;
-    TArray<FInstanceData> Instances; // 인스턴스 데이터 목록
+    TArray<FInstanceData> Instances;
 };
 
 // 한 프레임의 드로우 요청을 수집하는 큐
@@ -49,6 +50,9 @@ public:
         case ERenderType::Instancing:
             InstancingRenderQ.push_back(Data);
             break;
+        case ERenderType::Spotlight:
+            SpotlightRenderQ.push_back(Data);
+            break;
         default:
             break;
         }
@@ -60,6 +64,7 @@ public:
     const TArray<FRenderData>& GetTextureRenderQ() const { return TextureRenderQ; }
     const TArray<FRenderData>& GetTextRenderQ() const { return TextRenderQ; }
     const TArray<FRenderData>& GetInstancingRenderQ() const { return InstancingRenderQ; }
+    const TArray<FRenderData>& GetSpotlightRenderQ() const { return SpotlightRenderQ; }
 
     // 프레임 끝에 호출
     void Clear() { 
@@ -67,16 +72,19 @@ public:
         TextureRenderQ.clear();
         TextRenderQ.clear();
         InstancingRenderQ.clear();
+        SpotlightRenderQ.clear();
     }
 
     bool IsPrimRQEmpty() const { return primRenderQ.empty(); }
     bool IsTextureRQEmpty() const { return TextureRenderQ.empty(); }
     bool IsTextRQEmpty() const { return TextRenderQ.empty(); }
     bool IsInstancingRQEmpty() const { return InstancingRenderQ.empty(); }
+    bool IsSpotlightRQEmpty() const { return SpotlightRenderQ.empty(); }
 
 private:
     TArray<FRenderData> primRenderQ;
     TArray<FRenderData> TextureRenderQ;
     TArray<FRenderData> TextRenderQ;
     TArray<FRenderData> InstancingRenderQ;
+    TArray<FRenderData> SpotlightRenderQ;
 };

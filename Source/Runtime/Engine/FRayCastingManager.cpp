@@ -56,7 +56,7 @@ bool FRayCastingManager::RayIntersectsMeshes(
 			continue;
 		}
 
-		auto Mesh = FRenderResourceLibrary::Get().GetMesh(Component->GetRenderData().MeshId);
+		auto Mesh = FRenderResourceLibrary::Get().GetMesh(Component->GetPureRenderData().MeshId);
 		if (!Mesh)
 		{
 			continue;

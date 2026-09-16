@@ -33,7 +33,8 @@ enum class EPipelineID : uint8 {
   Billboard,
   SelectedActor_Text,
   Outline,
-  PostProcess
+  PostProcess,
+  None,
 };
 
 enum class EMeshID : uint8 {
@@ -51,7 +52,7 @@ enum class EMeshID : uint8 {
   Plane,
   Rect,
   TextMesh,
-  Count
+  None,
 };
 
 enum class EMaterialID : uint8 {
@@ -67,7 +68,8 @@ enum class EMaterialID : uint8 {
   SelectedActor_Text,
   Instance_Billboard,
   Billboard,
-  Outline
+  Outline,
+  None,
 };
 
 // 인스턴싱 배치 키 구조체

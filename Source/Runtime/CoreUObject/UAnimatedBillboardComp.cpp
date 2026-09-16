@@ -95,7 +95,8 @@ void UAnimatedBillboardComp::Update(float DeltaTime) {
 }
 
 
-void UAnimatedBillboardComp::RefreshUV() 
+
+void UAnimatedBillboardComp::RefreshUV()
 {
   if (GridX <= 0 || GridY <= 0) {
     UVScale = FVector2{1.0f, 1.0f};
@@ -111,7 +112,4 @@ void UAnimatedBillboardComp::RefreshUV()
 
   UVOffset.X = static_cast<float>(Col) * UVScale.X;
   UVOffset.Y = static_cast<float>(Row) * UVScale.Y;
-
-  RenderData.Constants.UVScale = UVScale;
-  RenderData.Constants.UVOffset = UVOffset;
 }

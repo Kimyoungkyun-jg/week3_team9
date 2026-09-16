@@ -34,7 +34,16 @@ void FRenderView::CollectScenePrimitives(const UScene& Scene, const FSceneView& 
             bSelected = true;
         }
 
-        FRenderData Data = PrimitiveComponent->GetRenderData();
+        FRenderData Data = PrimitiveComponent->GetRenderData(View.Camera);
+        Data.bSelected = bSelected;
+
+        // 인스턴싱 및 텍스트는 인스턴스 배열을 사용하므로 바로 푸시
+        if (Data.type == ERenderType::Text || Data.type == ERenderType::Instancing)
+        {
+            RenderQueue.Push(Data);
+            continue;
+        }
+
         const FMatrix World = PrimitiveComponent->GetRenderMatrix(View.Camera);
         Data.Constants.MVP   = World * View.ViewProj;
         Data.Constants.World = World;
@@ -50,7 +59,6 @@ void FRenderView::CollectScenePrimitives(const UScene& Scene, const FSceneView& 
             Data.Constants.ColorOverride = FVector{ 1.0f, 1.0f, 1.0f };
             Data.Constants.ColorOverrideAmount = 0.5f;
         }
-        Data.bSelected = bSelected;
         RenderQueue.Push(Data);
     }
 }
@@ -125,7 +133,8 @@ void FRenderView::RenderOverlayPass(const FCamera& Camera, const FSceneView& Sce
     // 텍스트 오버레이 렌더링
     if (TextComp)
     {
-        FRenderData Data = TextComp->BuildRenderData(Camera);
+        Renderer.ClearDepth();
+        FRenderData Data = TextComp->GetRenderData(Camera);
         if (!Data.Instances.empty())
         {
             Renderer.AddTextInstanceArray(Data.Instances, Data.MeshId, Data.MaterialId);
@@ -195,7 +204,7 @@ void FRenderView::RenderUUIDText(const FCamera& Camera, FVector2 TopLeftUV,
     Renderer.ClearDepth();
 
     // BuildRenderData()로 Font 기반 인스턴스 데이터 획득 후 드로우
-    FRenderData Data = textcomp->BuildRenderData(Camera);
+    FRenderData Data = textcomp->GetRenderData(Camera);
     if (!Data.Instances.empty())
     {
         Renderer.AddTextInstanceArray(Data.Instances, Data.MeshId, Data.MaterialId);
@@ -221,7 +230,7 @@ void FRenderView::DrawStencilMask(const FCamera& Camera,
     if (!PrimComp) return;
 
     // FRenderData에서 MeshId 읽어 ResLib로 실제 Mesh 획득
-    const FRenderData& RD = PrimComp->GetRenderData();
+    const FRenderData& RD = PrimComp->GetPureRenderData();
     auto Mesh = FRenderResourceLibrary::Get().GetMesh(RD.MeshId);
     if (!Mesh) return;
 
@@ -319,13 +328,22 @@ void FRenderView::FlushQueue(const FCamera& Camera)
         Renderer.Draw(*Mesh, *Material, Data.Constants);
     }
 
+    // Spotlight 큐: 불투명 렌더링 후 가산 블렌딩 수행
+    for (const FRenderData& Data : RenderQueue.GetSpotlightRenderQ())
+    {
+        auto Mesh     = ResLib.GetMesh(Data.MeshId);
+        auto Material = ResLib.GetMaterial(Data.MaterialId);
+        if (!Mesh || !Material) continue;
+        Renderer.Draw(*Mesh, *Material, Data.Constants);
+    }
+
     // Text 큐: BuildRenderData()에서 이미 계산된 Instances 배열 사용
     if (!RenderQueue.IsTextRQEmpty())
     {
         const FRenderData& First = RenderQueue.GetTextRenderQ()[0];
         EMeshID     TextMeshId     = First.MeshId;
         EMaterialID TextMaterialId = First.MaterialId;
-
+        
         for (const FRenderData& Data : RenderQueue.GetTextRenderQ())
         {
             // Font에서 미리 계산된 글자별 쿼드 데이터를 그대로 넘김

@@ -22,7 +22,7 @@ protected:
   FVector2 UVOffset{0.0f, 0.0f};
 
 public:
-	virtual void Register(UScene& InScene) override;
+  virtual void Register(UScene& InScene) override;
 
 
   virtual void SetTexture(FString texture); // 원본 머터리얼을 건드리지 않고
@@ -30,6 +30,12 @@ public:
 
   // Object -> World 변환 행렬 생성
   virtual FMatrix GetRenderMatrix(const FCamera& Camera) const override;
+  
+  virtual const FRenderData& GetRenderData(const FCamera& Camera) override {
+      RenderData.Constants.UVScale = UVScale;
+      RenderData.Constants.UVOffset = UVOffset;
+      return RenderData;
+  }
 
 
   virtual EEngineShowFlags GetShowFlag() const { return EEngineShowFlags::SF_BillboardText; }

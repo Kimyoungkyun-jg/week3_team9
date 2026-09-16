@@ -33,9 +33,9 @@ private:
 	float GridCellSize = 1.0f;
 
 	// Gizmo
-	uint8 GizmoMode = 0;
+	uint8 GizmoMode = 1;
 	uint8 GizmoSpace = 0;
-	uint32 SelectedActor = -1; // Note: uint32이므로 -1은 언더플로우됨
+	uint32 SelectedActor = -1;
 
 public:
 	void WriteToFile(FStringView FilePath = DefaultFileName) const;

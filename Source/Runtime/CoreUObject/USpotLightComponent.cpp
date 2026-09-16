@@ -1,4 +1,4 @@
-﻿#include "USpotLightComponent.h"
+#include "USpotLightComponent.h"
 #include "Runtime/CoreUObject/UObjectGlobals.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 #include "Runtime/Engine/FArchive.h"
@@ -10,10 +10,11 @@ UCLASS_META(USpotLightComponent, MeshName, "SpotlightCone")
 
 void USpotLightComponent::Register(UScene& Scene)
 {
-	// ?먮퓭 硫붿떆 諛??ㅽ룷?몃씪?댄듃 癒명떚由ъ뼹 ?μ갑
+	// 스포트라이트 메쉬 및 머티리얼 장착
 	auto& ResLib = FRenderResourceLibrary::Get();
 	SetMeshID(EMeshID::SpotlightCone);
 	SetMaterialID(EMaterialID::Spotlight);
+	RenderData.type = ERenderType::Spotlight;
 	Super::Register(Scene);
 }
 

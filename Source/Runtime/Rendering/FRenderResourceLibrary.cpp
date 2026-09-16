@@ -56,6 +56,7 @@ constexpr FPipelineEntry pipelineTable[] = {
         .Id = EPipelineID::Spotlight,
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"SpotlightPS.cso",
+        .bDepthWrite = false,
         .CullMode = D3D11_CULL_NONE,
         .BlendMode = EBlendMode::Additive,
     },

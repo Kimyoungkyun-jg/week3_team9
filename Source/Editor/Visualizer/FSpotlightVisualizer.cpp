@@ -16,7 +16,7 @@ void FSpotlightVisualizer::Draw(
 {
     if (Component.IsA<USpotLightComponent>() == false) { return; }
 
-    auto MeshPtr = FRenderResourceLibrary::Get().GetMesh(Component.GetRenderData().MeshId);
+    auto MeshPtr = FRenderResourceLibrary::Get().GetMesh(Component.GetPureRenderData().MeshId);
     if (!MeshPtr) return;
     const FMesh& Mesh = *MeshPtr;
     const FMatrix ModelMatrix = Component.GetRenderMatrix(Camera);

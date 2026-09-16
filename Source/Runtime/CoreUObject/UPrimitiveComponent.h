@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Runtime/Engine/FCamera.h"
 #include "Runtime/Geometry/FAxisAlignedBoundingBox.h"
@@ -18,9 +18,13 @@ public:
     virtual void SetRelativeTransform(const FTransform& RelativeTransform) override;
 
     // FRenderData 조회 및 설정
-    const FRenderData& GetRenderData() const { return RenderData; }
+    virtual const FRenderData& GetRenderData(const FCamera& Camera){ return RenderData; }
+    const FRenderData& GetPureRenderData() const { return RenderData; }
+
+
     void SetMeshID(EMeshID InMeshId)         { RenderData.MeshId = InMeshId; }
     void SetMaterialID(EMaterialID InMaterialId) { RenderData.MaterialId = InMaterialId; }
+    void SetTextureID(FString textureid) { RenderData.TextureId = textureid; }
 
     // Visualizer 및 충돌 판정용 LocalBounds
     virtual FAxisAlignedBoundingBox CalcLocalBounds();
