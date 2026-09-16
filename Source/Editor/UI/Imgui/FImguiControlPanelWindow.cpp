@@ -86,6 +86,29 @@ void FImguiControlPanelWindow::ActorSpawnSetting(FEditor& Editor)
     }
     ImGui::SameLine();
     ImGui::Text("Actor");
+
+    float MinLocation = Editor.State.GetSpawnActorMinLocation();
+    float MaxLocation = Editor.State.GetSpawnActorMaxLocation();
+    ImGui::SetNextItemWidth(40.0f);
+    ImGui::Text("Min");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(50.0f);
+    if (ImGui::DragFloat("##SpawnMinLocation", &MinLocation, 0.1f, -100.0f, 100.0f, "%.1f"))
+    {
+        Editor.State.SetSpawnActorMinLocation(MinLocation);
+    }
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(40.0f);
+    ImGui::Text("Max");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(50.0f);
+    if (ImGui::DragFloat("##SpawnMaxLocation", &MaxLocation, 0.1f, -100.0f, 100.0f, "%.1f"))
+    {
+        Editor.State.SetSpawnActorMaxLocation(MaxLocation);
+    }
+    ImGui::SameLine();
+    ImGui::Text("Spawn Location");
+
     static int spawnCount = 1;
     if (ImGui::Button("Spawn"))
     {

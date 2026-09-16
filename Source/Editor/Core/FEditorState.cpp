@@ -17,6 +17,10 @@ void FEditorState::WriteToFile(FStringView FilePath) const
 	// Grid
 	Archive.SetFloat("Grid", "CellSize", GridCellSize);
 
+	// Spawn Actor
+	Archive.SetFloat("spawnactor", "min-location", SpawnActorMinLocation);
+	Archive.SetFloat("spawnactor", "max-location", SpawnActorMaxLocation);
+
 	// Gizmo
 	Archive.SetUInt32("Gizmo", "Mode", GizmoMode);
 	Archive.SetUInt32("Gizmo", "Space", GizmoSpace);
@@ -84,6 +88,18 @@ void FEditorState::ReadFromFile(FStringView FilePath)
 	if (!Archive.IsEmpty("Grid", "CellSize"))
 	{
 		GridCellSize = Archive.GetFloat("Grid", "CellSize");
+	}
+
+	// Spawn Actor
+
+	if (!Archive.IsEmpty("spawnactor", "min-location"))
+	{
+		SpawnActorMinLocation = Archive.GetFloat("spawnactor", "min-location");
+	}
+
+	if (!Archive.IsEmpty("spawnactor", "max-location"))
+	{
+		SpawnActorMaxLocation = Archive.GetFloat("spawnactor", "max-location");
 	}
 
 	// Gizmo
@@ -182,6 +198,20 @@ void FEditorState::SetGridCellSize(float Value)
 {
 	if (GridCellSize == Value) { return; }
 	GridCellSize = Value;
+	bDirty = true;
+}
+
+void FEditorState::SetSpawnActorMinLocation(float Value)
+{
+	if (SpawnActorMinLocation == Value) { return; }
+	SpawnActorMinLocation = Value;
+	bDirty = true;
+}
+
+void FEditorState::SetSpawnActorMaxLocation(float Value)
+{
+	if (SpawnActorMaxLocation == Value) { return; }
+	SpawnActorMaxLocation = Value;
 	bDirty = true;
 }
 

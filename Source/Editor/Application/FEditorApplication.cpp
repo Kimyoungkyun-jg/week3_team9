@@ -104,7 +104,6 @@ void FEditorApplication::Render() {
             continue;
         }
 
-
         bool bSelected = true;
 
         if (!PrimitiveComponent) { bSelected = false; }

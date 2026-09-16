@@ -32,6 +32,10 @@ private:
 	// Grid
 	float GridCellSize = 1.0f;
 
+	// Spawn Actor
+	float SpawnActorMinLocation = -3.0f;
+	float SpawnActorMaxLocation = 3.0f;
+
 	// Gizmo
 	uint8 GizmoMode = 0;
 	uint8 GizmoSpace = 0;
@@ -64,6 +68,12 @@ public:
 
 	void SetGridCellSize(float Value);
 	float GetGridCellSize() const { return GridCellSize; }
+
+	void SetSpawnActorMinLocation(float Value);
+	float GetSpawnActorMinLocation() const { return SpawnActorMinLocation; }
+
+	void SetSpawnActorMaxLocation(float Value);
+	float GetSpawnActorMaxLocation() const { return SpawnActorMaxLocation; }
 
 	void SetGizmoMode(uint8 Value);
 	uint8 GetGizmoMode() const { return GizmoMode; }
