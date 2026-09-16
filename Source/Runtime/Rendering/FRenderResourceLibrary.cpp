@@ -167,7 +167,7 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("Instance_Text_Bazzi"),
         .PipelineID = FName("Instance_Text"),
-        .TextureName = "maplestorybold",
+        .TextureName = "bazziotf",
     },
     {
         .Id = FName("Instance_Text_DNF"),
