@@ -39,7 +39,7 @@ void UTextInstanceComponent::Register(UScene &InScene) {
 
   RenderData.MeshId = FName("Rect");
   RenderData.MaterialId = FName("Instance_Text");
-  RenderData.TextureId = FName("maplestorybold");
+  RenderData.TextureId = FName("BazziOTF");
   RenderData.type = ERenderType::Text;
 
   RebuildTextMesh();
