@@ -156,9 +156,19 @@ const FMaterialEntry materialTable[] = {
         .TextureName = "uv-test",
     },
     {
-        .Id = FName("Instance_Text"),
+        .Id = FName("Instance_Text_Bazzi"),
         .PipelineID = FName("Instance_Text"),
         .TextureName = "bazziotf",
+    },
+    {
+        .Id = FName("Instance_Text_DNF"),
+        .PipelineID = FName("Instance_Text"),
+        .TextureName = "dnfbitbitv2",
+    },
+    {
+        .Id = FName("Instance_Text_Maple"),
+        .PipelineID = FName("Instance_Text"),
+        .TextureName = "maplestorybold",
     },
     {
         .Id = FName("Instance_Simple"),
@@ -1354,11 +1364,11 @@ bool FRenderResourceLibrary::CreateFonts(FRenderer& Renderer)
             Font->SetTexture(AllTextureMap[TextureKey]);
 
             // 이미 로드된 폰트 건너뜀
-            if (AllFontMap.find(KeyWide) != AllFontMap.end()) {
+            if (AllFontMap.find(TextureKey) != AllFontMap.end()) {
                 continue;
             }
 
-            AllFontMap[KeyWide] = Font;
+            AllFontMap[TextureKey] = Font;
         }
     }
 
