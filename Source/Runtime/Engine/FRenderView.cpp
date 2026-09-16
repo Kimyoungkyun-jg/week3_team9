@@ -308,6 +308,7 @@ void FRenderView::FlushLineBatch(const FMatrix& ViewProjection, const FName& Pip
 {
     FObjectConstants Constants{};
     Constants.MVP = ViewProjection;
+    Constants.DisableShading = 1.0f;
     Renderer.FlushLineBatch(Constants, PipelineId);
 }
 

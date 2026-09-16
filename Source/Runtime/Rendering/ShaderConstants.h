@@ -13,6 +13,8 @@ struct FObjectConstants {
   FVector2 UVScale{1.0f, 1.0f};
   FVector2 UVOffset{0.0f, 0.0f};
   FMatrix World = FMatrix::GetIdentity();
+  float DisableShading = 0.0f;
+  FVector Padding;
 };
 static_assert(sizeof(FObjectConstants) % 16 == 0);
 
