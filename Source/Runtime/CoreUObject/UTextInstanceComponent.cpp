@@ -39,7 +39,7 @@ void UTextInstanceComponent::Register(UScene &InScene) {
 
   RenderData.MeshId = FName("Rect");
   RenderData.MaterialId = FName("Instance_Text");
-  RenderData.TextureId = FName("maplestorybold");
+  RenderData.TextureId = FName("bazziotf");
   RenderData.type = ERenderType::Text;
 
   RebuildTextMesh();
@@ -60,9 +60,7 @@ void UTextInstanceComponent::SetFont(TSharedPtr<FFont> InFont) {
 
 void UTextInstanceComponent::SetFont() {
   if (!Font) {
-    Font = MakeShared<FFont>();
-    FWString Path = GetExecutableDirectory() + L"/Fonts/MaplestoryBold.json";
-    Font->Deserialize(Path);
+    Font = FRenderResourceLibrary::Get().GetFont("bazziotf");
   }
 }
 
