@@ -19,6 +19,7 @@ struct FTextVertex {
 
 enum class EPipelineID : uint8 {
   Simple_Solid,
+  Simple_Line,
   Simple_Wireframe,
   Textured,
   Grid,

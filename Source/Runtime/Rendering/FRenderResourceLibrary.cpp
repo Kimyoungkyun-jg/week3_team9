@@ -40,6 +40,12 @@ constexpr FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Opaque,
     },
     {
+        .Id = EPipelineID::Simple_Line,
+        .VertexShader = L"ExampleVS.cso",
+        .PixelShader = L"UnlightPS.cso",
+        .BlendMode = EBlendMode::Opaque,
+    },
+    {
         .Id = EPipelineID::Textured,
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"TexturedPS.cso",
