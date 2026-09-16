@@ -111,4 +111,7 @@ void UAnimatedBillboardComp::RefreshUV()
 
   UVOffset.X = static_cast<float>(Col) * UVScale.X;
   UVOffset.Y = static_cast<float>(Row) * UVScale.Y;
+
+  RenderData.Constants.UVScale = UVScale;
+  RenderData.Constants.UVOffset = UVOffset;
 }
