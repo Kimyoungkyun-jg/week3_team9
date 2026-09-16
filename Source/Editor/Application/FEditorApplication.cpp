@@ -82,17 +82,14 @@ void FEditorApplication::Render() {
     EditorCtx.SelectedTransform = Editor.SelectedTransform;
     EditorCtx.Gizmo             = Editor.ObjectSelected() ? &Editor.GetGizmo() : nullptr;
     EditorCtx.TextComp          = Editor.ObjectSelected() ? Editor.GetTextcomp() : nullptr;
-    EditorCtx.DrawLinesCallback = [&](FRenderView& RV) {
-        RV.DrawGrid(sceneview.Camera, Editor.GetGrid());
-        if (Editor.ObjectSelected()) {
-            USceneComponent *RootComp = Editor.GetSelectedActor()->GetRootComponent();
-            if (auto *PrimComp = RootComp->Cast<UPrimitiveComponent>()) {
-                if (auto *Vis = VisualizerRegistry.FindVisualizer(PrimComp->GetClass())) {
-                    Vis->Draw(*PrimComp, RV, EditorViewport.ViewportCamera, FVector4{ 0.0f, 1.0f, 0.0f, 1.0f });
-                }
-            }
+    EditorCtx.Grid               = &Editor.GetGrid();
+    EditorCtx.VisualizerRegistry = &VisualizerRegistry;
+
+    if (EditorCtx.SelectedActor) {
+        if (USceneComponent* RootComp = EditorCtx.SelectedActor->GetRootComponent()) {
+            EditorCtx.SelectedPrimitive = RootComp->Cast<UPrimitiveComponent>();
         }
-    };
+    }
 
     // 뷰포트 렌더링 일괄 수행
     RenderView->RenderView(sceneview, *SceneManager->CurrentScene, EditorCtx);

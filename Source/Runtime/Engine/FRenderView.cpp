@@ -2,6 +2,8 @@
 
 #include "Editor/Gizmo/FGizmo.h"
 #include "Editor/Grid/FGrid.h"
+#include "Editor/Visualizer/FVisualizerRegistry.h"
+#include "Editor/Visualizer/IVisualizer.h"
 #include "Runtime/Actors/AActor.h"
 #include "Runtime/CoreUObject/UBillBoardComp.h"
 #include "Runtime/CoreUObject/UClass.h"
@@ -74,10 +76,21 @@ void FRenderView::RenderView(const FSceneView& View, const UScene& Scene, const 
     // 기본 씬 오브젝트 패스
     FlushBasePass(View.Camera);
 
-    // 라인 패스
-    if (EditorCtx.DrawLinesCallback)
-    {
-        EditorCtx.DrawLinesCallback(*this);
+    // 에디터 라인 패스
+    if (EditorCtx.Grid) {
+        DrawGrid(View.Camera, *EditorCtx.Grid);
+    }
+
+    if (EditorCtx.SelectedPrimitive && EditorCtx.VisualizerRegistry) {
+        if (IVisualizer* Visualizer = EditorCtx.VisualizerRegistry->FindVisualizer(
+                EditorCtx.SelectedPrimitive->GetClass())) {
+            Visualizer->Draw(
+                *EditorCtx.SelectedPrimitive,
+                *this,
+                View.Camera,
+                FVector4{0.0f, 1.0f, 0.0f, 1.0f}
+            );
+        }
     }
     
     FlushLinePass(View.Camera);
