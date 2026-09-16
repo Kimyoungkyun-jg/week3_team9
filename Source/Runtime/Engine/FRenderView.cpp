@@ -138,7 +138,7 @@ void FRenderView::RenderOverlayPass(const FCamera& Camera, const FSceneView& Sce
     Gizmo.Draw(Renderer, SelectedTransform, Camera);
 
     // 텍스트 오버레이 렌더링
-    if (TextComp)
+    if (TextComp && (SceneView.ShowFlags & static_cast<uint64>(EEngineShowFlags::SF_BillboardText)))
     {
         Renderer.ClearDepth();
         FRenderData Data = TextComp->GetRenderData(Camera);
