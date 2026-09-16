@@ -143,7 +143,7 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("Text"),
         .PipelineID = FName("Text"),
-        .TextureName = "maplestorybold",
+        .TextureName = "bazziotf",
     },
     {
         .Id = FName("Textured"),
@@ -158,7 +158,7 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("Instance_Text"),
         .PipelineID = FName("Instance_Text"),
-        .TextureName = "maplestorybold",
+        .TextureName = "bazziotf",
     },
     {
         .Id = FName("Instance_Simple"),
@@ -175,7 +175,7 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("SelectedActor_Text"),
         .PipelineID = FName("SelectedActor_Text"),
-        .TextureName = "maplestorybold",
+        .TextureName = "bazziotf",
     },
 };
 
@@ -1350,8 +1350,8 @@ bool FRenderResourceLibrary::CreateFonts(FRenderer& Renderer)
             FString KeyWide = Entry.path().stem().string();
             std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
                 ::tolower);
-
-            Font->SetTexture(AllTextureMap[KeyWide]);
+            FName TextureKey(KeyWide);
+            Font->SetTexture(AllTextureMap[TextureKey]);
 
             // 이미 로드된 폰트 건너뜀
             if (AllFontMap.find(KeyWide) != AllFontMap.end()) {
