@@ -12,7 +12,7 @@ class UTextInstanceComponent : public UInstancePrimitiveComponent {
   DECLARE_UCLASS(UTextInstanceComponent, UInstancePrimitiveComponent)
 
 public:
-  void Register(UScene &InScene) override;
+  void Initialize() override;
   void Update(float delta) override;
 
   void SetText(const FWString &InText);
@@ -26,7 +26,7 @@ public:
 
   // Object -> World 변환 행렬 생성
   virtual FMatrix GetRenderMatrix(const FCamera &Camera) const override;
-  virtual const FRenderData &GetRenderData(const FCamera &Camera) override;
+  virtual const FRenderData& GetRenderData(const FCamera &Camera) override;
 
   virtual EEngineShowFlags GetShowFlag() const {
     return EEngineShowFlags::SF_BillboardText;

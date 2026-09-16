@@ -34,16 +34,16 @@ FMatrix GetRenderMatrix(const FTransform &Transform, const FCamera &Camera) {
 }
 } // namespace
 
-void UTextInstanceComponent::Register(UScene &InScene) {
-  SetFont();
+void UTextInstanceComponent::Initialize() {
+  Super::Initialize();
 
-  RenderData.MeshId = FName("Rect");
-  RenderData.MaterialId = FName("Instance_Text");
-  RenderData.TextureId = FName("maplestorybold");
+  SetMeshID(FName("Rect"));
+  SetMaterialID(FName("Instance_Text"));
+  SetTextureID(FName("maplestorybold"));
   RenderData.type = ERenderType::Text;
 
+  SetFont();
   RebuildTextMesh();
-  Super::Register(InScene);
 }
 
 void UTextInstanceComponent::Update(float delta) {}

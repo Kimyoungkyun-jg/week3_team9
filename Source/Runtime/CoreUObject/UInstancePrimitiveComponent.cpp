@@ -6,21 +6,13 @@
 
 IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
-void UInstancePrimitiveComponent::Register(UScene& Scene)
+void UInstancePrimitiveComponent::Initialize()
 {
-	if (GetMeshID().IsNone())
-	{
-		SetMeshID(FName("Cube"));
-	}
-	
-	if (GetMaterialID().IsNone())
-	{
-		SetMaterialID(FName("Instance_Simple"));
-	}
+    Super::Initialize();
 
+    SetMeshID(FName("Cube"));
+    SetMaterialID(FName("Instance_Simple"));
     RenderData.type = ERenderType::Instancing;
-
-    Super::Register(Scene);
 }
 
 void UInstancePrimitiveComponent::AddInstance(const FVector& WorldPosition, const FVector4& Color)

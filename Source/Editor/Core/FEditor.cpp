@@ -25,6 +25,7 @@ void FEditor::Initialize(USceneManager *SceneManager) {
   SelectedActorTextComp = NewObject<UTextInstanceComponent>();
   if (SelectedActorTextComp)
   {
+    SelectedActorTextComp->Initialize();
     FGarbageCollector::Get().AddRoot(SelectedActorTextComp.Get());
     SelectedActorTextComp->SetInheritRotation(false);
     SelectedActorTextComp->SetMeshID(FName("Rect"));
