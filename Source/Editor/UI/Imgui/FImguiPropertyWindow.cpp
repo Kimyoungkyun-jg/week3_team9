@@ -155,6 +155,17 @@ void FImguiPropertyWindow::ShowTextSettings(UTextInstanceComponent& TextComp) co
 	ImGui::Separator();
 	ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Text Settings");
 
+
+	const char* fontItems[] = { "bazziotf", "dnfbitbitv2", "maplestorybold" };
+	static int currFontIndex = 0;
+	if (ImGui::Combo("Font", &currFontIndex, fontItems, IM_ARRAYSIZE(fontItems)))
+	{
+		const FName Materials[] = { FName("Instance_Text_Bazzi"), FName("Instance_Text_DNF"), FName("Instance_Text_Maple") };
+		const char* selectedFont = fontItems[currFontIndex];
+		TextComp.SetMaterialID((Materials[currFontIndex]));
+		TextComp.SetFont(FName(selectedFont));
+	}
+
 	static char utfBuffer[512]{};
 	WideCharToMultiByte(CP_UTF8, 0, TextComp.GetText().c_str(), -1, &utfBuffer[0], sizeof(utfBuffer), NULL, NULL);
 

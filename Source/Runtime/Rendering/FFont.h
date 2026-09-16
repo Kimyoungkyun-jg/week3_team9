@@ -29,7 +29,7 @@ public:
 	const FCharacterInfo& GetCharInfo(char32_t InCharacter) const;
 	void SetTexture(const TSharedPtr<FTexture>& InName);
 private:
-
+	
 	//FMeterial	// 폰트 머터리얼
 	TSharedPtr<FTexture> Texture;
 	TMap<char32_t, FCharacterInfo> CharInfoMap;
