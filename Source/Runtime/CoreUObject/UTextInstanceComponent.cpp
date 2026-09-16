@@ -43,7 +43,6 @@ void UTextInstanceComponent::Initialize() {
   RenderData.TextureId = FName("bazziotf");
   RenderData.type = ERenderType::Text;
 
-  SetFont();
   RebuildTextMesh();
 }
 
