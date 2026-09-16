@@ -15,7 +15,8 @@ enum class ERenderType
     Texture,
     Text,
     Instancing,
-    Spotlight
+    Spotlight,
+    None
 };
 
 struct FRenderData

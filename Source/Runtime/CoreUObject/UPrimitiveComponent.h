@@ -26,9 +26,11 @@ public:
     void SetMeshID(const FName& InMeshId)         { RenderData.MeshId = InMeshId; }
     void SetMaterialID(const FName& InMaterialId) { RenderData.MaterialId = InMaterialId; }
     void SetTextureID(const FName& InTextureId)   { RenderData.TextureId = InTextureId; }
+    void SetRenderType(ERenderType InType)       { RenderData.type = InType; }
     const FName& GetMeshID() const               { return RenderData.MeshId; }
     const FName& GetMaterialID() const           { return RenderData.MaterialId; }
     const FName& GetTextureID() const            { return RenderData.TextureId; }
+    ERenderType GetRenderType() const            { return RenderData.type; }
 
     // 충돌 판정용 바운드 계산
     virtual FAxisAlignedBoundingBox CalcLocalBounds();
@@ -52,7 +54,13 @@ public:
 protected:
     UPrimitiveComponent() = default;
 
-    FRenderData RenderData;
+    FRenderData RenderData = {
+       .MeshId = FName("None"),
+       .MaterialId = FName("None"),
+       .TextureId = FName("None"),
+       .type = ERenderType::None,
+       .bSelected = false,
+    };
 
     FVector Color{1.0f, 1.0f, 1.0f};
     float ColorAmount = 0.0f;

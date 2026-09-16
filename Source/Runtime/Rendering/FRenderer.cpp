@@ -6,15 +6,16 @@
 #include "FRenderPipeline.h"
 #include "Runtime/Core/PointerTypes.h"
 #include "Runtime/Engine/FCamera.h"
-#include "Runtime/Rendering/FTexture.h"
 #include "Runtime/Rendering/FRenderQueue.h"
+#include "Runtime/Rendering/FTexture.h"
 #include "ShaderConstants.h"
+#include "ThirdParty/DirectXTK/Inc/DDSTextureLoader.h"
 #include "Vertices.h"
 #include <Windows.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <wrl/client.h>
-#include "ThirdParty/DirectXTK/Inc/DDSTextureLoader.h"
+
 
 bool FRenderer::Initialize(HWND Window) {
   if (!InitializeDeviceAndSwapChain(Window) ||
@@ -29,8 +30,7 @@ bool FRenderer::Initialize(HWND Window) {
   return true;
 }
 
-void FRenderer::Shutdown() 
-{
+void FRenderer::Shutdown() {
   if (Context) {
     Context->ClearState();
     Context->Flush();
@@ -61,7 +61,8 @@ void FRenderer::BeginFrame() {
 }
 
 void FRenderer::BindEditorViewportRenderTargets() {
-  Context->OMSetRenderTargets(1, EditorViewPortRTV.GetAddressOf(),DepthStencilView.Get());
+  Context->OMSetRenderTargets(1, EditorViewPortRTV.GetAddressOf(),
+                              DepthStencilView.Get());
 }
 
 void FRenderer::SetViewportUV(FVector2 TopLeftUV, FVector2 LengthUV) {
@@ -316,17 +317,17 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
     return nullptr;
   }
 
-  if (Desc.bIsInstancing)
-  {
-      Result = Device->CreateInputLayout(FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
-          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
+  if (Desc.bIsInstancing) {
+    Result = Device->CreateInputLayout(
+        FVertexInstanceLayouts::Layout, FVertexInstanceLayouts::NumElements,
+        Blob->GetBufferPointer(), Blob->GetBufferSize(),
+        &Pipeline->InputLayout);
+  } else {
+    Result = Device->CreateInputLayout(
+        FVertexLayouts::Layout, FVertexLayouts::NumElements,
+        Blob->GetBufferPointer(), Blob->GetBufferSize(),
+        &Pipeline->InputLayout);
   }
-  else
-  {
-      Result = Device->CreateInputLayout(FVertexLayouts::Layout, FVertexLayouts::NumElements,
-          Blob->GetBufferPointer(), Blob->GetBufferSize(), &Pipeline->InputLayout);
-  }
-
 
   if (FAILED(Result)) {
     return nullptr;
@@ -438,17 +439,19 @@ FRenderer::CreateRenderPipeline(const FRenderPipelineDesc &Desc,
   return Pipeline;
 }
 
-TSharedPtr<FTexture> FRenderer::CreateTexture(const wchar_t* path){
+TSharedPtr<FTexture> FRenderer::CreateTexture(const wchar_t *path) {
   auto Texture = TSharedPtr<FTexture>{new FTexture()};
   Microsoft::WRL::ComPtr<ID3D11Resource> TempResource;
-  HRESULT hr = DirectX::CreateDDSTextureFromFile(Device.Get(), path, TempResource.GetAddressOf(), Texture->TextureSRV.GetAddressOf());
+  HRESULT hr = DirectX::CreateDDSTextureFromFile(
+      Device.Get(), path, TempResource.GetAddressOf(),
+      Texture->TextureSRV.GetAddressOf());
   if (FAILED(hr)) {
-      return nullptr;
+    return nullptr;
   }
 
   hr = TempResource.As(&Texture->Texture2D);
   if (FAILED(hr)) {
-      return nullptr;
+    return nullptr;
   }
 
   D3D11_TEXTURE2D_DESC desc;
@@ -459,7 +462,7 @@ TSharedPtr<FTexture> FRenderer::CreateTexture(const wchar_t* path){
   return Texture;
 }
 
-TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(const FName& Id) const {
+TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(const FName &Id) const {
   return FRenderResourceLibrary::Get().GetPipeline(Id);
 }
 
@@ -667,31 +670,29 @@ void FRenderer::UpdateLightConstants(const FLightConstants &Constants,
     LocalConstants.Intensity = 0.0f;
   }
 
-  Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr, &LocalConstants,
-                             0, 0);
+  Context->UpdateSubresource(LightConstantBuffer.Get(), 0, nullptr,
+                             &LocalConstants, 0, 0);
   Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
 }
 
-void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances, const FName& MeshId, const FName& MaterialId)
-{
-    // 빈 데이터 전달 시 조기 반환
-    if (Instances.empty())
-    {
-        return;
-    }
-    auto& ResLib = FRenderResourceLibrary::Get();
-    // 머티리얼 리소스 존재 여부 확인
-    if (!ResLib.GetMaterial(MaterialId))
-    {
-        UE_LOG_WARN("[FRenderer] 유효하지 않은 머티리얼 ID 인스턴스 등록 시도");
-        return;
-    }
-    // 메시 리소스 존재 여부 확인
-    if (!ResLib.GetMesh(MeshId))
-    {
-        UE_LOG_WARN("[FRenderer] 유효하지 않은 메시 ID 인스턴스 등록 시도");
-        return;
-    }
+void FRenderer::AddTextInstanceArray(const TArray<FInstanceData> &Instances,
+                                     const FName &MeshId,
+                                     const FName &MaterialId) {
+  // 빈 데이터 전달 시 조기 반환
+  if (Instances.empty()) {
+    return;
+  }
+  auto &ResLib = FRenderResourceLibrary::Get();
+  // 머티리얼 리소스 존재 여부 확인
+  if (!ResLib.GetMaterial(MaterialId)) {
+    UE_LOG_WARN("[FRenderer] 유효하지 않은 머티리얼 ID 인스턴스 등록 시도");
+    return;
+  }
+  // 메시 리소스 존재 여부 확인
+  if (!ResLib.GetMesh(MeshId)) {
+    UE_LOG_WARN("[FRenderer] 유효하지 않은 메시 ID 인스턴스 등록 시도");
+    return;
+  }
 
   auto &TargetArray = ResLib.GetInstancingArray(MaterialId, MeshId);
   TargetArray.reserve(TargetArray.size() + Instances.size());
@@ -701,10 +702,10 @@ void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances, con
 void FRenderer::DrawInstances(const FCamera &Camera) {
   auto &ResLib = FRenderResourceLibrary::Get();
 
-    // 상수 버퍼 업데이트
-    FObjectConstants SC{};
-    SC.MVP = Camera.CreateViewProjectionMatrix();
-    UpdateBuffer(SC);
+  // 상수 버퍼 업데이트
+  FObjectConstants SC{};
+  SC.MVP = Camera.CreateViewProjectionMatrix();
+  UpdateBuffer(SC);
 
   // 배치 키(MaterialID, MeshID) 순회
   for (const auto &[BatchKey, InstanceData] : ResLib.AllInstancingArrayMap) {
@@ -850,30 +851,29 @@ void FRenderer::ClearTextInstances() {
   FRenderResourceLibrary::Get().DestroyAllInstancingArray();
 }
 
-void FRenderer::RenderOutline()
-{
-    // 백버퍼 뷰포트 및 토폴로지 복구
+void FRenderer::RenderOutline() {
+  // 백버퍼 뷰포트 및 토폴로지 복구
 
+  Context->RSSetViewports(1, &Viewport);
+  Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  Context->IASetInputLayout(nullptr);
 
-    Context->RSSetViewports(1, &Viewport);
-    Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    Context->IASetInputLayout(nullptr);
-    
-    
-    ID3D11Buffer* NullVB = nullptr;
-    UINT Zero = 0;
-    Context->IASetVertexBuffers(0, 1, &NullVB, &Zero, &Zero);
+  ID3D11Buffer *NullVB = nullptr;
+  UINT Zero = 0;
+  Context->IASetVertexBuffers(0, 1, &NullVB, &Zero, &Zero);
 
-    Context->OMSetRenderTargets(1, BackBufferRTV.GetAddressOf(), nullptr);
-    // 씬 텍스처와 스텐실 텍스처 바인딩
-    ID3D11ShaderResourceView* SRVs[] = { EditorViewPortSRV.Get(), DepthStencilSRV.Get() };
-    Context->PSSetShaderResources(0, 2, SRVs);
-        
-    FRenderResourceLibrary::Get().GetPipeline(FName("PostProcess"))->Bind(*Context.Get());
-    Context->Draw(3, 0);
+  Context->OMSetRenderTargets(1, BackBufferRTV.GetAddressOf(), nullptr);
+  // 씬 텍스처와 스텐실 텍스처 바인딩
+  ID3D11ShaderResourceView *SRVs[] = {EditorViewPortSRV.Get(),
+                                      DepthStencilSRV.Get()};
+  Context->PSSetShaderResources(0, 2, SRVs);
 
-    // 슬롯 해제
-    ID3D11ShaderResourceView* NullSRVs[] = { nullptr, nullptr };
-    Context->PSSetShaderResources(0, 2, NullSRVs);
+  FRenderResourceLibrary::Get()
+      .GetPipeline(FName("PostProcess"))
+      ->Bind(*Context.Get());
+  Context->Draw(3, 0);
+
+  // 슬롯 해제
+  ID3D11ShaderResourceView *NullSRVs[] = {nullptr, nullptr};
+  Context->PSSetShaderResources(0, 2, NullSRVs);
 }
-

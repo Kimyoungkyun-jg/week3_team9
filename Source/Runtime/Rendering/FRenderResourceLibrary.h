@@ -131,6 +131,12 @@ public:
   [[nodiscard]] TSharedPtr<FMesh> GetTextMesh() const {
     return GetMesh(FName("TextMesh"));
   }
+  [[nodiscard]] TSharedPtr<FMesh> GetMasterYiMesh() const {
+    return GetMesh(FName("MasterYi"));
+  }
+  [[nodiscard]] TSharedPtr<FMesh> GetMasteryMesh() const {
+    return GetMesh(FName("MasterYi"));
+  }
 
   // 머티리얼 등록
   TSharedPtr<FMaterial> RegisterMaterial(const FName& Id, TSharedPtr<FMaterial> inMaterial);
@@ -211,6 +217,8 @@ private:
   bool CreateLineMesh(FRenderer &Renderer);
   bool CreatePlaneMesh(FRenderer &Renderer);
   bool CreateRectMesh(FRenderer &Renderer);
+  bool CreateMasterYiMesh(FRenderer &Renderer);
+  bool CreateMasteryMesh(FRenderer &Renderer) { return CreateMasterYiMesh(Renderer); }
 
   bool CreateInstancingArrayMap();
   bool CreateOutlinePipeline(); //아웃라인용
@@ -220,8 +228,7 @@ private:
   bool InitializeMaterials(FRenderer &Renderer);
   bool CreateEditTextures(FRenderer &Renderer);
 
-  // 폰트 일괄 초기화
-  bool CreateFonts(FRenderer& Renderer);
+
 
   FRenderer *RendererRef = nullptr;
 };
