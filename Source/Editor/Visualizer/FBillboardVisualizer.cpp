@@ -30,7 +30,6 @@ void FBillboardVisualizer::Draw(
 		Array.push_back(WorldVector);
 	}
 
-
 	RenderView.RenderQuad(
 		Array[0],
 		Array[1],
