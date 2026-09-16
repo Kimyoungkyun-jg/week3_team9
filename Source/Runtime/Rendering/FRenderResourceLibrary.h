@@ -187,6 +187,8 @@ public:
   TSharedPtr<FMesh> GetOrCreateMesh(const FName &ID,
                                     const TArray<FVertexData> &vertices);
 
+  
+
   [[nodiscard]] TSharedPtr<FFont> GetFont(const FName& InName) const {
       auto it = AllFontMap.find(InName);
       if (it != AllFontMap.end())
@@ -226,7 +228,8 @@ private:
   bool InitializeMaterials(FRenderer &Renderer);
   bool CreateEditTextures(FRenderer &Renderer);
 
-
+  // 폰트 일괄 초기화
+  bool CreateFonts(FRenderer& Renderer);
 
   FRenderer *RendererRef = nullptr;
 };
