@@ -576,6 +576,9 @@
     <ClInclude Include="Source\Editor\Visualizer\FTextVisualizer.h">
       <Filter>Source\Editor\Visualizer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Math\Random.h">
+      <Filter>Source\Runtime\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\GridPS.hlsl">

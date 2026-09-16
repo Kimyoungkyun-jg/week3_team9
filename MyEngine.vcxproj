@@ -466,6 +466,7 @@
     <ClInclude Include="Source\Runtime\Math\FVector.h" />
     <ClInclude Include="Source\Runtime\Math\FVector2.h" />
     <ClInclude Include="Source\Runtime\Math\FVector4.h" />
+    <ClInclude Include="Source\Runtime\Math\Random.h" />
     <ClInclude Include="Source\Runtime\Rendering\FFont.h" />
     <ClInclude Include="Source\Runtime\Rendering\FInstanceBatchKey.h" />
     <ClInclude Include="Source\Runtime\Rendering\FLineBatcher.h" />
