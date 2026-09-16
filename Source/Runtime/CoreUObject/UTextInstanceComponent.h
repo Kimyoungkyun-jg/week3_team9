@@ -18,7 +18,7 @@ public:
   void SetText(const FWString &InText);
 
   [[nodiscard]] const FWString &GetText() const { return Text; }
-  void SetFont(TSharedPtr<FFont> InFont);
+  //void SetFont(TSharedPtr<FFont> InFont);
 
   void SetFont(const FName& InName);
 

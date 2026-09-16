@@ -10,7 +10,7 @@ void UInstancePrimitiveComponent::Initialize()
 {
     Super::Initialize();
 
-    SetMeshID(FName("Cube"));
+    //SetMeshID(FName("Cube"));
     
 	if (GetMaterialID().IsNone())
 	{
