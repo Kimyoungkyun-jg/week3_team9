@@ -11,6 +11,7 @@
 #include "Runtime/Core/TArray.h"
 #include "Runtime/Core/TMap.h"
 #include "Vertices.h"
+#include "FFont.h"
 
 class FRenderer;
 class FTexture;
@@ -34,6 +35,8 @@ public:
   TMap<FName, TSharedPtr<FMaterial>> AllMaterialMap;
   // 텍스쳐 보관 맵 (FName 기반)
   TMap<FName, TSharedPtr<FTexture>> AllTextureMap;
+  // 폰트 보관 맵
+  TMap<FString, TSharedPtr<FFont>> AllFontMap;
 
   // 에디터용 아이콘 텍스쳐 보관 맵
   TMap<FString, TSharedPtr<FTexture>> AllEditorTextureMap;
@@ -128,6 +131,12 @@ public:
   [[nodiscard]] TSharedPtr<FMesh> GetTextMesh() const {
     return GetMesh(FName("TextMesh"));
   }
+  [[nodiscard]] TSharedPtr<FMesh> GetMasterYiMesh() const {
+    return GetMesh(FName("MasterYi"));
+  }
+  [[nodiscard]] TSharedPtr<FMesh> GetMasteryMesh() const {
+    return GetMesh(FName("MasterYi"));
+  }
 
   // 머티리얼 등록
   TSharedPtr<FMaterial> RegisterMaterial(const FName& Id, TSharedPtr<FMaterial> inMaterial);
@@ -178,6 +187,16 @@ public:
   TSharedPtr<FMesh> GetOrCreateMesh(const FName &ID,
                                     const TArray<FVertexData> &vertices);
 
+  bool CreateFonts(FRenderer& Renderer);
+
+  [[nodiscard]] TSharedPtr<FFont> GetFont(const FString& InName) const {
+      auto it = AllFontMap.find(InName);
+      if (it != AllFontMap.end())
+          return it->second;
+      return nullptr;
+  }
+
+
 private:
   bool InitializePipelines(FRenderer &Renderer);
   bool CreateSolidWireframePipeline(FRenderer &Renderer);
@@ -198,6 +217,8 @@ private:
   bool CreateLineMesh(FRenderer &Renderer);
   bool CreatePlaneMesh(FRenderer &Renderer);
   bool CreateRectMesh(FRenderer &Renderer);
+  bool CreateMasterYiMesh(FRenderer &Renderer);
+  bool CreateMasteryMesh(FRenderer &Renderer) { return CreateMasterYiMesh(Renderer); }
 
   bool CreateInstancingArrayMap();
   bool CreateOutlinePipeline(); //아웃라인용
@@ -206,6 +227,8 @@ private:
   bool CreateTextures(FRenderer &Renderer);
   bool InitializeMaterials(FRenderer &Renderer);
   bool CreateEditTextures(FRenderer &Renderer);
+
+
 
   FRenderer *RendererRef = nullptr;
 };

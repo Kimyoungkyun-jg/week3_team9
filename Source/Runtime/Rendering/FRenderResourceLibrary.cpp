@@ -1,5 +1,6 @@
 #include "FRenderResourceLibrary.h"
 #include "Vertices.h"
+#include "Resources/MasterYi/MasterYi_HeadData.h"
 
 #include "FRenderer.h"
 #include "FTexture.h"
@@ -103,6 +104,14 @@ const FPipelineEntry pipelineTable[] = {
         .bIsInstancing = true,
     },
     {
+        .Id = FName("Instance_Textured"),
+        .VertexShader = L"InstanceVS.cso",
+        .PixelShader = L"TexturedPS.cso",
+        .CullMode = D3D11_CULL_NONE,
+        .BlendMode = EBlendMode::Translucent,
+        .bIsInstancing = true,
+    },
+    {
         .Id = FName("Gizmo"),
         .VertexShader = L"ExampleVS.cso",
         .PixelShader = L"ExamplePS.cso",
@@ -143,7 +152,7 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("Text"),
         .PipelineID = FName("Text"),
-        .TextureName = "maplestorybold",
+        .TextureName = "bazziotf",
     },
     {
         .Id = FName("Textured"),
@@ -165,6 +174,11 @@ const FMaterialEntry materialTable[] = {
         .PipelineID = FName("Instance_Simple"),
     },
     {
+        .Id = FName("Instance_Textured"),
+        .PipelineID = FName("Instance_Textured"),
+        .TextureName = "masteryi_head",
+    },
+    {
         .Id = FName("Gizmo"),
         .PipelineID = FName("Gizmo"),
     },
@@ -175,7 +189,7 @@ const FMaterialEntry materialTable[] = {
     {
         .Id = FName("SelectedActor_Text"),
         .PipelineID = FName("SelectedActor_Text"),
-        .TextureName = "maplestorybold",
+        .TextureName = "bazziotf",
     },
 };
 
@@ -470,9 +484,10 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
       !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
-      !CreateRectMesh(Renderer) || !CreateTextures(Renderer) ||
+      !CreateRectMesh(Renderer) || !CreateMasterYiMesh(Renderer) ||
+      !CreateTextures(Renderer) ||
       !InitializeMaterials(Renderer) || !CreateInstancingArrayMap() ||
-      !CreateEditTextures(Renderer)) {
+      !CreateEditTextures(Renderer) || !CreateFonts(Renderer)) {
     return false;
   }
 
@@ -1156,11 +1171,27 @@ bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {
   return AllMeshMap[FName("Rect")] != nullptr;
 }
 
+bool FRenderResourceLibrary::CreateMasterYiMesh(FRenderer &Renderer) {
+  FMeshDesc MeshDesc{
+      .VertexData = MasterYiHeadVertices,
+      .VertexDataSize = static_cast<uint32>(sizeof(MasterYiHeadVertices)),
+      .VertexStride = static_cast<uint32>(sizeof(FVertexData)),
+      .VertexCount = MasterYiHeadVertexCount,
+      .IndexData = MasterYiHeadIndices,
+      .IndexDataSize = static_cast<uint32>(sizeof(MasterYiHeadIndices)),
+      .IndexCount = MasterYiHeadIndexCount,
+  };
+
+  RegisterMesh(FName("MasterYi"), Renderer.CreateMesh(MeshDesc));
+  return AllMeshMap[FName("MasterYi")] != nullptr;
+}
+
 bool FRenderResourceLibrary::CreateInstancingArrayMap() {
   AllInstancingArrayMap.clear();
   // 기본 배치 키 등록
   AllInstancingArrayMap[{FName("Instance_Text"), FName("Rect")}] = {};
   AllInstancingArrayMap[{FName("Instance_Simple"), FName("Cube")}] = {};
+  AllInstancingArrayMap[{FName("Instance_Textured"), FName("MasterYi")}] = {};
   AllInstancingArrayMap[{FName("SelectedActor_Text"), FName("Rect")}] = {};
   
   return true;
@@ -1311,4 +1342,56 @@ FRenderResourceLibrary::GetOrCreateMesh(const FName &ID,
     AllMeshMap[ID] = newMesh;
   }
   return newMesh;
+}
+
+bool FRenderResourceLibrary::CreateFonts(FRenderer& Renderer)
+{
+    const std::filesystem::path ExeDir(GetExecutableDirectory());
+    const std::filesystem::path ProjectRoot =
+        ExeDir.parent_path().parent_path().parent_path();
+
+    TArray<std::filesystem::path> SearchRoots = {
+        ProjectRoot / L"Fonts",
+        std::filesystem::current_path() / L"Fonts",
+        ExeDir / L"Fonts",
+    };
+
+    for (const auto& Root : SearchRoots) {
+        std::error_code Ec;
+        if (!std::filesystem::exists(Root, Ec)) {
+            continue;
+        }
+
+        for (const auto& Entry :
+            std::filesystem::recursive_directory_iterator(Root, Ec)) {
+            if (!Entry.is_regular_file(Ec))
+                continue;
+
+            FWString Ext = Entry.path().extension().wstring();
+            std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+            if (Ext != L".json")
+                continue;
+
+            TSharedPtr<FFont>Font = MakeShared<FFont>();
+
+            FWString Path = Entry.path().wstring();
+            Font->Deserialize(Path);
+
+            // 확장자 제거
+            FString KeyWide = Entry.path().stem().string();
+            std::transform(KeyWide.begin(), KeyWide.end(), KeyWide.begin(),
+                ::tolower);
+            FName TextureKey(KeyWide);
+            Font->SetTexture(AllTextureMap[TextureKey]);
+
+            // 이미 로드된 폰트 건너뜀
+            if (AllFontMap.find(KeyWide) != AllFontMap.end()) {
+                continue;
+            }
+
+            AllFontMap[KeyWide] = Font;
+        }
+    }
+
+    return true;
 }

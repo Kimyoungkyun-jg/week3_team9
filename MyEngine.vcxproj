@@ -385,6 +385,7 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Actors\AAnimatedBillboardActor.cpp" />
+    <ClCompile Include="Source\Runtime\Actors\AMasterYi.cpp" />
     <ClCompile Include="Source\Runtime\Actors\TestTextActor.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UTextInstanceComponent.cpp" />
@@ -417,6 +418,7 @@
     <ClInclude Include="Source\Runtime\Actors\ACubeActor.h" />
     <ClInclude Include="Source\Runtime\Actors\ACylinderActor.h" />
     <ClInclude Include="Source\Runtime\Actors\AInstancingActor.h" />
+    <ClInclude Include="Source\Runtime\Actors\AMasterYi.h" />
     <ClInclude Include="Source\Runtime\Actors\ASphereActor.h" />
     <ClInclude Include="Source\Runtime\Actors\ASpotlightActor.h" />
     <ClInclude Include="Source\Runtime\Actors\ATextRenderActor.h" />
@@ -629,7 +631,7 @@
   <ImportGroup Label="ExtensionTargets" />
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\"  &amp; if exist "$(SolutionDir)Resources\Textures\Fonts" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\"</Command>
+      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\" &amp; if exist "$(SolutionDir)Resources\Textures\Fonts" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Fonts" xcopy /Y /D /I /E "$(SolutionDir)Fonts\" "$(OutDir)Fonts\"</Command>
       <Message>Copying textures to output directory...</Message>
     </PostBuildEvent>
     <ClCompile>

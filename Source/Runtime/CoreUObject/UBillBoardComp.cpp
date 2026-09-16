@@ -18,6 +18,8 @@ void UBillBoardComp::Initialize() {
   Super::Initialize();
   SetMeshID(FName("Rect"));
   SetMaterialID(FName("Billboard"));
+
+  RenderData.type = ERenderType::Texture;
 }
 
 void UBillBoardComp::Serialize(FArchive& Archive) const

@@ -14,6 +14,13 @@ void UPrimitiveComponent::Initialize()
 
 void UPrimitiveComponent::Register(UScene& InScene)
 {
+    if (RenderData.type == ERenderType::None)
+    {
+        RenderData.type = (!RenderData.TextureId.IsNone() && RenderData.TextureId != FName("None"))
+            ? ERenderType::Texture
+            : ERenderType::Primitive;
+    }
+
     Super::Register(InScene);
     InScene.AddRenderComponent(this);
 }

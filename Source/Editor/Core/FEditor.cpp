@@ -218,7 +218,6 @@ void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
 
         FTransform CurrentTransform = NewActor->GetTransform();
         CurrentTransform.Location = Location;
-        CurrentTransform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
         NewActor->SetTransform(CurrentTransform);
 
         // 액터 시작 및 선택
@@ -260,8 +259,9 @@ void FEditor::SpawnInstancingToCurrentScene(int Count)
     auto* Comp = TargetActor->GetRootComponent()->Cast<UInstancePrimitiveComponent>();
     if (!Comp) return;
 
-    // 일정 반경 이내 좌표 추가
+    // 일정 반경 및 높이 이내 좌표 추가
     const float MaxDistance = 25.0f;
+    const float MaxHeight = 15.0f;
     const float TwoPi = 6.2831853f;
     const FVector Center = TargetActor->GetTransform().Location;
 
@@ -269,10 +269,11 @@ void FEditor::SpawnInstancingToCurrentScene(int Count)
     {
         float Angle = (static_cast<float>(std::rand()) / RAND_MAX) * TwoPi;
         float Dist = std::sqrt(static_cast<float>(std::rand()) / RAND_MAX) * MaxDistance;
+        float OffsetZ = ((static_cast<float>(std::rand()) / RAND_MAX) * 2.0f - 1.0f) * MaxHeight;
         FVector Pos;
         Pos.X = Center.X + std::cos(Angle) * Dist;
         Pos.Y = Center.Y + std::sin(Angle) * Dist;
-        Pos.Z = Center.Z;
+        Pos.Z = Center.Z + OffsetZ;
         Comp->AddInstance(Pos, Color);
     }
 
