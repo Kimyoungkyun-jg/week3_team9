@@ -8,12 +8,16 @@ IMPLEMENT_UCLASS(UInstancePrimitiveComponent, UPrimitiveComponent)
 
 void UInstancePrimitiveComponent::Register(UScene& Scene)
 {
-    if(RenderData.MeshId == EMeshID::None)
-        SetMeshID(EMeshID::Cube);
-    if(RenderData.MaterialId == EMaterialID::None)
-        SetMaterialID(EMaterialID::Instance_Simple);
-    
-    RenderData.type = ERenderType::Instancing;
+	FRenderResourceLibrary* Resources = Scene.GetRenderResourceLibrary();
+	if (!PrimitiveMesh)
+	{
+		SetMesh(Resources ? Resources->GetMesh(FName("Cube")) : nullptr);
+	}
+	
+	if (!PrimitiveMaterial)
+	{
+		SetMaterial(Resources ? Resources->GetMaterial(FName("Instance_Simple")) : nullptr);
+	}
 
     Super::Register(Scene);
 }

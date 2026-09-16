@@ -43,19 +43,11 @@ static void  Strtrim(char* s) { char* str_end = s + strlen(s); while (str_end > 
 
 void FImguiConsoleWindow::Process(FEditor& Editor)
 {
-	if (!bIsOpened)
-		return;
+	ImGui::Begin("Console Window", nullptr, ImGuiWindowFlags_MenuBar);
 
-	if (!ImGui::Begin("Console Window", &bIsOpened, ImGuiWindowFlags_MenuBar)) {
-		ImGui::End();
-		return;
-	}
-
-	ShowCloseContextMenu();
 
 	const bool bCopyToClipboard = ShowMenuBar();
 
-	ShowDebugTextButton();
 	ShowLogRegion(bCopyToClipboard);
 
 	ImGui::Separator();
@@ -63,17 +55,6 @@ void FImguiConsoleWindow::Process(FEditor& Editor)
 	ShowCommandLine();
 
 	ImGui::End();
-}
-
-void FImguiConsoleWindow::ShowCloseContextMenu()
-{
-	if (ImGui::BeginPopupContextItem())
-	{
-		if (ImGui::MenuItem("Close Console")) {
-			bIsOpened = false;
-		}
-		ImGui::EndPopup();
-	}
 }
 
 bool FImguiConsoleWindow::ShowMenuBar()
@@ -100,21 +81,6 @@ bool FImguiConsoleWindow::ShowMenuBar()
 	}
 
 	return bCopyToClipboard;
-}
-
-void FImguiConsoleWindow::ShowDebugTextButton() const
-{
-	if (!ImGui::SmallButton("Add Debug Text")) {
-		return;
-	}
-
-	std::time_t now = std::time(nullptr);
-	std::tm local_time;
-	localtime_s(&local_time, &now);
-
-	UE_LOG("%dY-%dm-%dd %dH:%dM:%dS", local_time.tm_year + 1900, local_time.tm_mon + 1, local_time.tm_mday, local_time.tm_hour, local_time.tm_min, local_time.tm_sec);
-	UE_LOG_WARN("진돗개 둘");
-	UE_LOG_ERROR("DEFCON 1!!");
 }
 
 void FImguiConsoleWindow::ShowLogRegion(bool bCopyToClipboard)

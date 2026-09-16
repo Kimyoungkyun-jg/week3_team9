@@ -12,6 +12,7 @@
 
 FVisualizerRegistry::FVisualizerRegistry()
 {
+	// FPrimitiveVisualizer는 Visualizers에서 반드시 0번 인덱스로 냅둘것
 	Visualizers.push_back(MakeUnique<FPrimitiveVisualizer>());
 	Map[UPrimitiveComponent::StaticClass()] = Visualizers.back().get();
 	

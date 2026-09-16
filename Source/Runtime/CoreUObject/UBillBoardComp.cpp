@@ -16,8 +16,12 @@ UCLASS_META(UBillBoardComp, MeshName, "BillBoard")
 
 void UBillBoardComp::Register(UScene& InScene) {
   FRenderResourceLibrary* Resources = InScene.GetRenderResourceLibrary();
-  SetMeshID(EMeshID::Rect);
-  SetMaterialID(EMaterialID::Billboard);
+  if (!GetMesh()) {
+    SetMesh(Resources ? Resources->GetMesh(FName("Rect")) : nullptr);
+  }
+  if (!GetMaterial()) {
+    SetMaterial(Resources ? Resources->GetMaterial(FName("Billboard")) : nullptr);
+  }
   Super::Register(InScene);
 }
 

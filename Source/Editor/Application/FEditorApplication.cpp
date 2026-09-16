@@ -37,34 +37,11 @@ void FEditorApplication::Initialize_Runtime(USceneManager *SceneManager,
   this->CurrentScene = SceneManager->CurrentScene;
 
   Editor.Initialize(SceneManager);
-
   Editor.AddViewport(FEditorViewport{});
-
   Editor.LoadState();
-
-  // Editor.LoadScene("");
 }
 
 void FEditorApplication::Shutdown() { Editor.Shutdown(); }
-
-/// <summary>
-/// return value: if scene is pre-existing, returns true
-/// if scene was not existing, returns false
-/// </summary>
-/// <param name="path"></param>
-/// <returns></returns>
-bool FEditorApplication::CheckSceneExistsAndInitializeIfNotExists(
-    const FString &path) {
-  if (Editor.CheckSceneExists())
-    return true;
-  else {
-    if (path == "")
-      Editor.NewScene();
-    else
-      Editor.LoadScene(path);
-    return false;
-  }
-}
 
 void FEditorApplication::Update(float DeltaTime) {
   BeginFrame();

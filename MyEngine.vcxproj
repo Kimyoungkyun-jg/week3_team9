@@ -326,6 +326,7 @@
     <ClCompile Include="Source\Runtime\Rendering\FRenderer.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Rendering\FRenderResourceLibrary.cpp" />
+    <ClCompile Include="Source\Runtime\Utility\EngineUtil.cpp" />
     <ClCompile Include="Source\Runtime\Utility\WindowsUtil.cpp" />
     <ClCompile Include="Source\ThirdParty\Imgui\imgui.cpp">
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TurnOffAllWarnings</WarningLevel>
@@ -464,7 +465,9 @@
     <ClInclude Include="Source\Runtime\Math\FVector.h" />
     <ClInclude Include="Source\Runtime\Math\FVector2.h" />
     <ClInclude Include="Source\Runtime\Math\FVector4.h" />
+    <ClInclude Include="Source\Runtime\Math\Random.h" />
     <ClInclude Include="Source\Runtime\Rendering\FFont.h" />
+    <ClInclude Include="Source\Runtime\Rendering\FInstanceBatchKey.h" />
     <ClInclude Include="Source\Runtime\Rendering\FLineBatcher.h" />
     <ClInclude Include="Source\Runtime\Rendering\FMaterial.h" />
     <ClInclude Include="Source\Runtime\Rendering\FMesh.h" />
@@ -476,6 +479,7 @@
     <ClInclude Include="Source\Runtime\Rendering\FTexture.h" />
     <ClInclude Include="Source\Runtime\Rendering\ShaderConstants.h" />
     <ClInclude Include="Source\Runtime\Rendering\Vertices.h" />
+    <ClInclude Include="Source\Runtime\Utility\EngineUtil.h" />
     <ClInclude Include="Source\Runtime\Utility\WindowsUtil.h" />
     <ClInclude Include="Source\ThirdParty\Imgui\imconfig.h" />
     <ClInclude Include="Source\ThirdParty\Imgui\imgui.h" />
@@ -496,6 +500,14 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UTextInstanceComponent.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Shader\GridPS.hlsl">
+      <EntryPointName>MainPS</EntryPointName>
+      <ShaderType>Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shader\GridVS.hlsl">
+      <EntryPointName>MainVS</EntryPointName>
+      <ShaderType>Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="Shader\ExamplePS.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </ExcludedFromBuild>

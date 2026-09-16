@@ -1,5 +1,6 @@
 #include "FName.h"
 #include "Runtime/Core/FNamePool.h"
+#include "Runtime/Utility/EngineUtil.h"
 
 FName::FName(const char* CharPtr)
 	: FName{ FString{ CharPtr } }
@@ -57,4 +58,14 @@ bool FName::operator==(const FName& Other) const
 FString FName::ToString() const
 {
 	return FNamePool::GetDisplayString(Entry);
+}
+
+size_t FName::GetHash() const
+{
+	const size_t Bucket =
+		static_cast<size_t>(Entry.ComparisonBucketIndex);
+	const size_t Index =
+		static_cast<size_t>(Entry.ComparisonIndex);
+	
+	return EngineUtil::HashCombine(Bucket, Index);
 }

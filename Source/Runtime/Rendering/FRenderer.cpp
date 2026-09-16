@@ -149,10 +149,6 @@ void FRenderer::OnWindowSize(UINT Width, UINT Height) {
   InitializeEditorViewportRenderTarget();
 }
 
-void FRenderer::FlushLineBatch(const FMatrix &ViewProjection) {
-  LineBatcher.Flush(*Context.Get(), *this, ViewProjection);
-}
-
 TSharedPtr<FMesh> FRenderer::CreateMesh(const FMeshDesc &Desc) {
   if (!Desc.VertexData || Desc.VertexCount == 0 || Desc.VertexDataSize == 0 ||
       Desc.VertexStride == 0) {
@@ -463,7 +459,7 @@ TSharedPtr<FTexture> FRenderer::CreateTexture(const wchar_t* path){
   return Texture;
 }
 
-TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(EPipelineID Id) const {
+TSharedPtr<FRenderPipeline> FRenderer::GetPipeline(const FName& Id) const {
   return FRenderResourceLibrary::Get().GetPipeline(Id);
 }
 
@@ -676,24 +672,26 @@ void FRenderer::UpdateLightConstants(const FLightConstants &Constants,
   Context->PSSetConstantBuffers(2, 1, LightConstantBuffer.GetAddressOf());
 }
 
-void FRenderer::AddTextInstanceArray(const TArray<FInstanceData> &Instances,
-                                     const EMeshID &MeshId,
-                                     const EMaterialID &MaterialId) {
-  // 빈 데이터 전달 시 조기 반환
-  if (Instances.empty()) {
-    return;
-  }
-  auto &ResLib = FRenderResourceLibrary::Get();
-  // 머티리얼 리소스 존재 여부 확인
-  if (!ResLib.GetMaterial(MaterialId)) {
-    UE_LOG_WARN("[FRenderer] 유효하지 않은 머티리얼 ID 인스턴스 등록 시도");
-    return;
-  }
-  // 메시 리소스 존재 여부 확인
-  if (!ResLib.GetMesh(MeshId)) {
-    UE_LOG_WARN("[FRenderer] 유효하지 않은 메시 ID 인스턴스 등록 시도");
-    return;
-  }
+void FRenderer::AddTextInstanceArray(const TArray<FInstanceData>& Instances, const FName& MeshId, const FName& MaterialId)
+{
+    // 빈 데이터 전달 시 조기 반환
+    if (Instances.empty())
+    {
+        return;
+    }
+    auto& ResLib = FRenderResourceLibrary::Get();
+    // 머티리얼 리소스 존재 여부 확인
+    if (!ResLib.GetMaterial(MaterialId))
+    {
+        UE_LOG_WARN("[FRenderer] 유효하지 않은 머티리얼 ID 인스턴스 등록 시도");
+        return;
+    }
+    // 메시 리소스 존재 여부 확인
+    if (!ResLib.GetMesh(MeshId))
+    {
+        UE_LOG_WARN("[FRenderer] 유효하지 않은 메시 ID 인스턴스 등록 시도");
+        return;
+    }
 
   auto &TargetArray = ResLib.GetInstancingArray(MaterialId, MeshId);
   TargetArray.reserve(TargetArray.size() + Instances.size());

@@ -8,7 +8,7 @@ UCLASS_META(UCubeComp, MeshName, "Cube")
 
 void UCubeComp::Register(UScene &InScene) {
   FRenderResourceLibrary *Resources = InScene.GetRenderResourceLibrary();
-  SetMeshID(EMeshID::Cube);
-  SetMaterialID(EMaterialID::Textured);
+  SetMesh(Resources ? Resources->GetMesh(FName("Cube")) : nullptr);
+  SetMaterial(Resources ? Resources->GetMaterial(FName("Textured")) : nullptr);
   Super::Register(InScene);
 }

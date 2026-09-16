@@ -13,6 +13,7 @@
 #include "Runtime/Input/FInputManager.h"
 #include "Runtime/Actors/AInstancingActor.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
+#include "Runtime/Math/Random.h"
 #include "Runtime/CoreUObject/FGarbageCollector.h"
 #include <numbers>
 
@@ -192,14 +193,22 @@ void FEditor::SpawnActorToCurrentScene(UClass* Type, int Size) {
 
     if (Size <= 0) { return; }
 
+    const float Min = State.GetSpawnActorMinLocation();
+    const float Max = State.GetSpawnActorMaxLocation();
+    if (Min > Max) { return; }
+
     for (int i = 0; i < Size; ++i)
     {
-        // 오프셋 적용
-        static int SpawnSerial = 0;
-        const float Offset = 0.25f * static_cast<float>(SpawnSerial++);
+
+        FVector Location
+        {
+            Random::GetFloat(Min, Max, 2),
+            Random::GetFloat(Min, Max, 2),
+            Random::GetFloat(Min, Max, 2),
+        };
 
         FTransform Transform;
-        Transform.Location = FVector{ Offset, 0.0f, 0.0f };
+        Transform.Location = Location;
         Transform.Scale3D = FVector{ 0.5f, 0.5f, 0.5f };
 
         AActor* NewActor = SceneManager->CurrentScene->SpawnActor(Type);

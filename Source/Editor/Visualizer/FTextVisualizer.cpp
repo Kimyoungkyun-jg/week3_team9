@@ -8,13 +8,16 @@
 #include "Runtime/Rendering/FMesh.h"
 #include "Runtime/Rendering/FRenderResourceLibrary.h"
 
+void FTextVisualizer::Draw(
+	const UPrimitiveComponent& Component,
+	FRenderView& RenderView,
+	const FCamera& Camera,
+	const FVector4& Color
+) const
+{
+	if (Component.IsA<UTextInstanceComponent>() == false) { return; }
 
-void FTextVisualizer::Draw(const UPrimitiveComponent &Component,
-                           FRenderView &RenderView,
-                           const FCamera &Camera) const {
-  if (Component.IsA<UTextInstanceComponent>() == false) {
-    return;
-  }
+
 
   const UTextInstanceComponent &TextComponent =
       *Component.Cast<UTextInstanceComponent>();
@@ -33,12 +36,11 @@ void FTextVisualizer::Draw(const UPrimitiveComponent &Component,
     return;
   }
 
-  TArray<FVector> Array;
-  for (int i = 0; i < 4; ++i) {
-    FVector WorldVector = ModelMatrix.TransformPointRow(Mesh.GetPositions()[i]);
-    Array.push_back(WorldVector);
-  }
-
-  RenderView.RenderQuad(Array[0], Array[1], Array[2], Array[3],
-                        FVector4{1.0f, 1.0f, 1.0f, 1.0f});
+	RenderView.RenderQuad(
+		Array[0],
+		Array[1],
+		Array[2],
+		Array[3],
+		Color
+	);
 }

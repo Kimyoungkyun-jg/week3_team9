@@ -43,8 +43,6 @@ public:
   void SwapBuffer();
   void OnWindowSize(UINT Width, UINT Height);
 
-  void FlushLineBatch(const FMatrix &ViewProjection);
-
   EViewModeIndex GetRenderMode() const { return CurrentRenderMode; }
   void SetRenderMode(EViewModeIndex InMode) { CurrentRenderMode = InMode; }
 
@@ -70,14 +68,14 @@ public:
   TSharedPtr<FTexture> CreateTexture(const wchar_t* path);
   // 파이프라인 조회
   [[nodiscard]]
-  TSharedPtr<FRenderPipeline> GetPipeline(EPipelineID Id) const;
+  TSharedPtr<FRenderPipeline> GetPipeline(const FName& Id) const;
 
   FLineBatcher &GetLineBatcher() { return LineBatcher; }
 
   void UpdateLightConstants(const FLightConstants &Constants, const EViewModeIndex InMode);
 
   // 텍스트 인스턴싱
-  void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const EMeshID& MeshId, const EMaterialID& MaterialId);
+  void AddTextInstanceArray(const TArray<FInstanceData>& Instances, const FName& MeshId, const FName& MaterialId);
   void DrawInstances(const FCamera& Camera);
   void DrawTextInstances(const FCamera& Camera, const EMeshID& MeshId, const EMaterialID& MaterialId);
   void ClearTextInstances();
@@ -129,6 +127,13 @@ private:
   EViewModeIndex CurrentRenderMode = EViewModeIndex::VMI_Lit;
   
 public:
+  template <typename TConstants>
+  void FlushLineBatch(const TConstants &Constants,
+                      const FName& PipelineId = FName("Simple_Line")) {
+    UpdateBuffer(Constants);
+    LineBatcher.Flush(*Context.Get(), GetPipeline(PipelineId));
+  }
+
   // bApplyViewMode=false면 뷰모드(와이어프레임) 오버라이드를 건너뛴다
   template <typename TConstants>
   void Draw(const FMesh &Mesh, const FMaterial &Material,
@@ -137,7 +142,7 @@ public:
 
     TSharedPtr<FRenderPipeline> Pipeline = Material.Pipeline;
     if (bApplyViewMode && CurrentRenderMode == EViewModeIndex::VMI_Wireframe) {
-      Pipeline = GetPipeline(EPipelineID::Simple_Wireframe);
+      Pipeline = GetPipeline(FName("Simple_Wireframe"));
     }
     if (Pipeline) {
       Pipeline->Bind(*Context.Get());

@@ -9,7 +9,6 @@
 #include "Runtime/Core/IntTypes.h"
 
 // 내장 파이프라인 식별자 전방선언
-enum class EPipelineID : uint8;
 
 struct FRenderPipelineDesc {
   FWString VertexShaderFileName;
