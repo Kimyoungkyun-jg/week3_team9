@@ -217,9 +217,6 @@
     <ClCompile Include="Source\Runtime\CoreUObject\USphereComp.cpp">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\CoreUObject\UPlaneComp.cpp">
-      <Filter>Source\Runtime\CoreUObject</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Runtime\CoreUObject\FGarbageCollector.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -516,9 +513,6 @@
     <ClInclude Include="Source\Runtime\CoreUObject\USphereComp.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h">
-      <Filter>Source\Runtime\CoreUObject</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\CoreUObject\UInstancePrimitiveComponent.h">
       <Filter>Source\Runtime\CoreUObject</Filter>
     </ClInclude>
@@ -612,9 +606,6 @@
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\MsdfTextPS.hlsl">
-      <Filter>Shader</Filter>
-    </FxCompile>
-    <FxCompile Include="Shader\TextPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
     <FxCompile Include="Shader\TexturedPS.hlsl">

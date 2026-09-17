@@ -83,12 +83,6 @@ const FPipelineEntry pipelineTable[] = {
         .BlendMode = EBlendMode::Additive,
     },
     {
-        .Id = FName("Text"),
-        .VertexShader = L"ExampleVS.cso",
-        .PixelShader = L"MsdfTextPS.cso",
-        .BlendMode = EBlendMode::Translucent,
-    },
-    {
         .Id = FName("Instance_Text"),
         .VertexShader = L"InstanceVS.cso",
         .PixelShader = L"MsdfTextPS.cso",
@@ -149,14 +143,9 @@ const FMaterialEntry materialTable[] = {
         .PipelineID = FName("Spotlight"),
     },
     {
-        .Id = FName("Text"),
-        .PipelineID = FName("Text"),
-        .TextureName = "bazziotf",
-    },
-    {
         .Id = FName("Textured"),
         .PipelineID = FName("Textured"),
-        .TextureName = "Question_Block",
+        .TextureName = "uv-test",
     },
     {
         .Id = FName("Billboard"),
@@ -492,7 +481,7 @@ bool FRenderResourceLibrary::Initialize(FRenderer &Renderer) {
       !CreateArrowMesh(Renderer) || !CreateCircleMesh(Renderer) ||
       !CreateRotationGizmoMesh(Renderer) || !CreateSquareArrowMesh(Renderer) ||
       !CreateGridMesh(Renderer) || !CreateSphereMesh(Renderer) ||
-      !CreateLineMesh(Renderer) || !CreatePlaneMesh(Renderer) ||
+      !CreateLineMesh(Renderer) ||
       !CreateRectMesh(Renderer) || !CreateMasterYiMesh(Renderer) ||
       !CreateTextures(Renderer) ||
       !InitializeMaterials(Renderer) || !CreateInstancingArrayMap() ||
@@ -1138,18 +1127,6 @@ bool FRenderResourceLibrary::CreateLineMesh(FRenderer &Renderer) {
 
   RegisterMesh(FName("Line"), Renderer.CreateMesh(Desc));
   return AllMeshMap[FName("Line")] != nullptr;
-}
-
-bool FRenderResourceLibrary::CreatePlaneMesh(FRenderer &Renderer) {
-  FMeshDesc Desc{
-      .VertexData = PlaneVertices,
-      .VertexDataSize = static_cast<uint32>(sizeof(PlaneVertices)),
-      .VertexStride = sizeof(FVertexData),
-      .VertexCount = static_cast<uint32>(std::size(PlaneVertices)),
-  };
-
-  RegisterMesh(FName("Plane"), Renderer.CreateMesh(Desc));
-  return AllMeshMap[FName("Plane")] != nullptr;
 }
 
 bool FRenderResourceLibrary::CreateRectMesh(FRenderer &Renderer) {

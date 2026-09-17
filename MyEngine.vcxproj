@@ -301,7 +301,6 @@
     <ClCompile Include="Source\Runtime\CoreUObject\UCubeComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UCylinderComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UObject.cpp" />
-    <ClCompile Include="Source\Runtime\CoreUObject\UPlaneComp.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\UPrimitiveComponent.cpp" />
     <ClCompile Include="Source\Runtime\CoreUObject\USceneComponent.cpp" />
     <ClCompile Include="Source\Editor\Grid\FGrid.cpp" />
@@ -435,7 +434,6 @@
     <ClInclude Include="Source\Runtime\CoreUObject\UCylinderComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObject.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UObjectGlobals.h" />
-    <ClInclude Include="Source\Runtime\CoreUObject\UPlaneComp.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\UPrimitiveComponent.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\USceneComponent.h" />
     <ClInclude Include="Source\Runtime\CoreUObject\USphereComp.h" />
@@ -551,20 +549,6 @@
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="Shader\TextPS.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MainPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">Pixel</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MainPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">MainPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Analysis|x64'">Pixel</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MainPS</EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
     <FxCompile Include="Shader\TexturedPS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MainPS</EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Analysis|Win32'">MainPS</EntryPointName>
@@ -660,8 +644,8 @@
   <ImportGroup Label="ExtensionTargets" />
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>if exist "$(SolutionDir)Resources\Textures" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I /E "$(SolutionDir)Resources\Edit\" "$(OutDir)Edit\" &amp; if exist "$(SolutionDir)Resources\Textures\Fonts" xcopy /Y /D /I /E "$(SolutionDir)Resources\Textures\" "$(OutDir)Textures\" &amp; if exist "$(SolutionDir)Fonts" xcopy /Y /D /I /E "$(SolutionDir)Fonts\" "$(OutDir)Fonts\"</Command>
-      <Message>Copying textures to output directory...</Message>
+      <Command>if exist "$(SolutionDir)Resources\Textures" (xcopy /Y /D /I "$(SolutionDir)Resources\Textures\*.dds" "$(OutDir)Textures\" &amp; xcopy /Y /D /I "$(SolutionDir)Resources\Textures\*.jpg" "$(OutDir)Textures\") &amp; if exist "$(SolutionDir)Resources\Edit" xcopy /Y /D /I "$(SolutionDir)Resources\Edit\*.dds" "$(OutDir)Edit\" &amp; if exist "$(SolutionDir)Fonts" xcopy /Y /D /I "$(SolutionDir)Fonts\*.json" "$(OutDir)Fonts\"</Command>
+      <Message>Copying runtime textures and fonts to output directory...</Message>
     </PostBuildEvent>
     <ClCompile>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Runtime/Core/Log.h</ForcedIncludeFiles>

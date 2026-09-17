@@ -122,9 +122,6 @@ public:
   [[nodiscard]] TSharedPtr<FMesh> GetLineMesh() const {
     return GetMesh(FName("Line"));
   }
-  [[nodiscard]] TSharedPtr<FMesh> GetPlaneMesh() const {
-    return GetMesh(FName("Plane"));
-  }
   [[nodiscard]] TSharedPtr<FMesh> GetRectMesh() const {
     return GetMesh(FName("Rect"));
   }
@@ -215,7 +212,6 @@ private:
   bool CreateGridMesh(FRenderer &Renderer);
   bool CreateSphereMesh(FRenderer &Renderer);
   bool CreateLineMesh(FRenderer &Renderer);
-  bool CreatePlaneMesh(FRenderer &Renderer);
   bool CreateRectMesh(FRenderer &Renderer);
   bool CreateMasterYiMesh(FRenderer &Renderer);
   bool CreateMasteryMesh(FRenderer &Renderer) { return CreateMasterYiMesh(Renderer); }
